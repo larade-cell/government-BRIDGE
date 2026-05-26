@@ -10,6 +10,7 @@ The system is intentionally designed so that:
 * deterministic rules engines make official eligibility recommendations
 * AI acts as an assistive and operational enhancement layer
 * AI never becomes the source of truth for legal eligibility decisions
+* all generative AI responses use retrieval-augmented generation (RAG) over a curated, vetted knowledge base — the LLM does not answer from its own general/pretraining knowledge, and every answer cites the source passage it was grounded in
 * human escalation remains available for sensitive or uncertain cases
 
 ---
@@ -173,11 +174,11 @@ Users can ask:
 
 The assistant:
 
-* uses retrieval-augmented generation (RAG)
-* searches approved policy sources
-* generates plain-language responses
-* includes citations to authoritative sources
-* offers human handoff when needed
+* uses retrieval-augmented generation (RAG) — the LLM is restricted to content retrieved from the curated knowledge base on each query and is not permitted to answer from its own pretraining knowledge
+* maintains a vetted knowledge base of program rules, policy PDFs, and authoritative agency pages, refreshed on a documented cadence and version-controlled
+* retrieves the top-k relevant passages via vector search, then asks the LLM to synthesize a plain-language answer strictly grounded in those passages
+* refuses to answer (and offers human handoff) when no sufficiently relevant passage is retrieved, rather than guessing from prior knowledge
+* always includes citations linking back to the source passages
 
 ### Efficiency Improvements
 
@@ -191,7 +192,8 @@ The assistant:
 
 * AI cannot make official eligibility decisions
 * responses always include source citations
-* uncertainty triggers escalation recommendations
+* uncertainty or empty retrieval triggers escalation recommendations
+* the model is prompted to refuse rather than fabricate when retrieval is insufficient
 
 ---
 
@@ -491,12 +493,20 @@ AI should operate as a secondary enhancement layer for:
 * forecasting
 * analytics
 
+Any feature that produces free-text answers to user questions (chatbot, smart search explanations, recommendation rationales) must be implemented as a RAG pipeline over the curated knowledge base. Direct, ungrounded LLM completions are not permitted in user-facing responses. The required pieces:
+
+* a versioned knowledge base of program rules, policy documents, and authoritative agency pages
+* an embedding + vector-store layer (e.g., pgvector or a managed vector DB) for semantic retrieval
+* a retrieval step that returns the top-k passages with source metadata
+* an LLM call constrained by system prompt to answer only from the supplied passages and to refuse if context is insufficient
+* mandatory citations and a logged trace of which passages were used
+
 Examples:
 
-* OpenAI API
-* vector search / RAG
+* OpenAI / Anthropic API for the generation step
+* vector search / RAG (pgvector, FAISS, or a managed vector DB)
 * semantic embeddings
-* OCR + document AI
+* OCR + document AI (separate from the RAG pipeline)
 
 ---
 

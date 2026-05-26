@@ -232,10 +232,12 @@ The AI layer is the project's core value proposition. The governing principle ac
 
 ### 4.3 Chatbot / conversational AI
 - **Use case (P1):** a claimant-facing navigator that answers "Am I eligible if…?", explains requirements in plain language, guides the application, and supports multiple languages 24/7 — reducing call-center load.
-- **Architecture:** retrieval-augmented generation (RAG) over a curated, vetted knowledge base of program rules. **Every answer cites its source passage** (Nava's pattern).
+- **Architecture (P0):** retrieval-augmented generation (RAG) over a curated, vetted knowledge base of program rules and authoritative policy documents. **The LLM must not answer from its own pretraining knowledge** — every response is grounded in passages retrieved for that specific query, and **every answer cites its source passage** (Nava's pattern). When no sufficiently relevant passage is retrieved, the bot must refuse to answer and offer a human handoff rather than fall back on general knowledge.
+- **RAG pipeline components (P0):** versioned knowledge base; embedding model + vector store (e.g., pgvector); top-k retrieval with source metadata; LLM call constrained by system prompt to answer only from supplied passages; citation rendering; per-response trace of retrieved passages for audit.
+- **Knowledge base governance (P0):** content owners per program; documented refresh cadence (at minimum on policy change); version history; ability to remove or correct sources and have changes propagate to retrieval.
 - **Guardrails (P0):** always offer "talk to a human"; disclaim that it's an AI assistant; never let the bot make or imply an eligibility *decision*. Nava found chatbot accuracy "highly variable," requiring significant engineering — so scope conservatively.
 - **Evidence:** Nava + Imagine LA piloted an AI assistant for navigators serving ~10,000 households; mRelief is building an AI application-assistant on top of its existing chatbot.
-- **Approach:** RAG over rules knowledge base using an LLM API; keep it assistive and clearly bounded.
+- **Approach:** RAG over rules knowledge base using an LLM API; keep it assistive, grounded, and clearly bounded.
 
 ### 4.4 Predictive analytics
 - **Highest-value, lowest-risk uses (P2):** predict application *abandonment / drop-off* to trigger a helpful nudge; predict *recertification/churn risk* to send proactive reminders; identify *eligible-but-not-enrolled* populations for targeted outreach (where the largest impact lives — e.g., the ~18% SNAP gap, ~9M under-enrolled seniors).

@@ -309,7 +309,6 @@ CREATE TABLE document_uploads (
   storage_url TEXT NOT NULL,
   status upload_status NOT NULL DEFAULT 'uploaded',
   ocr_text TEXT,
-  ocr_prefill JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

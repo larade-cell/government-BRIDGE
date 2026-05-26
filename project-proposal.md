@@ -14,10 +14,10 @@ THE USERS
     - Frontline/digital inclusion teams
 
 THE SOLUTION
-    The solution is a conversational web assistant that asks users questions, determines eligibility, explains required documents, generates action plans, and optionally pre-fills forms. Critically, it pairs with assisted-digital support and an offline/cell phone fallback so that it extends access instead of replacing it.
+    The solution is a conversational web assistant that asks users questions, determines eligibility, explains required documents, and generates action plans. Critically, it pairs with assisted-digital support and an offline/cell phone fallback so that it extends access instead of replacing it.
 
 AI ENHANCEMENT
-    AI can be used to summarize dense requirements, answer questions, and extract information from policy PDFs and forms. AI is also able to bridges fragmentation at the citizen level. Rather than waiting for systems to sync up, the AI assistant can simplify these services into a single plain-language platform. The report found 56% of local-government practitioners were concerned about public perception and trust in AI, and 69% about AI-generated misinformation affecting public policy. To maintain transparency, the assistant must communicate clearly about its purpose and limitations.
+    AI can be used to summarize dense requirements, answer questions, and extract information from policy PDFs. AI is also able to bridges fragmentation at the citizen level. Rather than waiting for systems to sync up, the AI assistant can simplify these services into a single plain-language platform. The report found 56% of local-government practitioners were concerned about public perception and trust in AI, and 69% about AI-generated misinformation affecting public policy. To maintain transparency, the assistant must communicate clearly about its purpose and limitations.
 
 WHY THIS ONE?
     This idea targest the row from the report's table of challenges with the highest prevalence and impact. The issue grounded in solid evidence, and solving it adds value without requiring full legacy replacement. It also doesn't seek to replace human capacity, simply to reduce redundancies and increase accessibility.

@@ -57,7 +57,7 @@ What the system must *do*, organized as features and the workflow it supports.
 - **Multilingual content.** English + Spanish at MVP (i18n architecture for more).
 
 **P1 — Should-have**
-- **Document upload** via phone camera (accept JPG/PNG/PDF/HEIC); treat any OCR as assistive prefill, never a gate.
+- **Document upload** via phone camera (accept JPG/PNG/PDF/HEIC); OCR is optional and assistive, never a gate.
 - **Conversational AI navigator** that answers eligibility questions in plain language with source citations and always offers a human handoff.
 - **Notification preferences center** (channel, language, frequency, opt-in/opt-out).
 - **Referrals / warm handoff** to 211 or community organizations for unmet needs.
@@ -86,7 +86,7 @@ Model the application as an explicit **state machine** with timestamped transiti
 10. **Benefit issuance** — out of scope for a navigator; reflect status only if available.
 11. **Notification** — see §2.3.
 12. **Status tracking** — applicant-visible timeline (or deep link to state portal).
-13. **Renewal / recertification** — pre-filled forms, reminders, ex parte where allowed (largest source of avoidable benefit loss).
+13. **Renewal / recertification** — reminders, ex parte where allowed (largest source of avoidable benefit loss).
 14. **Change reporting** — simple mobile-friendly change form.
 15. **Appeals** — appeals form, evidence upload, status tracking.
 
@@ -226,7 +226,7 @@ The AI layer is the project's core value proposition. The governing principle ac
 
 ### 4.2 Document processing
 - **Intelligent document processing (P1):** OCR + extraction from pay stubs, IDs, utility bills, leases. Real services: AWS Textract, Google Document AI, Azure Document Intelligence.
-- **Always human-in-the-loop:** show extracted values for user/caseworker confirmation; never block submission on OCR failure (treat as assistive prefill).
+- **Always human-in-the-loop:** show extracted values for user/caseworker confirmation; never block submission on OCR failure (OCR is assistive only).
 - **Impact evidence:** Nava's Vermont document uploader — 46% of users submitted documents within 24 hours of a request vs. 6% baseline, and time-to-determination fell 44%; Civilla's Michigan redesign tripled document submissions.
 - **Approach:** mock OCR, or wire AWS Textract free tier for a single demo flow; never store sensitive documents server-side beyond the session.
 

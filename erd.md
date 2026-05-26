@@ -197,7 +197,6 @@ erDiagram
         text storage_url
         upload_status status
         text ocr_text
-        jsonb ocr_prefill
         timestamptz created_at
     }
 
@@ -444,5 +443,5 @@ erDiagram
 - Screening can be anonymous because `screening_sessions.user_id` is nullable.
 - Eligibility determinations are deterministic through `eligibility_rule_versions`; AI tables are separate from rule execution.
 - Multilingual content is modeled through translation tables linked to `languages`.
-- Document uploads support OCR as assistive metadata only through `ocr_text` and `ocr_prefill`.
+- Document uploads support OCR as assistive metadata only through `ocr_text`.
 - Audit logs are append-only in practice and should be written by backend services, not directly by public API clients.

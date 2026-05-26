@@ -1,4 +1,4 @@
-# AI Efficiency Improvements for the Benefit Eligibility Platform HI
+# AI Efficiency Improvements for the Benefit Eligibility Platform
 Made with the help of ChatGPT
 
 ## Overview

@@ -6,6 +6,57 @@ Base URL:
 /api/v1
 ```
 
+> **Implementation note.** The contract below is REST-shaped for reference. The actual implementation is **tRPC procedures** under `/api/trpc/<router>.<procedure>`. The mapping is one-to-one — e.g. `POST /screening-sessions` ↔ `screeningSession.create`.
+
+## Implementation Status
+
+Phases are sized so each one is independently shippable. Tick boxes as work lands.
+
+### Phase 1 — Screening core (today)
+
+| Route (REST) | tRPC procedure | Designed | Implemented | Tested |
+|---|---|:-:|:-:|:-:|
+| `POST /screening-sessions` | `screeningSession.create` | ✅ | ✅ | ✅ |
+| `GET /screening-sessions/:id` | `screeningSession.byId` | ✅ | ✅ | ✅ |
+| `GET /questions` | `question.list` | ✅ | ✅ | ✅ |
+| `POST /screening-sessions/:id/answers` | `answer.upsert` | ✅ | ✅ | ✅ |
+| `POST /screening-sessions/:id/eligibility/run` | `eligibility.run` | ✅ | ✅ | ✅ |
+| `GET /screening-sessions/:id/eligibility-results` | `eligibilityResult.list` | ✅ | ✅ | ✅ |
+
+### Phase 2 — Programs catalog + checklist (Tuesday/Wednesday)
+
+| Route (REST) | tRPC procedure | Designed | Implemented | Tested |
+|---|---|:-:|:-:|:-:|
+| `GET /programs` | `program.list` | ✅ | ☐ | ☐ |
+| `GET /programs/:id` | `program.byId` | ✅ | ☐ | ☐ |
+| `GET /search/programs?q=…` | `program.search` | ✅ | ☐ | ☐ |
+| `GET /screening-sessions/:id/document-checklist` | `documentChecklist.bySession` | ✅ | ☐ | ☐ |
+| `POST /document-uploads` | `documentUpload.create` | ✅ | ☐ | ☐ |
+| `DELETE /document-uploads/:id` | `documentUpload.delete` | ✅ | ☐ | ☐ |
+
+### Phase 3 — Profile, notifications, referrals (Wednesday)
+
+| Route (REST) | tRPC procedure | Designed | Implemented | Tested |
+|---|---|:-:|:-:|:-:|
+| `GET /auth/me` | `user.me` | ✅ | ✅ | ☐ |
+| `PATCH /users/me` | `user.update` | ✅ | ☐ | ☐ |
+| `GET /notification-preferences` | `notificationPreference.list` | ✅ | ☐ | ☐ |
+| `PUT /notification-preferences/:id` | `notificationPreference.upsert` | ✅ | ☐ | ☐ |
+| `POST /referrals` | `referral.create` | ✅ | ☐ | ☐ |
+| `GET /referrals` | `referral.list` | ✅ | ☐ | ☐ |
+
+### Phase 4 — AI, admin, reports (Thursday)
+
+| Route (REST) | tRPC procedure | Designed | Implemented | Tested |
+|---|---|:-:|:-:|:-:|
+| `POST /ai/ask` | `ai.ask` | ✅ | ☐ | ☐ |
+| `GET /reports/overview` | `report.overview` | ✅ | ☐ | ☐ |
+| `GET /cases` | `case.list` | ✅ | ☐ | ☐ |
+| `PATCH /cases/:id` | `case.update` | ✅ | ☐ | ☐ |
+| `POST /eligibility-rules` | `eligibilityRule.publish` | ✅ | ☐ | ☐ |
+
+---
+
 ## Authentication
 
 ```http

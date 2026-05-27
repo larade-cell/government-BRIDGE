@@ -129,6 +129,7 @@ model document_type_translations {
   language_code    String
   name             String
   description      String?
+  examples         String?
   document_types   document_types @relation(fields: [document_type_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   languages        languages      @relation(fields: [language_code], references: [code], onDelete: NoAction, onUpdate: NoAction)
 
@@ -136,27 +137,31 @@ model document_type_translations {
 }
 
 model document_types {
-  id                            String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  doc_key                       String                          @unique
-  category                      String
-  document_type_translations    document_type_translations[]
-  document_uploads              document_uploads[]
-  program_document_requirements program_document_requirements[]
-  session_document_checklist    session_document_checklist[]
+  id                              String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  doc_key                         String                          @unique
+  category                        String
+  document_type_translations      document_type_translations[]
+  document_uploads_confirmed_type document_uploads[]              @relation("document_uploads_confirmed_type")
+  document_uploads_predicted_type document_uploads[]              @relation("document_uploads_predicted_type")
+  program_document_requirements   program_document_requirements[]
+  session_document_checklist      session_document_checklist[]
 }
 
 model document_uploads {
-  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  session_id         String             @db.Uuid
-  document_type_id   String?            @db.Uuid
-  file_name          String
-  file_mime_type     String
-  storage_url        String
-  status             upload_status      @default(uploaded)
-  ocr_text           String?
-  created_at         DateTime           @default(now()) @db.Timestamptz(6)
-  document_types     document_types?    @relation(fields: [document_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  screening_sessions screening_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id                 String             @db.Uuid
+  document_type_id           String?            @db.Uuid
+  predicted_document_type_id String?            @db.Uuid
+  classification_confidence  Decimal?           @db.Decimal(4, 3)
+  file_name                  String
+  file_mime_type             String
+  storage_url                String
+  status                     upload_status      @default(uploaded)
+  ocr_text                   String?
+  created_at                 DateTime           @default(now()) @db.Timestamptz(6)
+  document_types             document_types?    @relation("document_uploads_confirmed_type", fields: [document_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  predicted_document_type    document_types?    @relation("document_uploads_predicted_type", fields: [predicted_document_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  screening_sessions         screening_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model eligibility_results {
@@ -346,6 +351,7 @@ model programs {
   authoritative_url             String
   is_active                     Boolean                         @default(true)
   created_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  search_vector                 Unsupported("tsvector")?
   benefit_estimates             benefit_estimates[]
   eligibility_results           eligibility_results[]
   eligibility_rule_versions     eligibility_rule_versions[]
@@ -354,6 +360,8 @@ model programs {
   program_life_events           program_life_events[]
   program_translations          program_translations[]
   session_document_checklist    session_document_checklist[]
+
+  @@index([search_vector], type: Gin)
 }
 
 model question_dependencies {

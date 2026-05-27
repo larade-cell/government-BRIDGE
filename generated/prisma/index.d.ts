@@ -5046,14 +5046,16 @@ export namespace Prisma {
 
   export type Document_typesCountOutputType = {
     document_type_translations: number
-    document_uploads: number
+    document_uploads_confirmed_type: number
+    document_uploads_predicted_type: number
     program_document_requirements: number
     session_document_checklist: number
   }
 
   export type Document_typesCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     document_type_translations?: boolean | Document_typesCountOutputTypeCountDocument_type_translationsArgs
-    document_uploads?: boolean | Document_typesCountOutputTypeCountDocument_uploadsArgs
+    document_uploads_confirmed_type?: boolean | Document_typesCountOutputTypeCountDocument_uploads_confirmed_typeArgs
+    document_uploads_predicted_type?: boolean | Document_typesCountOutputTypeCountDocument_uploads_predicted_typeArgs
     program_document_requirements?: boolean | Document_typesCountOutputTypeCountProgram_document_requirementsArgs
     session_document_checklist?: boolean | Document_typesCountOutputTypeCountSession_document_checklistArgs
   }
@@ -5079,7 +5081,14 @@ export namespace Prisma {
   /**
    * Document_typesCountOutputType without action
    */
-  export type Document_typesCountOutputTypeCountDocument_uploadsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type Document_typesCountOutputTypeCountDocument_uploads_confirmed_typeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: document_uploadsWhereInput
+  }
+
+  /**
+   * Document_typesCountOutputType without action
+   */
+  export type Document_typesCountOutputTypeCountDocument_uploads_predicted_typeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: document_uploadsWhereInput
   }
 
@@ -16006,6 +16015,7 @@ export namespace Prisma {
     language_code: string | null
     name: string | null
     description: string | null
+    examples: string | null
   }
 
   export type Document_type_translationsMaxAggregateOutputType = {
@@ -16013,6 +16023,7 @@ export namespace Prisma {
     language_code: string | null
     name: string | null
     description: string | null
+    examples: string | null
   }
 
   export type Document_type_translationsCountAggregateOutputType = {
@@ -16020,6 +16031,7 @@ export namespace Prisma {
     language_code: number
     name: number
     description: number
+    examples: number
     _all: number
   }
 
@@ -16029,6 +16041,7 @@ export namespace Prisma {
     language_code?: true
     name?: true
     description?: true
+    examples?: true
   }
 
   export type Document_type_translationsMaxAggregateInputType = {
@@ -16036,6 +16049,7 @@ export namespace Prisma {
     language_code?: true
     name?: true
     description?: true
+    examples?: true
   }
 
   export type Document_type_translationsCountAggregateInputType = {
@@ -16043,6 +16057,7 @@ export namespace Prisma {
     language_code?: true
     name?: true
     description?: true
+    examples?: true
     _all?: true
   }
 
@@ -16123,6 +16138,7 @@ export namespace Prisma {
     language_code: string
     name: string
     description: string | null
+    examples: string | null
     _count: Document_type_translationsCountAggregateOutputType | null
     _min: Document_type_translationsMinAggregateOutputType | null
     _max: Document_type_translationsMaxAggregateOutputType | null
@@ -16147,6 +16163,7 @@ export namespace Prisma {
     language_code?: boolean
     name?: boolean
     description?: boolean
+    examples?: boolean
     document_types?: boolean | document_typesDefaultArgs<ExtArgs>
     languages?: boolean | languagesDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["document_type_translations"]>
@@ -16156,6 +16173,7 @@ export namespace Prisma {
     language_code?: boolean
     name?: boolean
     description?: boolean
+    examples?: boolean
     document_types?: boolean | document_typesDefaultArgs<ExtArgs>
     languages?: boolean | languagesDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["document_type_translations"]>
@@ -16165,6 +16183,7 @@ export namespace Prisma {
     language_code?: boolean
     name?: boolean
     description?: boolean
+    examples?: boolean
     document_types?: boolean | document_typesDefaultArgs<ExtArgs>
     languages?: boolean | languagesDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["document_type_translations"]>
@@ -16174,9 +16193,10 @@ export namespace Prisma {
     language_code?: boolean
     name?: boolean
     description?: boolean
+    examples?: boolean
   }
 
-  export type document_type_translationsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"document_type_id" | "language_code" | "name" | "description", ExtArgs["result"]["document_type_translations"]>
+  export type document_type_translationsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"document_type_id" | "language_code" | "name" | "description" | "examples", ExtArgs["result"]["document_type_translations"]>
   export type document_type_translationsInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     document_types?: boolean | document_typesDefaultArgs<ExtArgs>
     languages?: boolean | languagesDefaultArgs<ExtArgs>
@@ -16201,6 +16221,7 @@ export namespace Prisma {
       language_code: string
       name: string
       description: string | null
+      examples: string | null
     }, ExtArgs["result"]["document_type_translations"]>
     composites: {}
   }
@@ -16630,6 +16651,7 @@ export namespace Prisma {
     readonly language_code: FieldRef<"document_type_translations", 'String'>
     readonly name: FieldRef<"document_type_translations", 'String'>
     readonly description: FieldRef<"document_type_translations", 'String'>
+    readonly examples: FieldRef<"document_type_translations", 'String'>
   }
     
 
@@ -17193,7 +17215,8 @@ export namespace Prisma {
     doc_key?: boolean
     category?: boolean
     document_type_translations?: boolean | document_types$document_type_translationsArgs<ExtArgs>
-    document_uploads?: boolean | document_types$document_uploadsArgs<ExtArgs>
+    document_uploads_confirmed_type?: boolean | document_types$document_uploads_confirmed_typeArgs<ExtArgs>
+    document_uploads_predicted_type?: boolean | document_types$document_uploads_predicted_typeArgs<ExtArgs>
     program_document_requirements?: boolean | document_types$program_document_requirementsArgs<ExtArgs>
     session_document_checklist?: boolean | document_types$session_document_checklistArgs<ExtArgs>
     _count?: boolean | Document_typesCountOutputTypeDefaultArgs<ExtArgs>
@@ -17220,7 +17243,8 @@ export namespace Prisma {
   export type document_typesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "doc_key" | "category", ExtArgs["result"]["document_types"]>
   export type document_typesInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     document_type_translations?: boolean | document_types$document_type_translationsArgs<ExtArgs>
-    document_uploads?: boolean | document_types$document_uploadsArgs<ExtArgs>
+    document_uploads_confirmed_type?: boolean | document_types$document_uploads_confirmed_typeArgs<ExtArgs>
+    document_uploads_predicted_type?: boolean | document_types$document_uploads_predicted_typeArgs<ExtArgs>
     program_document_requirements?: boolean | document_types$program_document_requirementsArgs<ExtArgs>
     session_document_checklist?: boolean | document_types$session_document_checklistArgs<ExtArgs>
     _count?: boolean | Document_typesCountOutputTypeDefaultArgs<ExtArgs>
@@ -17232,7 +17256,8 @@ export namespace Prisma {
     name: "document_types"
     objects: {
       document_type_translations: Prisma.$document_type_translationsPayload<ExtArgs>[]
-      document_uploads: Prisma.$document_uploadsPayload<ExtArgs>[]
+      document_uploads_confirmed_type: Prisma.$document_uploadsPayload<ExtArgs>[]
+      document_uploads_predicted_type: Prisma.$document_uploadsPayload<ExtArgs>[]
       program_document_requirements: Prisma.$program_document_requirementsPayload<ExtArgs>[]
       session_document_checklist: Prisma.$session_document_checklistPayload<ExtArgs>[]
     }
@@ -17635,7 +17660,8 @@ export namespace Prisma {
   export interface Prisma__document_typesClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     document_type_translations<T extends document_types$document_type_translationsArgs<ExtArgs> = {}>(args?: Subset<T, document_types$document_type_translationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$document_type_translationsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    document_uploads<T extends document_types$document_uploadsArgs<ExtArgs> = {}>(args?: Subset<T, document_types$document_uploadsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$document_uploadsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    document_uploads_confirmed_type<T extends document_types$document_uploads_confirmed_typeArgs<ExtArgs> = {}>(args?: Subset<T, document_types$document_uploads_confirmed_typeArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$document_uploadsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    document_uploads_predicted_type<T extends document_types$document_uploads_predicted_typeArgs<ExtArgs> = {}>(args?: Subset<T, document_types$document_uploads_predicted_typeArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$document_uploadsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     program_document_requirements<T extends document_types$program_document_requirementsArgs<ExtArgs> = {}>(args?: Subset<T, document_types$program_document_requirementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$program_document_requirementsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     session_document_checklist<T extends document_types$session_document_checklistArgs<ExtArgs> = {}>(args?: Subset<T, document_types$session_document_checklistArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$session_document_checklistPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -18082,9 +18108,33 @@ export namespace Prisma {
   }
 
   /**
-   * document_types.document_uploads
+   * document_types.document_uploads_confirmed_type
    */
-  export type document_types$document_uploadsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type document_types$document_uploads_confirmed_typeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the document_uploads
+     */
+    select?: document_uploadsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the document_uploads
+     */
+    omit?: document_uploadsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: document_uploadsInclude<ExtArgs> | null
+    where?: document_uploadsWhereInput
+    orderBy?: document_uploadsOrderByWithRelationInput | document_uploadsOrderByWithRelationInput[]
+    cursor?: document_uploadsWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: Document_uploadsScalarFieldEnum | Document_uploadsScalarFieldEnum[]
+  }
+
+  /**
+   * document_types.document_uploads_predicted_type
+   */
+  export type document_types$document_uploads_predicted_typeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
      * Select specific fields to fetch from the document_uploads
      */
@@ -18178,14 +18228,26 @@ export namespace Prisma {
 
   export type AggregateDocument_uploads = {
     _count: Document_uploadsCountAggregateOutputType | null
+    _avg: Document_uploadsAvgAggregateOutputType | null
+    _sum: Document_uploadsSumAggregateOutputType | null
     _min: Document_uploadsMinAggregateOutputType | null
     _max: Document_uploadsMaxAggregateOutputType | null
+  }
+
+  export type Document_uploadsAvgAggregateOutputType = {
+    classification_confidence: Decimal | null
+  }
+
+  export type Document_uploadsSumAggregateOutputType = {
+    classification_confidence: Decimal | null
   }
 
   export type Document_uploadsMinAggregateOutputType = {
     id: string | null
     session_id: string | null
     document_type_id: string | null
+    predicted_document_type_id: string | null
+    classification_confidence: Decimal | null
     file_name: string | null
     file_mime_type: string | null
     storage_url: string | null
@@ -18198,6 +18260,8 @@ export namespace Prisma {
     id: string | null
     session_id: string | null
     document_type_id: string | null
+    predicted_document_type_id: string | null
+    classification_confidence: Decimal | null
     file_name: string | null
     file_mime_type: string | null
     storage_url: string | null
@@ -18210,6 +18274,8 @@ export namespace Prisma {
     id: number
     session_id: number
     document_type_id: number
+    predicted_document_type_id: number
+    classification_confidence: number
     file_name: number
     file_mime_type: number
     storage_url: number
@@ -18220,10 +18286,20 @@ export namespace Prisma {
   }
 
 
+  export type Document_uploadsAvgAggregateInputType = {
+    classification_confidence?: true
+  }
+
+  export type Document_uploadsSumAggregateInputType = {
+    classification_confidence?: true
+  }
+
   export type Document_uploadsMinAggregateInputType = {
     id?: true
     session_id?: true
     document_type_id?: true
+    predicted_document_type_id?: true
+    classification_confidence?: true
     file_name?: true
     file_mime_type?: true
     storage_url?: true
@@ -18236,6 +18312,8 @@ export namespace Prisma {
     id?: true
     session_id?: true
     document_type_id?: true
+    predicted_document_type_id?: true
+    classification_confidence?: true
     file_name?: true
     file_mime_type?: true
     storage_url?: true
@@ -18248,6 +18326,8 @@ export namespace Prisma {
     id?: true
     session_id?: true
     document_type_id?: true
+    predicted_document_type_id?: true
+    classification_confidence?: true
     file_name?: true
     file_mime_type?: true
     storage_url?: true
@@ -18295,6 +18375,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: Document_uploadsAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Document_uploadsSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: Document_uploadsMinAggregateInputType
@@ -18325,6 +18417,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: Document_uploadsCountAggregateInputType | true
+    _avg?: Document_uploadsAvgAggregateInputType
+    _sum?: Document_uploadsSumAggregateInputType
     _min?: Document_uploadsMinAggregateInputType
     _max?: Document_uploadsMaxAggregateInputType
   }
@@ -18333,6 +18427,8 @@ export namespace Prisma {
     id: string
     session_id: string
     document_type_id: string | null
+    predicted_document_type_id: string | null
+    classification_confidence: Decimal | null
     file_name: string
     file_mime_type: string
     storage_url: string
@@ -18340,6 +18436,8 @@ export namespace Prisma {
     ocr_text: string | null
     created_at: Date
     _count: Document_uploadsCountAggregateOutputType | null
+    _avg: Document_uploadsAvgAggregateOutputType | null
+    _sum: Document_uploadsSumAggregateOutputType | null
     _min: Document_uploadsMinAggregateOutputType | null
     _max: Document_uploadsMaxAggregateOutputType | null
   }
@@ -18362,6 +18460,8 @@ export namespace Prisma {
     id?: boolean
     session_id?: boolean
     document_type_id?: boolean
+    predicted_document_type_id?: boolean
+    classification_confidence?: boolean
     file_name?: boolean
     file_mime_type?: boolean
     storage_url?: boolean
@@ -18369,6 +18469,7 @@ export namespace Prisma {
     ocr_text?: boolean
     created_at?: boolean
     document_types?: boolean | document_uploads$document_typesArgs<ExtArgs>
+    predicted_document_type?: boolean | document_uploads$predicted_document_typeArgs<ExtArgs>
     screening_sessions?: boolean | screening_sessionsDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["document_uploads"]>
 
@@ -18376,6 +18477,8 @@ export namespace Prisma {
     id?: boolean
     session_id?: boolean
     document_type_id?: boolean
+    predicted_document_type_id?: boolean
+    classification_confidence?: boolean
     file_name?: boolean
     file_mime_type?: boolean
     storage_url?: boolean
@@ -18383,6 +18486,7 @@ export namespace Prisma {
     ocr_text?: boolean
     created_at?: boolean
     document_types?: boolean | document_uploads$document_typesArgs<ExtArgs>
+    predicted_document_type?: boolean | document_uploads$predicted_document_typeArgs<ExtArgs>
     screening_sessions?: boolean | screening_sessionsDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["document_uploads"]>
 
@@ -18390,6 +18494,8 @@ export namespace Prisma {
     id?: boolean
     session_id?: boolean
     document_type_id?: boolean
+    predicted_document_type_id?: boolean
+    classification_confidence?: boolean
     file_name?: boolean
     file_mime_type?: boolean
     storage_url?: boolean
@@ -18397,6 +18503,7 @@ export namespace Prisma {
     ocr_text?: boolean
     created_at?: boolean
     document_types?: boolean | document_uploads$document_typesArgs<ExtArgs>
+    predicted_document_type?: boolean | document_uploads$predicted_document_typeArgs<ExtArgs>
     screening_sessions?: boolean | screening_sessionsDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["document_uploads"]>
 
@@ -18404,6 +18511,8 @@ export namespace Prisma {
     id?: boolean
     session_id?: boolean
     document_type_id?: boolean
+    predicted_document_type_id?: boolean
+    classification_confidence?: boolean
     file_name?: boolean
     file_mime_type?: boolean
     storage_url?: boolean
@@ -18412,17 +18521,20 @@ export namespace Prisma {
     created_at?: boolean
   }
 
-  export type document_uploadsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "session_id" | "document_type_id" | "file_name" | "file_mime_type" | "storage_url" | "status" | "ocr_text" | "created_at", ExtArgs["result"]["document_uploads"]>
+  export type document_uploadsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "session_id" | "document_type_id" | "predicted_document_type_id" | "classification_confidence" | "file_name" | "file_mime_type" | "storage_url" | "status" | "ocr_text" | "created_at", ExtArgs["result"]["document_uploads"]>
   export type document_uploadsInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     document_types?: boolean | document_uploads$document_typesArgs<ExtArgs>
+    predicted_document_type?: boolean | document_uploads$predicted_document_typeArgs<ExtArgs>
     screening_sessions?: boolean | screening_sessionsDefaultArgs<ExtArgs>
   }
   export type document_uploadsIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     document_types?: boolean | document_uploads$document_typesArgs<ExtArgs>
+    predicted_document_type?: boolean | document_uploads$predicted_document_typeArgs<ExtArgs>
     screening_sessions?: boolean | screening_sessionsDefaultArgs<ExtArgs>
   }
   export type document_uploadsIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     document_types?: boolean | document_uploads$document_typesArgs<ExtArgs>
+    predicted_document_type?: boolean | document_uploads$predicted_document_typeArgs<ExtArgs>
     screening_sessions?: boolean | screening_sessionsDefaultArgs<ExtArgs>
   }
 
@@ -18430,12 +18542,15 @@ export namespace Prisma {
     name: "document_uploads"
     objects: {
       document_types: Prisma.$document_typesPayload<ExtArgs> | null
+      predicted_document_type: Prisma.$document_typesPayload<ExtArgs> | null
       screening_sessions: Prisma.$screening_sessionsPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       session_id: string
       document_type_id: string | null
+      predicted_document_type_id: string | null
+      classification_confidence: Prisma.Decimal | null
       file_name: string
       file_mime_type: string
       storage_url: string
@@ -18837,6 +18952,7 @@ export namespace Prisma {
   export interface Prisma__document_uploadsClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     document_types<T extends document_uploads$document_typesArgs<ExtArgs> = {}>(args?: Subset<T, document_uploads$document_typesArgs<ExtArgs>>): Prisma__document_typesClient<$Result.GetResult<Prisma.$document_typesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    predicted_document_type<T extends document_uploads$predicted_document_typeArgs<ExtArgs> = {}>(args?: Subset<T, document_uploads$predicted_document_typeArgs<ExtArgs>>): Prisma__document_typesClient<$Result.GetResult<Prisma.$document_typesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     screening_sessions<T extends screening_sessionsDefaultArgs<ExtArgs> = {}>(args?: Subset<T, screening_sessionsDefaultArgs<ExtArgs>>): Prisma__screening_sessionsClient<$Result.GetResult<Prisma.$screening_sessionsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -18870,6 +18986,8 @@ export namespace Prisma {
     readonly id: FieldRef<"document_uploads", 'String'>
     readonly session_id: FieldRef<"document_uploads", 'String'>
     readonly document_type_id: FieldRef<"document_uploads", 'String'>
+    readonly predicted_document_type_id: FieldRef<"document_uploads", 'String'>
+    readonly classification_confidence: FieldRef<"document_uploads", 'Decimal'>
     readonly file_name: FieldRef<"document_uploads", 'String'>
     readonly file_mime_type: FieldRef<"document_uploads", 'String'>
     readonly storage_url: FieldRef<"document_uploads", 'String'>
@@ -19275,6 +19393,25 @@ export namespace Prisma {
    * document_uploads.document_types
    */
   export type document_uploads$document_typesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the document_types
+     */
+    select?: document_typesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the document_types
+     */
+    omit?: document_typesOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: document_typesInclude<ExtArgs> | null
+    where?: document_typesWhereInput
+  }
+
+  /**
+   * document_uploads.predicted_document_type
+   */
+  export type document_uploads$predicted_document_typeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
      * Select specific fields to fetch from the document_types
      */
@@ -56545,7 +56682,8 @@ export namespace Prisma {
     document_type_id: 'document_type_id',
     language_code: 'language_code',
     name: 'name',
-    description: 'description'
+    description: 'description',
+    examples: 'examples'
   };
 
   export type Document_type_translationsScalarFieldEnum = (typeof Document_type_translationsScalarFieldEnum)[keyof typeof Document_type_translationsScalarFieldEnum]
@@ -56564,6 +56702,8 @@ export namespace Prisma {
     id: 'id',
     session_id: 'session_id',
     document_type_id: 'document_type_id',
+    predicted_document_type_id: 'predicted_document_type_id',
+    classification_confidence: 'classification_confidence',
     file_name: 'file_name',
     file_mime_type: 'file_mime_type',
     storage_url: 'storage_url',
@@ -57808,6 +57948,7 @@ export namespace Prisma {
     language_code?: StringFilter<"document_type_translations"> | string
     name?: StringFilter<"document_type_translations"> | string
     description?: StringNullableFilter<"document_type_translations"> | string | null
+    examples?: StringNullableFilter<"document_type_translations"> | string | null
     document_types?: XOR<Document_typesScalarRelationFilter, document_typesWhereInput>
     languages?: XOR<LanguagesScalarRelationFilter, languagesWhereInput>
   }
@@ -57817,6 +57958,7 @@ export namespace Prisma {
     language_code?: SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
+    examples?: SortOrderInput | SortOrder
     document_types?: document_typesOrderByWithRelationInput
     languages?: languagesOrderByWithRelationInput
   }
@@ -57830,6 +57972,7 @@ export namespace Prisma {
     language_code?: StringFilter<"document_type_translations"> | string
     name?: StringFilter<"document_type_translations"> | string
     description?: StringNullableFilter<"document_type_translations"> | string | null
+    examples?: StringNullableFilter<"document_type_translations"> | string | null
     document_types?: XOR<Document_typesScalarRelationFilter, document_typesWhereInput>
     languages?: XOR<LanguagesScalarRelationFilter, languagesWhereInput>
   }, "document_type_id_language_code">
@@ -57839,6 +57982,7 @@ export namespace Prisma {
     language_code?: SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
+    examples?: SortOrderInput | SortOrder
     _count?: document_type_translationsCountOrderByAggregateInput
     _max?: document_type_translationsMaxOrderByAggregateInput
     _min?: document_type_translationsMinOrderByAggregateInput
@@ -57852,6 +57996,7 @@ export namespace Prisma {
     language_code?: StringWithAggregatesFilter<"document_type_translations"> | string
     name?: StringWithAggregatesFilter<"document_type_translations"> | string
     description?: StringNullableWithAggregatesFilter<"document_type_translations"> | string | null
+    examples?: StringNullableWithAggregatesFilter<"document_type_translations"> | string | null
   }
 
   export type document_typesWhereInput = {
@@ -57862,7 +58007,8 @@ export namespace Prisma {
     doc_key?: StringFilter<"document_types"> | string
     category?: StringFilter<"document_types"> | string
     document_type_translations?: Document_type_translationsListRelationFilter
-    document_uploads?: Document_uploadsListRelationFilter
+    document_uploads_confirmed_type?: Document_uploadsListRelationFilter
+    document_uploads_predicted_type?: Document_uploadsListRelationFilter
     program_document_requirements?: Program_document_requirementsListRelationFilter
     session_document_checklist?: Session_document_checklistListRelationFilter
   }
@@ -57872,7 +58018,8 @@ export namespace Prisma {
     doc_key?: SortOrder
     category?: SortOrder
     document_type_translations?: document_type_translationsOrderByRelationAggregateInput
-    document_uploads?: document_uploadsOrderByRelationAggregateInput
+    document_uploads_confirmed_type?: document_uploadsOrderByRelationAggregateInput
+    document_uploads_predicted_type?: document_uploadsOrderByRelationAggregateInput
     program_document_requirements?: program_document_requirementsOrderByRelationAggregateInput
     session_document_checklist?: session_document_checklistOrderByRelationAggregateInput
   }
@@ -57885,7 +58032,8 @@ export namespace Prisma {
     NOT?: document_typesWhereInput | document_typesWhereInput[]
     category?: StringFilter<"document_types"> | string
     document_type_translations?: Document_type_translationsListRelationFilter
-    document_uploads?: Document_uploadsListRelationFilter
+    document_uploads_confirmed_type?: Document_uploadsListRelationFilter
+    document_uploads_predicted_type?: Document_uploadsListRelationFilter
     program_document_requirements?: Program_document_requirementsListRelationFilter
     session_document_checklist?: Session_document_checklistListRelationFilter
   }, "id" | "doc_key">
@@ -57915,6 +58063,8 @@ export namespace Prisma {
     id?: UuidFilter<"document_uploads"> | string
     session_id?: UuidFilter<"document_uploads"> | string
     document_type_id?: UuidNullableFilter<"document_uploads"> | string | null
+    predicted_document_type_id?: UuidNullableFilter<"document_uploads"> | string | null
+    classification_confidence?: DecimalNullableFilter<"document_uploads"> | Decimal | DecimalJsLike | number | string | null
     file_name?: StringFilter<"document_uploads"> | string
     file_mime_type?: StringFilter<"document_uploads"> | string
     storage_url?: StringFilter<"document_uploads"> | string
@@ -57922,6 +58072,7 @@ export namespace Prisma {
     ocr_text?: StringNullableFilter<"document_uploads"> | string | null
     created_at?: DateTimeFilter<"document_uploads"> | Date | string
     document_types?: XOR<Document_typesNullableScalarRelationFilter, document_typesWhereInput> | null
+    predicted_document_type?: XOR<Document_typesNullableScalarRelationFilter, document_typesWhereInput> | null
     screening_sessions?: XOR<Screening_sessionsScalarRelationFilter, screening_sessionsWhereInput>
   }
 
@@ -57929,6 +58080,8 @@ export namespace Prisma {
     id?: SortOrder
     session_id?: SortOrder
     document_type_id?: SortOrderInput | SortOrder
+    predicted_document_type_id?: SortOrderInput | SortOrder
+    classification_confidence?: SortOrderInput | SortOrder
     file_name?: SortOrder
     file_mime_type?: SortOrder
     storage_url?: SortOrder
@@ -57936,6 +58089,7 @@ export namespace Prisma {
     ocr_text?: SortOrderInput | SortOrder
     created_at?: SortOrder
     document_types?: document_typesOrderByWithRelationInput
+    predicted_document_type?: document_typesOrderByWithRelationInput
     screening_sessions?: screening_sessionsOrderByWithRelationInput
   }
 
@@ -57946,6 +58100,8 @@ export namespace Prisma {
     NOT?: document_uploadsWhereInput | document_uploadsWhereInput[]
     session_id?: UuidFilter<"document_uploads"> | string
     document_type_id?: UuidNullableFilter<"document_uploads"> | string | null
+    predicted_document_type_id?: UuidNullableFilter<"document_uploads"> | string | null
+    classification_confidence?: DecimalNullableFilter<"document_uploads"> | Decimal | DecimalJsLike | number | string | null
     file_name?: StringFilter<"document_uploads"> | string
     file_mime_type?: StringFilter<"document_uploads"> | string
     storage_url?: StringFilter<"document_uploads"> | string
@@ -57953,6 +58109,7 @@ export namespace Prisma {
     ocr_text?: StringNullableFilter<"document_uploads"> | string | null
     created_at?: DateTimeFilter<"document_uploads"> | Date | string
     document_types?: XOR<Document_typesNullableScalarRelationFilter, document_typesWhereInput> | null
+    predicted_document_type?: XOR<Document_typesNullableScalarRelationFilter, document_typesWhereInput> | null
     screening_sessions?: XOR<Screening_sessionsScalarRelationFilter, screening_sessionsWhereInput>
   }, "id">
 
@@ -57960,6 +58117,8 @@ export namespace Prisma {
     id?: SortOrder
     session_id?: SortOrder
     document_type_id?: SortOrderInput | SortOrder
+    predicted_document_type_id?: SortOrderInput | SortOrder
+    classification_confidence?: SortOrderInput | SortOrder
     file_name?: SortOrder
     file_mime_type?: SortOrder
     storage_url?: SortOrder
@@ -57967,8 +58126,10 @@ export namespace Prisma {
     ocr_text?: SortOrderInput | SortOrder
     created_at?: SortOrder
     _count?: document_uploadsCountOrderByAggregateInput
+    _avg?: document_uploadsAvgOrderByAggregateInput
     _max?: document_uploadsMaxOrderByAggregateInput
     _min?: document_uploadsMinOrderByAggregateInput
+    _sum?: document_uploadsSumOrderByAggregateInput
   }
 
   export type document_uploadsScalarWhereWithAggregatesInput = {
@@ -57978,6 +58139,8 @@ export namespace Prisma {
     id?: UuidWithAggregatesFilter<"document_uploads"> | string
     session_id?: UuidWithAggregatesFilter<"document_uploads"> | string
     document_type_id?: UuidNullableWithAggregatesFilter<"document_uploads"> | string | null
+    predicted_document_type_id?: UuidNullableWithAggregatesFilter<"document_uploads"> | string | null
+    classification_confidence?: DecimalNullableWithAggregatesFilter<"document_uploads"> | Decimal | DecimalJsLike | number | string | null
     file_name?: StringWithAggregatesFilter<"document_uploads"> | string
     file_mime_type?: StringWithAggregatesFilter<"document_uploads"> | string
     storage_url?: StringWithAggregatesFilter<"document_uploads"> | string
@@ -60731,6 +60894,7 @@ export namespace Prisma {
   export type document_type_translationsCreateInput = {
     name: string
     description?: string | null
+    examples?: string | null
     document_types: document_typesCreateNestedOneWithoutDocument_type_translationsInput
     languages: languagesCreateNestedOneWithoutDocument_type_translationsInput
   }
@@ -60740,11 +60904,13 @@ export namespace Prisma {
     language_code: string
     name: string
     description?: string | null
+    examples?: string | null
   }
 
   export type document_type_translationsUpdateInput = {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    examples?: NullableStringFieldUpdateOperationsInput | string | null
     document_types?: document_typesUpdateOneRequiredWithoutDocument_type_translationsNestedInput
     languages?: languagesUpdateOneRequiredWithoutDocument_type_translationsNestedInput
   }
@@ -60754,6 +60920,7 @@ export namespace Prisma {
     language_code?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    examples?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type document_type_translationsCreateManyInput = {
@@ -60761,11 +60928,13 @@ export namespace Prisma {
     language_code: string
     name: string
     description?: string | null
+    examples?: string | null
   }
 
   export type document_type_translationsUpdateManyMutationInput = {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    examples?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type document_type_translationsUncheckedUpdateManyInput = {
@@ -60773,6 +60942,7 @@ export namespace Prisma {
     language_code?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    examples?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type document_typesCreateInput = {
@@ -60780,7 +60950,8 @@ export namespace Prisma {
     doc_key: string
     category: string
     document_type_translations?: document_type_translationsCreateNestedManyWithoutDocument_typesInput
-    document_uploads?: document_uploadsCreateNestedManyWithoutDocument_typesInput
+    document_uploads_confirmed_type?: document_uploadsCreateNestedManyWithoutDocument_typesInput
+    document_uploads_predicted_type?: document_uploadsCreateNestedManyWithoutPredicted_document_typeInput
     program_document_requirements?: program_document_requirementsCreateNestedManyWithoutDocument_typesInput
     session_document_checklist?: session_document_checklistCreateNestedManyWithoutDocument_typesInput
   }
@@ -60790,7 +60961,8 @@ export namespace Prisma {
     doc_key: string
     category: string
     document_type_translations?: document_type_translationsUncheckedCreateNestedManyWithoutDocument_typesInput
-    document_uploads?: document_uploadsUncheckedCreateNestedManyWithoutDocument_typesInput
+    document_uploads_confirmed_type?: document_uploadsUncheckedCreateNestedManyWithoutDocument_typesInput
+    document_uploads_predicted_type?: document_uploadsUncheckedCreateNestedManyWithoutPredicted_document_typeInput
     program_document_requirements?: program_document_requirementsUncheckedCreateNestedManyWithoutDocument_typesInput
     session_document_checklist?: session_document_checklistUncheckedCreateNestedManyWithoutDocument_typesInput
   }
@@ -60800,7 +60972,8 @@ export namespace Prisma {
     doc_key?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     document_type_translations?: document_type_translationsUpdateManyWithoutDocument_typesNestedInput
-    document_uploads?: document_uploadsUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_confirmed_type?: document_uploadsUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_predicted_type?: document_uploadsUpdateManyWithoutPredicted_document_typeNestedInput
     program_document_requirements?: program_document_requirementsUpdateManyWithoutDocument_typesNestedInput
     session_document_checklist?: session_document_checklistUpdateManyWithoutDocument_typesNestedInput
   }
@@ -60810,7 +60983,8 @@ export namespace Prisma {
     doc_key?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     document_type_translations?: document_type_translationsUncheckedUpdateManyWithoutDocument_typesNestedInput
-    document_uploads?: document_uploadsUncheckedUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_confirmed_type?: document_uploadsUncheckedUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_predicted_type?: document_uploadsUncheckedUpdateManyWithoutPredicted_document_typeNestedInput
     program_document_requirements?: program_document_requirementsUncheckedUpdateManyWithoutDocument_typesNestedInput
     session_document_checklist?: session_document_checklistUncheckedUpdateManyWithoutDocument_typesNestedInput
   }
@@ -60835,13 +61009,15 @@ export namespace Prisma {
 
   export type document_uploadsCreateInput = {
     id?: string
+    classification_confidence?: Decimal | DecimalJsLike | number | string | null
     file_name: string
     file_mime_type: string
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
     created_at?: Date | string
-    document_types?: document_typesCreateNestedOneWithoutDocument_uploadsInput
+    document_types?: document_typesCreateNestedOneWithoutDocument_uploads_confirmed_typeInput
+    predicted_document_type?: document_typesCreateNestedOneWithoutDocument_uploads_predicted_typeInput
     screening_sessions: screening_sessionsCreateNestedOneWithoutDocument_uploadsInput
   }
 
@@ -60849,6 +61025,8 @@ export namespace Prisma {
     id?: string
     session_id: string
     document_type_id?: string | null
+    predicted_document_type_id?: string | null
+    classification_confidence?: Decimal | DecimalJsLike | number | string | null
     file_name: string
     file_mime_type: string
     storage_url: string
@@ -60859,13 +61037,15 @@ export namespace Prisma {
 
   export type document_uploadsUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    classification_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     file_name?: StringFieldUpdateOperationsInput | string
     file_mime_type?: StringFieldUpdateOperationsInput | string
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    document_types?: document_typesUpdateOneWithoutDocument_uploadsNestedInput
+    document_types?: document_typesUpdateOneWithoutDocument_uploads_confirmed_typeNestedInput
+    predicted_document_type?: document_typesUpdateOneWithoutDocument_uploads_predicted_typeNestedInput
     screening_sessions?: screening_sessionsUpdateOneRequiredWithoutDocument_uploadsNestedInput
   }
 
@@ -60873,6 +61053,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     session_id?: StringFieldUpdateOperationsInput | string
     document_type_id?: NullableStringFieldUpdateOperationsInput | string | null
+    predicted_document_type_id?: NullableStringFieldUpdateOperationsInput | string | null
+    classification_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     file_name?: StringFieldUpdateOperationsInput | string
     file_mime_type?: StringFieldUpdateOperationsInput | string
     storage_url?: StringFieldUpdateOperationsInput | string
@@ -60885,6 +61067,8 @@ export namespace Prisma {
     id?: string
     session_id: string
     document_type_id?: string | null
+    predicted_document_type_id?: string | null
+    classification_confidence?: Decimal | DecimalJsLike | number | string | null
     file_name: string
     file_mime_type: string
     storage_url: string
@@ -60895,6 +61079,7 @@ export namespace Prisma {
 
   export type document_uploadsUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    classification_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     file_name?: StringFieldUpdateOperationsInput | string
     file_mime_type?: StringFieldUpdateOperationsInput | string
     storage_url?: StringFieldUpdateOperationsInput | string
@@ -60907,6 +61092,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     session_id?: StringFieldUpdateOperationsInput | string
     document_type_id?: NullableStringFieldUpdateOperationsInput | string | null
+    predicted_document_type_id?: NullableStringFieldUpdateOperationsInput | string | null
+    classification_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     file_name?: StringFieldUpdateOperationsInput | string
     file_mime_type?: StringFieldUpdateOperationsInput | string
     storage_url?: StringFieldUpdateOperationsInput | string
@@ -63763,6 +63950,7 @@ export namespace Prisma {
     language_code?: SortOrder
     name?: SortOrder
     description?: SortOrder
+    examples?: SortOrder
   }
 
   export type document_type_translationsMaxOrderByAggregateInput = {
@@ -63770,6 +63958,7 @@ export namespace Prisma {
     language_code?: SortOrder
     name?: SortOrder
     description?: SortOrder
+    examples?: SortOrder
   }
 
   export type document_type_translationsMinOrderByAggregateInput = {
@@ -63777,6 +63966,7 @@ export namespace Prisma {
     language_code?: SortOrder
     name?: SortOrder
     description?: SortOrder
+    examples?: SortOrder
   }
 
   export type Document_type_translationsListRelationFilter = {
@@ -63853,6 +64043,8 @@ export namespace Prisma {
     id?: SortOrder
     session_id?: SortOrder
     document_type_id?: SortOrder
+    predicted_document_type_id?: SortOrder
+    classification_confidence?: SortOrder
     file_name?: SortOrder
     file_mime_type?: SortOrder
     storage_url?: SortOrder
@@ -63861,10 +64053,16 @@ export namespace Prisma {
     created_at?: SortOrder
   }
 
+  export type document_uploadsAvgOrderByAggregateInput = {
+    classification_confidence?: SortOrder
+  }
+
   export type document_uploadsMaxOrderByAggregateInput = {
     id?: SortOrder
     session_id?: SortOrder
     document_type_id?: SortOrder
+    predicted_document_type_id?: SortOrder
+    classification_confidence?: SortOrder
     file_name?: SortOrder
     file_mime_type?: SortOrder
     storage_url?: SortOrder
@@ -63877,12 +64075,18 @@ export namespace Prisma {
     id?: SortOrder
     session_id?: SortOrder
     document_type_id?: SortOrder
+    predicted_document_type_id?: SortOrder
+    classification_confidence?: SortOrder
     file_name?: SortOrder
     file_mime_type?: SortOrder
     storage_url?: SortOrder
     status?: SortOrder
     ocr_text?: SortOrder
     created_at?: SortOrder
+  }
+
+  export type document_uploadsSumOrderByAggregateInput = {
+    classification_confidence?: SortOrder
   }
 
   export type Enumupload_statusWithAggregatesFilter<$PrismaModel = never> = {
@@ -65745,6 +65949,13 @@ export namespace Prisma {
     connect?: document_uploadsWhereUniqueInput | document_uploadsWhereUniqueInput[]
   }
 
+  export type document_uploadsCreateNestedManyWithoutPredicted_document_typeInput = {
+    create?: XOR<document_uploadsCreateWithoutPredicted_document_typeInput, document_uploadsUncheckedCreateWithoutPredicted_document_typeInput> | document_uploadsCreateWithoutPredicted_document_typeInput[] | document_uploadsUncheckedCreateWithoutPredicted_document_typeInput[]
+    connectOrCreate?: document_uploadsCreateOrConnectWithoutPredicted_document_typeInput | document_uploadsCreateOrConnectWithoutPredicted_document_typeInput[]
+    createMany?: document_uploadsCreateManyPredicted_document_typeInputEnvelope
+    connect?: document_uploadsWhereUniqueInput | document_uploadsWhereUniqueInput[]
+  }
+
   export type program_document_requirementsCreateNestedManyWithoutDocument_typesInput = {
     create?: XOR<program_document_requirementsCreateWithoutDocument_typesInput, program_document_requirementsUncheckedCreateWithoutDocument_typesInput> | program_document_requirementsCreateWithoutDocument_typesInput[] | program_document_requirementsUncheckedCreateWithoutDocument_typesInput[]
     connectOrCreate?: program_document_requirementsCreateOrConnectWithoutDocument_typesInput | program_document_requirementsCreateOrConnectWithoutDocument_typesInput[]
@@ -65770,6 +65981,13 @@ export namespace Prisma {
     create?: XOR<document_uploadsCreateWithoutDocument_typesInput, document_uploadsUncheckedCreateWithoutDocument_typesInput> | document_uploadsCreateWithoutDocument_typesInput[] | document_uploadsUncheckedCreateWithoutDocument_typesInput[]
     connectOrCreate?: document_uploadsCreateOrConnectWithoutDocument_typesInput | document_uploadsCreateOrConnectWithoutDocument_typesInput[]
     createMany?: document_uploadsCreateManyDocument_typesInputEnvelope
+    connect?: document_uploadsWhereUniqueInput | document_uploadsWhereUniqueInput[]
+  }
+
+  export type document_uploadsUncheckedCreateNestedManyWithoutPredicted_document_typeInput = {
+    create?: XOR<document_uploadsCreateWithoutPredicted_document_typeInput, document_uploadsUncheckedCreateWithoutPredicted_document_typeInput> | document_uploadsCreateWithoutPredicted_document_typeInput[] | document_uploadsUncheckedCreateWithoutPredicted_document_typeInput[]
+    connectOrCreate?: document_uploadsCreateOrConnectWithoutPredicted_document_typeInput | document_uploadsCreateOrConnectWithoutPredicted_document_typeInput[]
+    createMany?: document_uploadsCreateManyPredicted_document_typeInputEnvelope
     connect?: document_uploadsWhereUniqueInput | document_uploadsWhereUniqueInput[]
   }
 
@@ -65812,6 +66030,20 @@ export namespace Prisma {
     connect?: document_uploadsWhereUniqueInput | document_uploadsWhereUniqueInput[]
     update?: document_uploadsUpdateWithWhereUniqueWithoutDocument_typesInput | document_uploadsUpdateWithWhereUniqueWithoutDocument_typesInput[]
     updateMany?: document_uploadsUpdateManyWithWhereWithoutDocument_typesInput | document_uploadsUpdateManyWithWhereWithoutDocument_typesInput[]
+    deleteMany?: document_uploadsScalarWhereInput | document_uploadsScalarWhereInput[]
+  }
+
+  export type document_uploadsUpdateManyWithoutPredicted_document_typeNestedInput = {
+    create?: XOR<document_uploadsCreateWithoutPredicted_document_typeInput, document_uploadsUncheckedCreateWithoutPredicted_document_typeInput> | document_uploadsCreateWithoutPredicted_document_typeInput[] | document_uploadsUncheckedCreateWithoutPredicted_document_typeInput[]
+    connectOrCreate?: document_uploadsCreateOrConnectWithoutPredicted_document_typeInput | document_uploadsCreateOrConnectWithoutPredicted_document_typeInput[]
+    upsert?: document_uploadsUpsertWithWhereUniqueWithoutPredicted_document_typeInput | document_uploadsUpsertWithWhereUniqueWithoutPredicted_document_typeInput[]
+    createMany?: document_uploadsCreateManyPredicted_document_typeInputEnvelope
+    set?: document_uploadsWhereUniqueInput | document_uploadsWhereUniqueInput[]
+    disconnect?: document_uploadsWhereUniqueInput | document_uploadsWhereUniqueInput[]
+    delete?: document_uploadsWhereUniqueInput | document_uploadsWhereUniqueInput[]
+    connect?: document_uploadsWhereUniqueInput | document_uploadsWhereUniqueInput[]
+    update?: document_uploadsUpdateWithWhereUniqueWithoutPredicted_document_typeInput | document_uploadsUpdateWithWhereUniqueWithoutPredicted_document_typeInput[]
+    updateMany?: document_uploadsUpdateManyWithWhereWithoutPredicted_document_typeInput | document_uploadsUpdateManyWithWhereWithoutPredicted_document_typeInput[]
     deleteMany?: document_uploadsScalarWhereInput | document_uploadsScalarWhereInput[]
   }
 
@@ -65871,6 +66103,20 @@ export namespace Prisma {
     deleteMany?: document_uploadsScalarWhereInput | document_uploadsScalarWhereInput[]
   }
 
+  export type document_uploadsUncheckedUpdateManyWithoutPredicted_document_typeNestedInput = {
+    create?: XOR<document_uploadsCreateWithoutPredicted_document_typeInput, document_uploadsUncheckedCreateWithoutPredicted_document_typeInput> | document_uploadsCreateWithoutPredicted_document_typeInput[] | document_uploadsUncheckedCreateWithoutPredicted_document_typeInput[]
+    connectOrCreate?: document_uploadsCreateOrConnectWithoutPredicted_document_typeInput | document_uploadsCreateOrConnectWithoutPredicted_document_typeInput[]
+    upsert?: document_uploadsUpsertWithWhereUniqueWithoutPredicted_document_typeInput | document_uploadsUpsertWithWhereUniqueWithoutPredicted_document_typeInput[]
+    createMany?: document_uploadsCreateManyPredicted_document_typeInputEnvelope
+    set?: document_uploadsWhereUniqueInput | document_uploadsWhereUniqueInput[]
+    disconnect?: document_uploadsWhereUniqueInput | document_uploadsWhereUniqueInput[]
+    delete?: document_uploadsWhereUniqueInput | document_uploadsWhereUniqueInput[]
+    connect?: document_uploadsWhereUniqueInput | document_uploadsWhereUniqueInput[]
+    update?: document_uploadsUpdateWithWhereUniqueWithoutPredicted_document_typeInput | document_uploadsUpdateWithWhereUniqueWithoutPredicted_document_typeInput[]
+    updateMany?: document_uploadsUpdateManyWithWhereWithoutPredicted_document_typeInput | document_uploadsUpdateManyWithWhereWithoutPredicted_document_typeInput[]
+    deleteMany?: document_uploadsScalarWhereInput | document_uploadsScalarWhereInput[]
+  }
+
   export type program_document_requirementsUncheckedUpdateManyWithoutDocument_typesNestedInput = {
     create?: XOR<program_document_requirementsCreateWithoutDocument_typesInput, program_document_requirementsUncheckedCreateWithoutDocument_typesInput> | program_document_requirementsCreateWithoutDocument_typesInput[] | program_document_requirementsUncheckedCreateWithoutDocument_typesInput[]
     connectOrCreate?: program_document_requirementsCreateOrConnectWithoutDocument_typesInput | program_document_requirementsCreateOrConnectWithoutDocument_typesInput[]
@@ -65899,9 +66145,15 @@ export namespace Prisma {
     deleteMany?: session_document_checklistScalarWhereInput | session_document_checklistScalarWhereInput[]
   }
 
-  export type document_typesCreateNestedOneWithoutDocument_uploadsInput = {
-    create?: XOR<document_typesCreateWithoutDocument_uploadsInput, document_typesUncheckedCreateWithoutDocument_uploadsInput>
-    connectOrCreate?: document_typesCreateOrConnectWithoutDocument_uploadsInput
+  export type document_typesCreateNestedOneWithoutDocument_uploads_confirmed_typeInput = {
+    create?: XOR<document_typesCreateWithoutDocument_uploads_confirmed_typeInput, document_typesUncheckedCreateWithoutDocument_uploads_confirmed_typeInput>
+    connectOrCreate?: document_typesCreateOrConnectWithoutDocument_uploads_confirmed_typeInput
+    connect?: document_typesWhereUniqueInput
+  }
+
+  export type document_typesCreateNestedOneWithoutDocument_uploads_predicted_typeInput = {
+    create?: XOR<document_typesCreateWithoutDocument_uploads_predicted_typeInput, document_typesUncheckedCreateWithoutDocument_uploads_predicted_typeInput>
+    connectOrCreate?: document_typesCreateOrConnectWithoutDocument_uploads_predicted_typeInput
     connect?: document_typesWhereUniqueInput
   }
 
@@ -65915,14 +66167,24 @@ export namespace Prisma {
     set?: $Enums.upload_status
   }
 
-  export type document_typesUpdateOneWithoutDocument_uploadsNestedInput = {
-    create?: XOR<document_typesCreateWithoutDocument_uploadsInput, document_typesUncheckedCreateWithoutDocument_uploadsInput>
-    connectOrCreate?: document_typesCreateOrConnectWithoutDocument_uploadsInput
-    upsert?: document_typesUpsertWithoutDocument_uploadsInput
+  export type document_typesUpdateOneWithoutDocument_uploads_confirmed_typeNestedInput = {
+    create?: XOR<document_typesCreateWithoutDocument_uploads_confirmed_typeInput, document_typesUncheckedCreateWithoutDocument_uploads_confirmed_typeInput>
+    connectOrCreate?: document_typesCreateOrConnectWithoutDocument_uploads_confirmed_typeInput
+    upsert?: document_typesUpsertWithoutDocument_uploads_confirmed_typeInput
     disconnect?: document_typesWhereInput | boolean
     delete?: document_typesWhereInput | boolean
     connect?: document_typesWhereUniqueInput
-    update?: XOR<XOR<document_typesUpdateToOneWithWhereWithoutDocument_uploadsInput, document_typesUpdateWithoutDocument_uploadsInput>, document_typesUncheckedUpdateWithoutDocument_uploadsInput>
+    update?: XOR<XOR<document_typesUpdateToOneWithWhereWithoutDocument_uploads_confirmed_typeInput, document_typesUpdateWithoutDocument_uploads_confirmed_typeInput>, document_typesUncheckedUpdateWithoutDocument_uploads_confirmed_typeInput>
+  }
+
+  export type document_typesUpdateOneWithoutDocument_uploads_predicted_typeNestedInput = {
+    create?: XOR<document_typesCreateWithoutDocument_uploads_predicted_typeInput, document_typesUncheckedCreateWithoutDocument_uploads_predicted_typeInput>
+    connectOrCreate?: document_typesCreateOrConnectWithoutDocument_uploads_predicted_typeInput
+    upsert?: document_typesUpsertWithoutDocument_uploads_predicted_typeInput
+    disconnect?: document_typesWhereInput | boolean
+    delete?: document_typesWhereInput | boolean
+    connect?: document_typesWhereUniqueInput
+    update?: XOR<XOR<document_typesUpdateToOneWithWhereWithoutDocument_uploads_predicted_typeInput, document_typesUpdateWithoutDocument_uploads_predicted_typeInput>, document_typesUncheckedUpdateWithoutDocument_uploads_predicted_typeInput>
   }
 
   export type screening_sessionsUpdateOneRequiredWithoutDocument_uploadsNestedInput = {
@@ -71107,7 +71369,8 @@ export namespace Prisma {
     id?: string
     doc_key: string
     category: string
-    document_uploads?: document_uploadsCreateNestedManyWithoutDocument_typesInput
+    document_uploads_confirmed_type?: document_uploadsCreateNestedManyWithoutDocument_typesInput
+    document_uploads_predicted_type?: document_uploadsCreateNestedManyWithoutPredicted_document_typeInput
     program_document_requirements?: program_document_requirementsCreateNestedManyWithoutDocument_typesInput
     session_document_checklist?: session_document_checklistCreateNestedManyWithoutDocument_typesInput
   }
@@ -71116,7 +71379,8 @@ export namespace Prisma {
     id?: string
     doc_key: string
     category: string
-    document_uploads?: document_uploadsUncheckedCreateNestedManyWithoutDocument_typesInput
+    document_uploads_confirmed_type?: document_uploadsUncheckedCreateNestedManyWithoutDocument_typesInput
+    document_uploads_predicted_type?: document_uploadsUncheckedCreateNestedManyWithoutPredicted_document_typeInput
     program_document_requirements?: program_document_requirementsUncheckedCreateNestedManyWithoutDocument_typesInput
     session_document_checklist?: session_document_checklistUncheckedCreateNestedManyWithoutDocument_typesInput
   }
@@ -71174,7 +71438,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     doc_key?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
-    document_uploads?: document_uploadsUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_confirmed_type?: document_uploadsUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_predicted_type?: document_uploadsUpdateManyWithoutPredicted_document_typeNestedInput
     program_document_requirements?: program_document_requirementsUpdateManyWithoutDocument_typesNestedInput
     session_document_checklist?: session_document_checklistUpdateManyWithoutDocument_typesNestedInput
   }
@@ -71183,7 +71448,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     doc_key?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
-    document_uploads?: document_uploadsUncheckedUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_confirmed_type?: document_uploadsUncheckedUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_predicted_type?: document_uploadsUncheckedUpdateManyWithoutPredicted_document_typeNestedInput
     program_document_requirements?: program_document_requirementsUncheckedUpdateManyWithoutDocument_typesNestedInput
     session_document_checklist?: session_document_checklistUncheckedUpdateManyWithoutDocument_typesNestedInput
   }
@@ -71230,6 +71496,7 @@ export namespace Prisma {
   export type document_type_translationsCreateWithoutDocument_typesInput = {
     name: string
     description?: string | null
+    examples?: string | null
     languages: languagesCreateNestedOneWithoutDocument_type_translationsInput
   }
 
@@ -71237,6 +71504,7 @@ export namespace Prisma {
     language_code: string
     name: string
     description?: string | null
+    examples?: string | null
   }
 
   export type document_type_translationsCreateOrConnectWithoutDocument_typesInput = {
@@ -71251,18 +71519,22 @@ export namespace Prisma {
 
   export type document_uploadsCreateWithoutDocument_typesInput = {
     id?: string
+    classification_confidence?: Decimal | DecimalJsLike | number | string | null
     file_name: string
     file_mime_type: string
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
     created_at?: Date | string
+    predicted_document_type?: document_typesCreateNestedOneWithoutDocument_uploads_predicted_typeInput
     screening_sessions: screening_sessionsCreateNestedOneWithoutDocument_uploadsInput
   }
 
   export type document_uploadsUncheckedCreateWithoutDocument_typesInput = {
     id?: string
     session_id: string
+    predicted_document_type_id?: string | null
+    classification_confidence?: Decimal | DecimalJsLike | number | string | null
     file_name: string
     file_mime_type: string
     storage_url: string
@@ -71278,6 +71550,42 @@ export namespace Prisma {
 
   export type document_uploadsCreateManyDocument_typesInputEnvelope = {
     data: document_uploadsCreateManyDocument_typesInput | document_uploadsCreateManyDocument_typesInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type document_uploadsCreateWithoutPredicted_document_typeInput = {
+    id?: string
+    classification_confidence?: Decimal | DecimalJsLike | number | string | null
+    file_name: string
+    file_mime_type: string
+    storage_url: string
+    status?: $Enums.upload_status
+    ocr_text?: string | null
+    created_at?: Date | string
+    document_types?: document_typesCreateNestedOneWithoutDocument_uploads_confirmed_typeInput
+    screening_sessions: screening_sessionsCreateNestedOneWithoutDocument_uploadsInput
+  }
+
+  export type document_uploadsUncheckedCreateWithoutPredicted_document_typeInput = {
+    id?: string
+    session_id: string
+    document_type_id?: string | null
+    classification_confidence?: Decimal | DecimalJsLike | number | string | null
+    file_name: string
+    file_mime_type: string
+    storage_url: string
+    status?: $Enums.upload_status
+    ocr_text?: string | null
+    created_at?: Date | string
+  }
+
+  export type document_uploadsCreateOrConnectWithoutPredicted_document_typeInput = {
+    where: document_uploadsWhereUniqueInput
+    create: XOR<document_uploadsCreateWithoutPredicted_document_typeInput, document_uploadsUncheckedCreateWithoutPredicted_document_typeInput>
+  }
+
+  export type document_uploadsCreateManyPredicted_document_typeInputEnvelope = {
+    data: document_uploadsCreateManyPredicted_document_typeInput | document_uploadsCreateManyPredicted_document_typeInput[]
     skipDuplicates?: boolean
   }
 
@@ -71355,6 +71663,7 @@ export namespace Prisma {
     language_code?: StringFilter<"document_type_translations"> | string
     name?: StringFilter<"document_type_translations"> | string
     description?: StringNullableFilter<"document_type_translations"> | string | null
+    examples?: StringNullableFilter<"document_type_translations"> | string | null
   }
 
   export type document_uploadsUpsertWithWhereUniqueWithoutDocument_typesInput = {
@@ -71380,12 +71689,30 @@ export namespace Prisma {
     id?: UuidFilter<"document_uploads"> | string
     session_id?: UuidFilter<"document_uploads"> | string
     document_type_id?: UuidNullableFilter<"document_uploads"> | string | null
+    predicted_document_type_id?: UuidNullableFilter<"document_uploads"> | string | null
+    classification_confidence?: DecimalNullableFilter<"document_uploads"> | Decimal | DecimalJsLike | number | string | null
     file_name?: StringFilter<"document_uploads"> | string
     file_mime_type?: StringFilter<"document_uploads"> | string
     storage_url?: StringFilter<"document_uploads"> | string
     status?: Enumupload_statusFilter<"document_uploads"> | $Enums.upload_status
     ocr_text?: StringNullableFilter<"document_uploads"> | string | null
     created_at?: DateTimeFilter<"document_uploads"> | Date | string
+  }
+
+  export type document_uploadsUpsertWithWhereUniqueWithoutPredicted_document_typeInput = {
+    where: document_uploadsWhereUniqueInput
+    update: XOR<document_uploadsUpdateWithoutPredicted_document_typeInput, document_uploadsUncheckedUpdateWithoutPredicted_document_typeInput>
+    create: XOR<document_uploadsCreateWithoutPredicted_document_typeInput, document_uploadsUncheckedCreateWithoutPredicted_document_typeInput>
+  }
+
+  export type document_uploadsUpdateWithWhereUniqueWithoutPredicted_document_typeInput = {
+    where: document_uploadsWhereUniqueInput
+    data: XOR<document_uploadsUpdateWithoutPredicted_document_typeInput, document_uploadsUncheckedUpdateWithoutPredicted_document_typeInput>
+  }
+
+  export type document_uploadsUpdateManyWithWhereWithoutPredicted_document_typeInput = {
+    where: document_uploadsScalarWhereInput
+    data: XOR<document_uploadsUpdateManyMutationInput, document_uploadsUncheckedUpdateManyWithoutPredicted_document_typeInput>
   }
 
   export type program_document_requirementsUpsertWithWhereUniqueWithoutDocument_typesInput = {
@@ -71443,27 +71770,54 @@ export namespace Prisma {
     created_at?: DateTimeFilter<"session_document_checklist"> | Date | string
   }
 
-  export type document_typesCreateWithoutDocument_uploadsInput = {
+  export type document_typesCreateWithoutDocument_uploads_confirmed_typeInput = {
     id?: string
     doc_key: string
     category: string
     document_type_translations?: document_type_translationsCreateNestedManyWithoutDocument_typesInput
+    document_uploads_predicted_type?: document_uploadsCreateNestedManyWithoutPredicted_document_typeInput
     program_document_requirements?: program_document_requirementsCreateNestedManyWithoutDocument_typesInput
     session_document_checklist?: session_document_checklistCreateNestedManyWithoutDocument_typesInput
   }
 
-  export type document_typesUncheckedCreateWithoutDocument_uploadsInput = {
+  export type document_typesUncheckedCreateWithoutDocument_uploads_confirmed_typeInput = {
     id?: string
     doc_key: string
     category: string
     document_type_translations?: document_type_translationsUncheckedCreateNestedManyWithoutDocument_typesInput
+    document_uploads_predicted_type?: document_uploadsUncheckedCreateNestedManyWithoutPredicted_document_typeInput
     program_document_requirements?: program_document_requirementsUncheckedCreateNestedManyWithoutDocument_typesInput
     session_document_checklist?: session_document_checklistUncheckedCreateNestedManyWithoutDocument_typesInput
   }
 
-  export type document_typesCreateOrConnectWithoutDocument_uploadsInput = {
+  export type document_typesCreateOrConnectWithoutDocument_uploads_confirmed_typeInput = {
     where: document_typesWhereUniqueInput
-    create: XOR<document_typesCreateWithoutDocument_uploadsInput, document_typesUncheckedCreateWithoutDocument_uploadsInput>
+    create: XOR<document_typesCreateWithoutDocument_uploads_confirmed_typeInput, document_typesUncheckedCreateWithoutDocument_uploads_confirmed_typeInput>
+  }
+
+  export type document_typesCreateWithoutDocument_uploads_predicted_typeInput = {
+    id?: string
+    doc_key: string
+    category: string
+    document_type_translations?: document_type_translationsCreateNestedManyWithoutDocument_typesInput
+    document_uploads_confirmed_type?: document_uploadsCreateNestedManyWithoutDocument_typesInput
+    program_document_requirements?: program_document_requirementsCreateNestedManyWithoutDocument_typesInput
+    session_document_checklist?: session_document_checklistCreateNestedManyWithoutDocument_typesInput
+  }
+
+  export type document_typesUncheckedCreateWithoutDocument_uploads_predicted_typeInput = {
+    id?: string
+    doc_key: string
+    category: string
+    document_type_translations?: document_type_translationsUncheckedCreateNestedManyWithoutDocument_typesInput
+    document_uploads_confirmed_type?: document_uploadsUncheckedCreateNestedManyWithoutDocument_typesInput
+    program_document_requirements?: program_document_requirementsUncheckedCreateNestedManyWithoutDocument_typesInput
+    session_document_checklist?: session_document_checklistUncheckedCreateNestedManyWithoutDocument_typesInput
+  }
+
+  export type document_typesCreateOrConnectWithoutDocument_uploads_predicted_typeInput = {
+    where: document_typesWhereUniqueInput
+    create: XOR<document_typesCreateWithoutDocument_uploads_predicted_typeInput, document_typesUncheckedCreateWithoutDocument_uploads_predicted_typeInput>
   }
 
   export type screening_sessionsCreateWithoutDocument_uploadsInput = {
@@ -71515,31 +71869,64 @@ export namespace Prisma {
     create: XOR<screening_sessionsCreateWithoutDocument_uploadsInput, screening_sessionsUncheckedCreateWithoutDocument_uploadsInput>
   }
 
-  export type document_typesUpsertWithoutDocument_uploadsInput = {
-    update: XOR<document_typesUpdateWithoutDocument_uploadsInput, document_typesUncheckedUpdateWithoutDocument_uploadsInput>
-    create: XOR<document_typesCreateWithoutDocument_uploadsInput, document_typesUncheckedCreateWithoutDocument_uploadsInput>
+  export type document_typesUpsertWithoutDocument_uploads_confirmed_typeInput = {
+    update: XOR<document_typesUpdateWithoutDocument_uploads_confirmed_typeInput, document_typesUncheckedUpdateWithoutDocument_uploads_confirmed_typeInput>
+    create: XOR<document_typesCreateWithoutDocument_uploads_confirmed_typeInput, document_typesUncheckedCreateWithoutDocument_uploads_confirmed_typeInput>
     where?: document_typesWhereInput
   }
 
-  export type document_typesUpdateToOneWithWhereWithoutDocument_uploadsInput = {
+  export type document_typesUpdateToOneWithWhereWithoutDocument_uploads_confirmed_typeInput = {
     where?: document_typesWhereInput
-    data: XOR<document_typesUpdateWithoutDocument_uploadsInput, document_typesUncheckedUpdateWithoutDocument_uploadsInput>
+    data: XOR<document_typesUpdateWithoutDocument_uploads_confirmed_typeInput, document_typesUncheckedUpdateWithoutDocument_uploads_confirmed_typeInput>
   }
 
-  export type document_typesUpdateWithoutDocument_uploadsInput = {
+  export type document_typesUpdateWithoutDocument_uploads_confirmed_typeInput = {
     id?: StringFieldUpdateOperationsInput | string
     doc_key?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     document_type_translations?: document_type_translationsUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_predicted_type?: document_uploadsUpdateManyWithoutPredicted_document_typeNestedInput
     program_document_requirements?: program_document_requirementsUpdateManyWithoutDocument_typesNestedInput
     session_document_checklist?: session_document_checklistUpdateManyWithoutDocument_typesNestedInput
   }
 
-  export type document_typesUncheckedUpdateWithoutDocument_uploadsInput = {
+  export type document_typesUncheckedUpdateWithoutDocument_uploads_confirmed_typeInput = {
     id?: StringFieldUpdateOperationsInput | string
     doc_key?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     document_type_translations?: document_type_translationsUncheckedUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_predicted_type?: document_uploadsUncheckedUpdateManyWithoutPredicted_document_typeNestedInput
+    program_document_requirements?: program_document_requirementsUncheckedUpdateManyWithoutDocument_typesNestedInput
+    session_document_checklist?: session_document_checklistUncheckedUpdateManyWithoutDocument_typesNestedInput
+  }
+
+  export type document_typesUpsertWithoutDocument_uploads_predicted_typeInput = {
+    update: XOR<document_typesUpdateWithoutDocument_uploads_predicted_typeInput, document_typesUncheckedUpdateWithoutDocument_uploads_predicted_typeInput>
+    create: XOR<document_typesCreateWithoutDocument_uploads_predicted_typeInput, document_typesUncheckedCreateWithoutDocument_uploads_predicted_typeInput>
+    where?: document_typesWhereInput
+  }
+
+  export type document_typesUpdateToOneWithWhereWithoutDocument_uploads_predicted_typeInput = {
+    where?: document_typesWhereInput
+    data: XOR<document_typesUpdateWithoutDocument_uploads_predicted_typeInput, document_typesUncheckedUpdateWithoutDocument_uploads_predicted_typeInput>
+  }
+
+  export type document_typesUpdateWithoutDocument_uploads_predicted_typeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    doc_key?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    document_type_translations?: document_type_translationsUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_confirmed_type?: document_uploadsUpdateManyWithoutDocument_typesNestedInput
+    program_document_requirements?: program_document_requirementsUpdateManyWithoutDocument_typesNestedInput
+    session_document_checklist?: session_document_checklistUpdateManyWithoutDocument_typesNestedInput
+  }
+
+  export type document_typesUncheckedUpdateWithoutDocument_uploads_predicted_typeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    doc_key?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    document_type_translations?: document_type_translationsUncheckedUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_confirmed_type?: document_uploadsUncheckedUpdateManyWithoutDocument_typesNestedInput
     program_document_requirements?: program_document_requirementsUncheckedUpdateManyWithoutDocument_typesNestedInput
     session_document_checklist?: session_document_checklistUncheckedUpdateManyWithoutDocument_typesNestedInput
   }
@@ -72290,6 +72677,7 @@ export namespace Prisma {
   export type document_type_translationsCreateWithoutLanguagesInput = {
     name: string
     description?: string | null
+    examples?: string | null
     document_types: document_typesCreateNestedOneWithoutDocument_type_translationsInput
   }
 
@@ -72297,6 +72685,7 @@ export namespace Prisma {
     document_type_id: string
     name: string
     description?: string | null
+    examples?: string | null
   }
 
   export type document_type_translationsCreateOrConnectWithoutLanguagesInput = {
@@ -73774,7 +74163,8 @@ export namespace Prisma {
     doc_key: string
     category: string
     document_type_translations?: document_type_translationsCreateNestedManyWithoutDocument_typesInput
-    document_uploads?: document_uploadsCreateNestedManyWithoutDocument_typesInput
+    document_uploads_confirmed_type?: document_uploadsCreateNestedManyWithoutDocument_typesInput
+    document_uploads_predicted_type?: document_uploadsCreateNestedManyWithoutPredicted_document_typeInput
     session_document_checklist?: session_document_checklistCreateNestedManyWithoutDocument_typesInput
   }
 
@@ -73783,7 +74173,8 @@ export namespace Prisma {
     doc_key: string
     category: string
     document_type_translations?: document_type_translationsUncheckedCreateNestedManyWithoutDocument_typesInput
-    document_uploads?: document_uploadsUncheckedCreateNestedManyWithoutDocument_typesInput
+    document_uploads_confirmed_type?: document_uploadsUncheckedCreateNestedManyWithoutDocument_typesInput
+    document_uploads_predicted_type?: document_uploadsUncheckedCreateNestedManyWithoutPredicted_document_typeInput
     session_document_checklist?: session_document_checklistUncheckedCreateNestedManyWithoutDocument_typesInput
   }
 
@@ -73845,7 +74236,8 @@ export namespace Prisma {
     doc_key?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     document_type_translations?: document_type_translationsUpdateManyWithoutDocument_typesNestedInput
-    document_uploads?: document_uploadsUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_confirmed_type?: document_uploadsUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_predicted_type?: document_uploadsUpdateManyWithoutPredicted_document_typeNestedInput
     session_document_checklist?: session_document_checklistUpdateManyWithoutDocument_typesNestedInput
   }
 
@@ -73854,7 +74246,8 @@ export namespace Prisma {
     doc_key?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     document_type_translations?: document_type_translationsUncheckedUpdateManyWithoutDocument_typesNestedInput
-    document_uploads?: document_uploadsUncheckedUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_confirmed_type?: document_uploadsUncheckedUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_predicted_type?: document_uploadsUncheckedUpdateManyWithoutPredicted_document_typeNestedInput
     session_document_checklist?: session_document_checklistUncheckedUpdateManyWithoutDocument_typesNestedInput
   }
 
@@ -75832,18 +76225,22 @@ export namespace Prisma {
 
   export type document_uploadsCreateWithoutScreening_sessionsInput = {
     id?: string
+    classification_confidence?: Decimal | DecimalJsLike | number | string | null
     file_name: string
     file_mime_type: string
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
     created_at?: Date | string
-    document_types?: document_typesCreateNestedOneWithoutDocument_uploadsInput
+    document_types?: document_typesCreateNestedOneWithoutDocument_uploads_confirmed_typeInput
+    predicted_document_type?: document_typesCreateNestedOneWithoutDocument_uploads_predicted_typeInput
   }
 
   export type document_uploadsUncheckedCreateWithoutScreening_sessionsInput = {
     id?: string
     document_type_id?: string | null
+    predicted_document_type_id?: string | null
+    classification_confidence?: Decimal | DecimalJsLike | number | string | null
     file_name: string
     file_mime_type: string
     storage_url: string
@@ -76463,7 +76860,8 @@ export namespace Prisma {
     doc_key: string
     category: string
     document_type_translations?: document_type_translationsCreateNestedManyWithoutDocument_typesInput
-    document_uploads?: document_uploadsCreateNestedManyWithoutDocument_typesInput
+    document_uploads_confirmed_type?: document_uploadsCreateNestedManyWithoutDocument_typesInput
+    document_uploads_predicted_type?: document_uploadsCreateNestedManyWithoutPredicted_document_typeInput
     program_document_requirements?: program_document_requirementsCreateNestedManyWithoutDocument_typesInput
   }
 
@@ -76472,7 +76870,8 @@ export namespace Prisma {
     doc_key: string
     category: string
     document_type_translations?: document_type_translationsUncheckedCreateNestedManyWithoutDocument_typesInput
-    document_uploads?: document_uploadsUncheckedCreateNestedManyWithoutDocument_typesInput
+    document_uploads_confirmed_type?: document_uploadsUncheckedCreateNestedManyWithoutDocument_typesInput
+    document_uploads_predicted_type?: document_uploadsUncheckedCreateNestedManyWithoutPredicted_document_typeInput
     program_document_requirements?: program_document_requirementsUncheckedCreateNestedManyWithoutDocument_typesInput
   }
 
@@ -76583,7 +76982,8 @@ export namespace Prisma {
     doc_key?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     document_type_translations?: document_type_translationsUpdateManyWithoutDocument_typesNestedInput
-    document_uploads?: document_uploadsUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_confirmed_type?: document_uploadsUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_predicted_type?: document_uploadsUpdateManyWithoutPredicted_document_typeNestedInput
     program_document_requirements?: program_document_requirementsUpdateManyWithoutDocument_typesNestedInput
   }
 
@@ -76592,7 +76992,8 @@ export namespace Prisma {
     doc_key?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     document_type_translations?: document_type_translationsUncheckedUpdateManyWithoutDocument_typesNestedInput
-    document_uploads?: document_uploadsUncheckedUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_confirmed_type?: document_uploadsUncheckedUpdateManyWithoutDocument_typesNestedInput
+    document_uploads_predicted_type?: document_uploadsUncheckedUpdateManyWithoutPredicted_document_typeNestedInput
     program_document_requirements?: program_document_requirementsUncheckedUpdateManyWithoutDocument_typesNestedInput
   }
 
@@ -77946,11 +78347,27 @@ export namespace Prisma {
     language_code: string
     name: string
     description?: string | null
+    examples?: string | null
   }
 
   export type document_uploadsCreateManyDocument_typesInput = {
     id?: string
     session_id: string
+    predicted_document_type_id?: string | null
+    classification_confidence?: Decimal | DecimalJsLike | number | string | null
+    file_name: string
+    file_mime_type: string
+    storage_url: string
+    status?: $Enums.upload_status
+    ocr_text?: string | null
+    created_at?: Date | string
+  }
+
+  export type document_uploadsCreateManyPredicted_document_typeInput = {
+    id?: string
+    session_id: string
+    document_type_id?: string | null
+    classification_confidence?: Decimal | DecimalJsLike | number | string | null
     file_name: string
     file_mime_type: string
     storage_url: string
@@ -77977,6 +78394,7 @@ export namespace Prisma {
   export type document_type_translationsUpdateWithoutDocument_typesInput = {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    examples?: NullableStringFieldUpdateOperationsInput | string | null
     languages?: languagesUpdateOneRequiredWithoutDocument_type_translationsNestedInput
   }
 
@@ -77984,28 +78402,34 @@ export namespace Prisma {
     language_code?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    examples?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type document_type_translationsUncheckedUpdateManyWithoutDocument_typesInput = {
     language_code?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    examples?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type document_uploadsUpdateWithoutDocument_typesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    classification_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     file_name?: StringFieldUpdateOperationsInput | string
     file_mime_type?: StringFieldUpdateOperationsInput | string
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    predicted_document_type?: document_typesUpdateOneWithoutDocument_uploads_predicted_typeNestedInput
     screening_sessions?: screening_sessionsUpdateOneRequiredWithoutDocument_uploadsNestedInput
   }
 
   export type document_uploadsUncheckedUpdateWithoutDocument_typesInput = {
     id?: StringFieldUpdateOperationsInput | string
     session_id?: StringFieldUpdateOperationsInput | string
+    predicted_document_type_id?: NullableStringFieldUpdateOperationsInput | string | null
+    classification_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     file_name?: StringFieldUpdateOperationsInput | string
     file_mime_type?: StringFieldUpdateOperationsInput | string
     storage_url?: StringFieldUpdateOperationsInput | string
@@ -78017,6 +78441,47 @@ export namespace Prisma {
   export type document_uploadsUncheckedUpdateManyWithoutDocument_typesInput = {
     id?: StringFieldUpdateOperationsInput | string
     session_id?: StringFieldUpdateOperationsInput | string
+    predicted_document_type_id?: NullableStringFieldUpdateOperationsInput | string | null
+    classification_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    file_name?: StringFieldUpdateOperationsInput | string
+    file_mime_type?: StringFieldUpdateOperationsInput | string
+    storage_url?: StringFieldUpdateOperationsInput | string
+    status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
+    ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type document_uploadsUpdateWithoutPredicted_document_typeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    classification_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    file_name?: StringFieldUpdateOperationsInput | string
+    file_mime_type?: StringFieldUpdateOperationsInput | string
+    storage_url?: StringFieldUpdateOperationsInput | string
+    status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
+    ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    document_types?: document_typesUpdateOneWithoutDocument_uploads_confirmed_typeNestedInput
+    screening_sessions?: screening_sessionsUpdateOneRequiredWithoutDocument_uploadsNestedInput
+  }
+
+  export type document_uploadsUncheckedUpdateWithoutPredicted_document_typeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    session_id?: StringFieldUpdateOperationsInput | string
+    document_type_id?: NullableStringFieldUpdateOperationsInput | string | null
+    classification_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    file_name?: StringFieldUpdateOperationsInput | string
+    file_mime_type?: StringFieldUpdateOperationsInput | string
+    storage_url?: StringFieldUpdateOperationsInput | string
+    status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
+    ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type document_uploadsUncheckedUpdateManyWithoutPredicted_document_typeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    session_id?: StringFieldUpdateOperationsInput | string
+    document_type_id?: NullableStringFieldUpdateOperationsInput | string | null
+    classification_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     file_name?: StringFieldUpdateOperationsInput | string
     file_mime_type?: StringFieldUpdateOperationsInput | string
     storage_url?: StringFieldUpdateOperationsInput | string
@@ -78127,6 +78592,7 @@ export namespace Prisma {
     document_type_id: string
     name: string
     description?: string | null
+    examples?: string | null
   }
 
   export type knowledge_sourcesCreateManyLanguagesInput = {
@@ -78229,6 +78695,7 @@ export namespace Prisma {
   export type document_type_translationsUpdateWithoutLanguagesInput = {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    examples?: NullableStringFieldUpdateOperationsInput | string | null
     document_types?: document_typesUpdateOneRequiredWithoutDocument_type_translationsNestedInput
   }
 
@@ -78236,12 +78703,14 @@ export namespace Prisma {
     document_type_id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    examples?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type document_type_translationsUncheckedUpdateManyWithoutLanguagesInput = {
     document_type_id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    examples?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type knowledge_sourcesUpdateWithoutLanguagesInput = {
@@ -79084,6 +79553,8 @@ export namespace Prisma {
   export type document_uploadsCreateManyScreening_sessionsInput = {
     id?: string
     document_type_id?: string | null
+    predicted_document_type_id?: string | null
+    classification_confidence?: Decimal | DecimalJsLike | number | string | null
     file_name: string
     file_mime_type: string
     storage_url: string
@@ -79308,18 +79779,22 @@ export namespace Prisma {
 
   export type document_uploadsUpdateWithoutScreening_sessionsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    classification_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     file_name?: StringFieldUpdateOperationsInput | string
     file_mime_type?: StringFieldUpdateOperationsInput | string
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    document_types?: document_typesUpdateOneWithoutDocument_uploadsNestedInput
+    document_types?: document_typesUpdateOneWithoutDocument_uploads_confirmed_typeNestedInput
+    predicted_document_type?: document_typesUpdateOneWithoutDocument_uploads_predicted_typeNestedInput
   }
 
   export type document_uploadsUncheckedUpdateWithoutScreening_sessionsInput = {
     id?: StringFieldUpdateOperationsInput | string
     document_type_id?: NullableStringFieldUpdateOperationsInput | string | null
+    predicted_document_type_id?: NullableStringFieldUpdateOperationsInput | string | null
+    classification_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     file_name?: StringFieldUpdateOperationsInput | string
     file_mime_type?: StringFieldUpdateOperationsInput | string
     storage_url?: StringFieldUpdateOperationsInput | string
@@ -79331,6 +79806,8 @@ export namespace Prisma {
   export type document_uploadsUncheckedUpdateManyWithoutScreening_sessionsInput = {
     id?: StringFieldUpdateOperationsInput | string
     document_type_id?: NullableStringFieldUpdateOperationsInput | string | null
+    predicted_document_type_id?: NullableStringFieldUpdateOperationsInput | string | null
+    classification_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     file_name?: StringFieldUpdateOperationsInput | string
     file_mime_type?: StringFieldUpdateOperationsInput | string
     storage_url?: StringFieldUpdateOperationsInput | string

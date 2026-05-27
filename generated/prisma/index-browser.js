@@ -213,7 +213,8 @@ exports.Prisma.Document_type_translationsScalarFieldEnum = {
   document_type_id: 'document_type_id',
   language_code: 'language_code',
   name: 'name',
-  description: 'description'
+  description: 'description',
+  examples: 'examples'
 };
 
 exports.Prisma.Document_typesScalarFieldEnum = {
@@ -226,6 +227,8 @@ exports.Prisma.Document_uploadsScalarFieldEnum = {
   id: 'id',
   session_id: 'session_id',
   document_type_id: 'document_type_id',
+  predicted_document_type_id: 'predicted_document_type_id',
+  classification_confidence: 'classification_confidence',
   file_name: 'file_name',
   file_mime_type: 'file_mime_type',
   storage_url: 'storage_url',

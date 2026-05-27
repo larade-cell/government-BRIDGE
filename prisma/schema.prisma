@@ -579,7 +579,7 @@ enum user_role {
 // ---------------------------------------------------------------------------
 
 model User {
-  id            String    @id @default(cuid())
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name          String?
   email         String?   @unique
   emailVerified DateTime?
@@ -590,7 +590,7 @@ model User {
 
 model Account {
   id                String  @id @default(cuid())
-  userId            String
+  userId            String  @db.Uuid
   type              String
   provider          String
   providerAccountId String
@@ -610,7 +610,7 @@ model Account {
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
-  userId       String
+  userId       String   @db.Uuid
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -37,4 +37,16 @@ export const authConfig = {
       },
     }),
   },
+  events: {
+    // Mirror NextAuth's User into the domain `users` table on first sign-up,
+    // reusing the same UUID so downstream domain tables can FK to it.
+    createUser: async ({ user }) => {
+      if (!user.id || !user.email) return;
+      await db.users.upsert({
+        where: { id: user.id },
+        update: { email: user.email },
+        create: { id: user.id, email: user.email },
+      });
+    },
+  },
 } satisfies NextAuthConfig;

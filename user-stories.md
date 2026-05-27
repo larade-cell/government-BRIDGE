@@ -3,10 +3,10 @@
 ## Authentication/Profile Stories
 
 ### 1 - Anonymous Screening Session
-Priority: Must
-User Story:
+**Priority: Must** 
+#### User Story:
     As a resident, I want to begin a screening session without creating an account so that I can quickly check my eligibility for benefits.
-Acceptance Criteria
+#### Acceptance Criteria
 - User can start a screening session without registration
 - User not required to provide a SSN
 - System creates a temporary session

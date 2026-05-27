@@ -16,7 +16,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 2 - Save and Resume Screening
 **Priority: Must**
 #### User Story:
-    As a resident, I want to save my progress using a magic link or SMS code so that I can continue later without losing information.
+As a resident, I want to save my progress using a magic link or SMS code so that I can continue later without losing information.
 #### Acceptance Criteria:
 - User can request a link/code
 - System securely generates a temporary token
@@ -27,7 +27,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 3 - Update Language Preference
 **Priority: Should**
 #### User Story:
-    As a multilingual user, I want to choose my preferred language so that I can understand the platform better.
+As a multilingual user, I want to choose my preferred language so that I can understand the platform better.
 #### Acceptance Criteria:
 - User can switch between English and Spanish
 - Selected language persists during the session
@@ -37,7 +37,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 4 - Optional Account Creation
 **Priority: Nice**
 #### User Story:
-    As a resident, I want to optionally create an account so that I can manage multiple applications.
+As a resident, I want to optionally create an account so that I can manage multiple applications.
 #### Acceptance Criteria:
 - User can register using email or phone
 - Existing sessions can be linked to a personal account
@@ -48,7 +48,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 5 - Complete Screener
 **Priority: Must**
 #### User Story:
-    As a resident, I want to answer simple questions so that I can discover what I qualify for.
+As a resident, I want to answer simple questions so that I can discover what I qualify for.
 #### Acceptance Criteria:
 - Questionnaire with only ~10 plain-language questions
 - Only one question per screen
@@ -60,7 +60,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 6 - Multi-Program Screening
 **Priority: Must**
 #### User Story:
-    As a resident, I want one questionnaire to screen me for multiple programs so that I do not need to repeat the process.
+As a resident, I want one questionnaire to screen me for multiple programs so that I do not need to repeat the process.
 #### Acceptance Criteria:
 - Single questionnaire evaluates eligibility for multiple programs
 - Programs include SNAP, WIC, Medicaid/CHIP, LIHEAP, rental assistance, and childcare subsidies
@@ -70,7 +70,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 7 - View Results
 **Priority: Must**
 #### User Story:
-    As a resident, I want to see my likely eligible programs so I know which applications to complete.
+As a resident, I want to see my likely eligible programs so I know which applications to complete.
 #### Acceptance Criteria:
 - Results categorize eligibility as: likely eligible, may be eligible, needs for information, and not eligible
 - Each result includes descriptions of the program, next steps, and a link to the application
@@ -79,7 +79,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 8 - Personalised Checklist
 **Priority: Must**
 #### User Story:
-    As a resident, I want a personalized checklist of required documents so that I know what to prepare before applying.
+As a resident, I want a personalized checklist of required documents so that I know what to prepare before applying.
 #### Acceptance Criteria:
 - Checklist is generated dynamically from screening answers
 - Checklist updates when answers change
@@ -89,7 +89,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 9 - Upload Supporting Docs
 **Priority: Should**
 #### User Story:
-    As a resident, I want to upload documents from my phone so that I can prepare my application materials online.
+As a resident, I want to upload documents from my phone so that I can prepare my application materials online.
 #### Acceptance Criteria:
 - Accepts JPG, PNG, PDF, and HEIC uploads
 - Uploads work on mobile devices
@@ -100,7 +100,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 10 - Browse by Category
 **Priority: Should**
 #### User Story: 
-    As a resident, I want to browse programs by category or life event so that I can discover assistance programs that I may not know about.
+As a resident, I want to browse programs by category or life event so that I can discover assistance programs that I may not know about.
 #### Acceptance Criteria:
 - User can browse by category
 - User can browse by life event
@@ -110,7 +110,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 11 - Receive Community Referrals
 **Priority: Should**
 #### User Story:
-    As a resident, I want referrals to local organizations so that I can get help beyond government-provided benefits.
+As a resident, I want referrals to local organizations so that I can get help beyond government-provided benefits.
 #### Acceptance Criteria:
 - Platform displays referral organizations/nonprofits
 - Referral includes contact information
@@ -120,7 +120,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 12 - Manage Notifications
 **Priority: Should**
 #### User Story:
-    As a resident, I want to manage notifications so that I receive updates through my preferred method of communication.
+As a resident, I want to manage notifications so that I receive updates through my preferred method of communication.
 #### Acceptance Criteria
 - User can choose email or SMS
 - User can opt in or out
@@ -131,7 +131,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 13 - Ask Questions with Chatbot
 **Priority: Must**
 #### User Story:
-    As a resident, I want an AI chatbot to answer benefit questions so that I can better understand the process.
+As a resident, I want an AI chatbot to answer benefit questions so that I can better understand the process.
 #### Acceptance Criteria:
 - User can ask questions in plain language
 - Chatbot provides responses with source citations
@@ -142,7 +142,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 14 - Smart Program Search
 **Priority: Should**
 #### User Story:
-    As a resident, I want to search using natural language so that I can find relevant programs more easily
+As a resident, I want to search using natural language so that I can find relevant programs more easily
 #### Acceptance Criteria:
 - Seach supports natural language queries
 - Search understands synonyms and related concepts
@@ -152,7 +152,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 15 - AI Document Classification
 **Priority: Should**
 #### User Story:
-    As a resident, I want uploaded documents to be classified for me so I can avoid submitting incorrect files.
+As a resident, I want uploaded documents to be classified for me so I can avoid submitting incorrect files.
 #### Acceptance Criteria:
 - OCR extracts document text
 - System predicts document type
@@ -163,7 +163,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 16 - AI Recommendations
 **Priority: Should**
 #### User Story: 
-    As a resident, I want the system to recommend additional programs and resources so that I can maximise available support.
+As a resident, I want the system to recommend additional programs and resources so that I can maximise available support.
 #### Acceptance Criteria:
 - Recommendations are personalized
 - Recommednations include related programs
@@ -173,7 +173,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 17 - Anomaly Detection
 **Priority: Nice**
 #### User Story:
-    As an administrator, I want the system to detect suspicious or unusual activity so that operational risks can be identified early.
+As an administrator, I want the system to detect suspicious or unusual activity so that operational risks can be identified early.
 #### Acceptance Criteria:
 - System flags duplicate submissions
 - System identifies abnormal upload behavior
@@ -184,7 +184,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 18 - Caseworker Dashboard
 **Priority: Must**
 #### User Story:
-    As a caseworker, I want to view pending sessions and referrals so that I can assist residents efficiently.
+As a caseworker, I want to view pending sessions and referrals so that I can assist residents efficiently.
 #### Acceptance Criteria:
 - Dashboard displays pending cases
 - Cases can be filtered according to status
@@ -194,7 +194,7 @@ As a resident, I want to begin a screening session without creating an account s
 ### 20 - Manage Eligibility Rules
 **Priority: Should**
 #### User Story:
-    As an administrator I want to manage and version eligibility rules so that programs policies remain accurate and auditable
+As an administrator I want to manage and version eligibility rules so that programs policies remain accurate and auditable
 #### Acceptance Criteria:
 - Rules are version controlled
 - Admin can publish new rule versions

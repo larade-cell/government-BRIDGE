@@ -229,6 +229,8 @@ exports.Prisma.Document_uploadsScalarFieldEnum = {
   document_type_id: 'document_type_id',
   predicted_document_type_id: 'predicted_document_type_id',
   classification_confidence: 'classification_confidence',
+  classified_by: 'classified_by',
+  classified_at: 'classified_at',
   file_name: 'file_name',
   file_mime_type: 'file_mime_type',
   storage_url: 'storage_url',
@@ -444,6 +446,9 @@ exports.Prisma.Screening_sessionsScalarFieldEnum = {
   current_step: 'current_step',
   completed_at: 'completed_at',
   expires_at: 'expires_at',
+  ip_address: 'ip_address',
+  user_agent: 'user_agent',
+  fingerprint_hash: 'fingerprint_hash',
   created_at: 'created_at',
   updated_at: 'updated_at'
 };
@@ -479,6 +484,80 @@ exports.Prisma.UsersScalarFieldEnum = {
   phone: 'phone',
   preferred_language: 'preferred_language',
   role: 'role',
+  auth_user_id: 'auth_user_id',
+  created_at: 'created_at'
+};
+
+exports.Prisma.Ai_recommendationsScalarFieldEnum = {
+  id: 'id',
+  session_id: 'session_id',
+  user_id: 'user_id',
+  target_type: 'target_type',
+  target_id: 'target_id',
+  rationale: 'rationale',
+  score: 'score',
+  model_name: 'model_name',
+  status: 'status',
+  viewed_at: 'viewed_at',
+  accepted_at: 'accepted_at',
+  dismissed_at: 'dismissed_at',
+  created_at: 'created_at'
+};
+
+exports.Prisma.Anomaly_flagsScalarFieldEnum = {
+  id: 'id',
+  session_id: 'session_id',
+  user_id: 'user_id',
+  flag_type: 'flag_type',
+  severity: 'severity',
+  status: 'status',
+  detector: 'detector',
+  payload: 'payload',
+  reviewed_by: 'reviewed_by',
+  reviewed_at: 'reviewed_at',
+  review_notes: 'review_notes',
+  created_at: 'created_at'
+};
+
+exports.Prisma.Document_classificationsScalarFieldEnum = {
+  id: 'id',
+  document_upload_id: 'document_upload_id',
+  document_type_id: 'document_type_id',
+  confidence: 'confidence',
+  classified_by: 'classified_by',
+  model_name: 'model_name',
+  corrected_by_user_id: 'corrected_by_user_id',
+  raw_response: 'raw_response',
+  created_at: 'created_at'
+};
+
+exports.Prisma.Search_embeddingsScalarFieldEnum = {
+  id: 'id',
+  target_type: 'target_type',
+  target_id: 'target_id',
+  language_code: 'language_code',
+  content_text: 'content_text',
+  embedding_model: 'embedding_model',
+  created_at: 'created_at'
+};
+
+exports.Prisma.Search_queriesScalarFieldEnum = {
+  id: 'id',
+  session_id: 'session_id',
+  user_id: 'user_id',
+  query_text: 'query_text',
+  language_code: 'language_code',
+  result_count: 'result_count',
+  selected_target_type: 'selected_target_type',
+  selected_target_id: 'selected_target_id',
+  created_at: 'created_at'
+};
+
+exports.Prisma.Search_synonymsScalarFieldEnum = {
+  id: 'id',
+  language_code: 'language_code',
+  term: 'term',
+  synonyms: 'synonyms',
   created_at: 'created_at'
 };
 
@@ -547,6 +626,27 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+exports.case_status = exports.$Enums.case_status = {
+  new: 'new',
+  in_progress: 'in_progress',
+  waiting_on_client: 'waiting_on_client',
+  resolved: 'resolved',
+  closed: 'closed'
+};
+
+exports.case_priority = exports.$Enums.case_priority = {
+  low: 'low',
+  normal: 'normal',
+  high: 'high',
+  urgent: 'urgent'
+};
+
+exports.classification_source = exports.$Enums.classification_source = {
+  ai: 'ai',
+  user: 'user',
+  system: 'system'
+};
+
 exports.upload_status = exports.$Enums.upload_status = {
   uploaded: 'uploaded',
   ocr_pending: 'ocr_pending',
@@ -568,6 +668,21 @@ exports.notification_channel = exports.$Enums.notification_channel = {
   whatsapp: 'whatsapp'
 };
 
+exports.notification_delivery_status = exports.$Enums.notification_delivery_status = {
+  pending: 'pending',
+  sent: 'sent',
+  delivered: 'delivered',
+  failed: 'failed',
+  bounced: 'bounced'
+};
+
+exports.notification_frequency = exports.$Enums.notification_frequency = {
+  realtime: 'realtime',
+  daily_digest: 'daily_digest',
+  weekly_digest: 'weekly_digest',
+  important_only: 'important_only'
+};
+
 exports.referral_status = exports.$Enums.referral_status = {
   draft: 'draft',
   sent: 'sent',
@@ -585,6 +700,47 @@ exports.user_role = exports.$Enums.user_role = {
   navigator: 'navigator',
   caseworker: 'caseworker',
   admin: 'admin'
+};
+
+exports.recommendation_target_type = exports.$Enums.recommendation_target_type = {
+  program: 'program',
+  organization: 'organization',
+  knowledge_source: 'knowledge_source'
+};
+
+exports.recommendation_status = exports.$Enums.recommendation_status = {
+  pending: 'pending',
+  viewed: 'viewed',
+  accepted: 'accepted',
+  dismissed: 'dismissed'
+};
+
+exports.anomaly_flag_type = exports.$Enums.anomaly_flag_type = {
+  duplicate_submission: 'duplicate_submission',
+  abnormal_upload_rate: 'abnormal_upload_rate',
+  suspicious_file: 'suspicious_file',
+  impossible_answer_pattern: 'impossible_answer_pattern',
+  rapid_session_creation: 'rapid_session_creation',
+  other: 'other'
+};
+
+exports.anomaly_severity = exports.$Enums.anomaly_severity = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+  critical: 'critical'
+};
+
+exports.anomaly_status = exports.$Enums.anomaly_status = {
+  open: 'open',
+  reviewing: 'reviewing',
+  dismissed: 'dismissed',
+  confirmed: 'confirmed'
+};
+
+exports.search_target_type = exports.$Enums.search_target_type = {
+  program: 'program',
+  knowledge_source: 'knowledge_source'
 };
 
 exports.Prisma.ModelName = {
@@ -629,6 +785,12 @@ exports.Prisma.ModelName = {
   user_roles: 'user_roles',
   user_sessions: 'user_sessions',
   users: 'users',
+  ai_recommendations: 'ai_recommendations',
+  anomaly_flags: 'anomaly_flags',
+  document_classifications: 'document_classifications',
+  search_embeddings: 'search_embeddings',
+  search_queries: 'search_queries',
+  search_synonyms: 'search_synonyms',
   User: 'User',
   Account: 'Account',
   Session: 'Session',

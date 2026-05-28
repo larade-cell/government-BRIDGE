@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import {
+  createTRPCContext,
   createTRPCRouter,
   publicProcedure,
 } from "~/server/api/trpc";
@@ -11,13 +12,46 @@ import {
  *
  * Anonymous sessions are intentional: Story 1 requires that residents can
  * start a screening without an account. The session id functions as a bearer
- * token — anyone presenting a valid id can act on that session. When/if a
- * `user_id` is later attached, additional authorization checks should kick in.
+ * token for anonymous (user_id IS NULL) sessions. Once a session is claimed
+ * by an account (user_id IS NOT NULL), ownership is enforced by
+ * `assertSessionAccess` so only the owning user can read or mutate it.
  */
 
 const SESSION_TTL_DAYS = 30;
 const ttl = () =>
   new Date(Date.now() + SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
+
+type Ctx = Awaited<ReturnType<typeof createTRPCContext>>;
+
+/**
+ * Load a session by id, throw NOT_FOUND if missing, and enforce ownership
+ * when the session has been claimed. Returns minimal session metadata so
+ * callers can apply any further checks (e.g., expiry).
+ */
+async function assertSessionAccess(ctx: Ctx, sessionId: string) {
+  const session = await ctx.db.screening_sessions.findUnique({
+    where: { id: sessionId },
+    select: {
+      id: true,
+      user_id: true,
+      expires_at: true,
+      completed_at: true,
+    },
+  });
+  if (!session) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
+  }
+  if (
+    session.user_id !== null &&
+    session.user_id !== ctx.session?.user.appUserId
+  ) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Session belongs to another user",
+    });
+  }
+  return session;
+}
 
 export const screeningSessionRouter = createTRPCRouter({
   create: publicProcedure
@@ -50,6 +84,7 @@ export const screeningSessionRouter = createTRPCRouter({
   byId: publicProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
+      await assertSessionAccess(ctx, input.id);
       const session = await ctx.db.screening_sessions.findUnique({
         where: { id: input.id },
         select: {
@@ -150,14 +185,7 @@ export const answerRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Confirm the session exists and isn't expired.
-      const session = await ctx.db.screening_sessions.findUnique({
-        where: { id: input.session_id },
-        select: { id: true, expires_at: true, completed_at: true },
-      });
-      if (!session) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
-      }
+      const session = await assertSessionAccess(ctx, input.session_id);
       if (session.expires_at && session.expires_at < new Date()) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -190,13 +218,7 @@ export const eligibilityRouter = createTRPCRouter({
   run: publicProcedure
     .input(z.object({ session_id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      const session = await ctx.db.screening_sessions.findUnique({
-        where: { id: input.session_id },
-        select: { id: true },
-      });
-      if (!session) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
-      }
+      await assertSessionAccess(ctx, input.session_id);
 
       // Pull the latest rule version per active program.
       const programs = await ctx.db.programs.findMany({
@@ -260,6 +282,7 @@ export const eligibilityResultRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      await assertSessionAccess(ctx, input.session_id);
       const results = await ctx.db.eligibility_results.findMany({
         where: { session_id: input.session_id },
         orderBy: { priority_rank: "asc" },

@@ -13,18 +13,16 @@ export async function requestMagicLink(formData: FormData) {
     throw new Error("Email is required");
   }
 
-  const user = await db.user.upsert({
-    where: { email },
-    update: name ? { name } : {},
-    create: { email, name: name || null },
-  });
-
-  // Mirror into the domain `users` table so FKs from the rest of the schema work.
-  await db.users.upsert({
-    where: { id: user.id },
-    update: { email },
-    create: { id: user.id, email },
-  });
+  // Capture the display name on the NextAuth User row so it's available the
+  // first time they verify. The domain `users` row is created by
+  // events.createUser after verification succeeds.
+  if (name) {
+    await db.user.upsert({
+      where: { email },
+      update: { name },
+      create: { email, name },
+    });
+  }
 
   await signIn("nodemailer", { email, redirectTo: "/" });
 }

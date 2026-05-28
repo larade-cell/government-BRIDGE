@@ -8,6 +8,7 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
+      appUserId: string | null;
     } & DefaultSession["user"];
   }
 }
@@ -32,23 +33,30 @@ export const authConfig = {
     error: "/auth/error",
   },
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    session: async ({ session, user }) => {
+      const appUser = await db.users.findUnique({
+        where: { auth_user_id: user.id },
+        select: { id: true },
+      });
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+          appUserId: appUser?.id ?? null,
+        },
+      };
+    },
   },
   events: {
-    // Mirror NextAuth's User into the domain `users` table on first sign-up,
-    // reusing the same UUID so downstream domain tables can FK to it.
+    // Create a matching domain `users` row on first sign-up. The two tables have
+    // independent IDs, linked via users.auth_user_id (unique FK to User.id).
     createUser: async ({ user }) => {
       if (!user.id || !user.email) return;
       await db.users.upsert({
-        where: { id: user.id },
+        where: { auth_user_id: user.id },
         update: { email: user.email },
-        create: { id: user.id, email: user.email },
+        create: { auth_user_id: user.id, email: user.email },
       });
     },
   },

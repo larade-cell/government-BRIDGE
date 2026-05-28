@@ -31,7 +31,7 @@ export const screeningSessionRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const session = await ctx.db.screening_sessions.create({
         data: {
-          user_id: ctx.session?.user.id ?? null,
+          user_id: ctx.session?.user.appUserId ?? null,
           preferred_language: input?.preferred_language ?? "en",
           current_step: 0,
           expires_at: ttl(),

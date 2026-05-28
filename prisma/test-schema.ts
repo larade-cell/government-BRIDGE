@@ -1,15 +1,13 @@
 /**
- * Foreign-key smoke test.
+ * Schema integrity smoke test — FK behavior, NOT NULL enforcement, default values.
  *
- * Builds one realistic screening-session scenario across the related tables,
- * then exercises the three FK behaviors the schema relies on:
+ * Sections:
+ *   1. Foreign keys — Cascade / SetNull / NoAction propagation across related tables.
+ *   2. NOT NULL    — raw INSERTs that omit a required column are rejected by the DB.
+ *   3. Defaults    — minimal INSERTs come back with the documented default values.
  *
- *   - Cascade   — deleting the parent removes its children.
- *   - SetNull   — deleting the parent leaves the child but clears the FK.
- *   - NoAction  — deleting the parent is rejected when children exist.
- *
- * Idempotent: tagged with sentinel values (email, fingerprint, detector) so it
- * cleans up its own rows. Reference data from `prisma/seed.ts` must already
+ * Idempotent: tagged with sentinel values (email, fingerprint, detector, etc.) so
+ * cleanup is reliable. Requires reference data from `prisma/seed.ts` to already
  * be present (programs, questions, rule versions).
  */
 
@@ -21,6 +19,8 @@ const SENTINEL_EMAIL = "fk-test@bridge.local";
 const SENTINEL_FINGERPRINT = "fk-test-fingerprint";
 const SENTINEL_DETECTOR = "fk-test";
 const SENTINEL_QUERY = "fk-test query";
+const SENTINEL_NULL_PROGRAM = "null-test-prog";
+const SENTINEL_DEFAULTS_EMAIL = "defaults-test@bridge.local";
 
 let passed = 0;
 let failed = 0;
@@ -42,12 +42,43 @@ function isFkError(e: unknown): boolean {
   );
 }
 
+function isNullError(e: unknown): boolean {
+  if (!(e instanceof Prisma.PrismaClientKnownRequestError)) return false;
+  // P2011 = Prisma client-side null constraint violation
+  if (e.code === "P2011") return true;
+  // P2010 = raw query failed; check PG SQLSTATE in meta (23502 = not_null_violation)
+  if (e.code === "P2010") {
+    const meta = e.meta as { code?: string } | undefined;
+    return meta?.code === "23502";
+  }
+  return false;
+}
+
+async function expectNullError(label: string, sql: string) {
+  try {
+    await db.$executeRawUnsafe(sql);
+    check(label, false);
+  } catch (e) {
+    check(label, isNullError(e));
+  }
+}
+
 async function cleanup() {
   await db.anomaly_flags.deleteMany({ where: { detector: SENTINEL_DETECTOR } });
   await db.search_queries.deleteMany({ where: { query_text: SENTINEL_QUERY } });
   await db.audit_logs.deleteMany({ where: { action: "fk-test" } });
-  await db.users.deleteMany({ where: { email: SENTINEL_EMAIL } });
-  await db.user.deleteMany({ where: { email: SENTINEL_EMAIL } });
+  await db.users.deleteMany({
+    where: { email: { in: [SENTINEL_EMAIL, SENTINEL_DEFAULTS_EMAIL] } },
+  });
+  await db.user.deleteMany({
+    where: { email: { in: [SENTINEL_EMAIL, SENTINEL_DEFAULTS_EMAIL] } },
+  });
+  await db.programs.deleteMany({
+    where: { program_key: { startsWith: SENTINEL_NULL_PROGRAM } },
+  });
+  await db.organizations.deleteMany({
+    where: { name: "defaults-test-org" },
+  });
 }
 
 async function requireReferenceData() {
@@ -57,7 +88,7 @@ async function requireReferenceData() {
   });
   if (!snap || !question) {
     throw new Error(
-      "Reference data missing. Run `npx prisma db seed` first to load programs and questions.",
+      "Reference data missing. Run `npx prisma db seed` first.",
     );
   }
   const ruleVersion = await db.eligibility_rule_versions.findFirst({
@@ -65,20 +96,20 @@ async function requireReferenceData() {
   });
   if (!ruleVersion) {
     throw new Error(
-      "Reference data missing: no eligibility_rule_versions row for snap@v1. Run `npx prisma db seed`.",
+      "Reference data missing: no eligibility_rule_versions row for snap@v1.",
     );
   }
   return { snap, question, ruleVersion };
 }
 
 async function main() {
-  console.log("\nFK smoke test\n");
+  console.log("\nSchema smoke test\n");
   await cleanup();
 
   const { snap, question, ruleVersion } = await requireReferenceData();
 
   // ────────────────────────────────────────────────────────────────────────
-  // Build scenario
+  // Build scenario (used by FK and NOT NULL tests)
   // ────────────────────────────────────────────────────────────────────────
   console.log("Building scenario:");
 
@@ -262,9 +293,74 @@ async function main() {
   });
 
   // ────────────────────────────────────────────────────────────────────────
-  // NoAction — refuse delete of referenced parents
+  // NOT NULL enforcement (raw SQL — bypasses Prisma client validation)
   // ────────────────────────────────────────────────────────────────────────
-  console.log("\nNoAction (delete should be rejected):");
+  console.log("\nNOT NULL constraints (DB rejects INSERT):");
+
+  await expectNullError(
+    "programs.authoritative_url NOT NULL",
+    `INSERT INTO programs (id, program_key, category) VALUES (gen_random_uuid(), '${SENTINEL_NULL_PROGRAM}-1', 'food')`,
+  );
+
+  await expectNullError(
+    "programs.program_key NOT NULL",
+    `INSERT INTO programs (id, category, authoritative_url) VALUES (gen_random_uuid(), 'food', 'https://x.test/')`,
+  );
+
+  await expectNullError(
+    "programs.category NOT NULL",
+    `INSERT INTO programs (id, program_key, authoritative_url) VALUES (gen_random_uuid(), '${SENTINEL_NULL_PROGRAM}-2', 'https://x.test/')`,
+  );
+
+  await expectNullError(
+    "ai_messages.content NOT NULL",
+    `INSERT INTO ai_messages (id, conversation_id, role) VALUES (gen_random_uuid(), '${conversation.id}', 'user')`,
+  );
+
+  await expectNullError(
+    "ai_messages.role NOT NULL",
+    `INSERT INTO ai_messages (id, conversation_id, content) VALUES (gen_random_uuid(), '${conversation.id}', 'x')`,
+  );
+
+  await expectNullError(
+    "referrals.need_category NOT NULL",
+    `INSERT INTO referrals (id, session_id) VALUES (gen_random_uuid(), '${session.id}')`,
+  );
+
+  await expectNullError(
+    "document_uploads.file_name NOT NULL",
+    `INSERT INTO document_uploads (id, session_id, file_mime_type, storage_url) VALUES (gen_random_uuid(), '${session.id}', 'application/pdf', 'memory://x')`,
+  );
+
+  await expectNullError(
+    "document_uploads.storage_url NOT NULL",
+    `INSERT INTO document_uploads (id, session_id, file_name, file_mime_type) VALUES (gen_random_uuid(), '${session.id}', 'a.pdf', 'application/pdf')`,
+  );
+
+  await expectNullError(
+    "eligibility_rule_versions.rules_json NOT NULL",
+    `INSERT INTO eligibility_rule_versions (id, program_id, version, effective_from) VALUES (gen_random_uuid(), '${snap.id}', 99, CURRENT_DATE)`,
+  );
+
+  await expectNullError(
+    "audit_logs.action NOT NULL",
+    `INSERT INTO audit_logs (id, entity_type) VALUES (gen_random_uuid(), 'test')`,
+  );
+
+  await expectNullError(
+    "audit_logs.entity_type NOT NULL",
+    `INSERT INTO audit_logs (id, action) VALUES (gen_random_uuid(), 'test')`,
+  );
+
+  await expectNullError(
+    "anomaly_flags.flag_type NOT NULL",
+    `INSERT INTO anomaly_flags (id, session_id) VALUES (gen_random_uuid(), '${session.id}')`,
+  );
+
+  // ────────────────────────────────────────────────────────────────────────
+  // FK NoAction — refuse delete of referenced parents
+  // ────────────────────────────────────────────────────────────────────────
+  console.log("\nFK NoAction (delete rejected):");
 
   try {
     await db.languages.delete({ where: { code: "en" } });
@@ -288,9 +384,9 @@ async function main() {
   }
 
   // ────────────────────────────────────────────────────────────────────────
-  // Cascade — session delete sweeps its children
+  // FK Cascade — session delete sweeps children
   // ────────────────────────────────────────────────────────────────────────
-  console.log("\nCascade (session delete):");
+  console.log("\nFK Cascade (session delete):");
 
   await db.screening_sessions.delete({ where: { id: session.id } });
 
@@ -359,9 +455,9 @@ async function main() {
   );
 
   // ────────────────────────────────────────────────────────────────────────
-  // SetNull — child survives, FK column clears
+  // FK SetNull — child survives, FK column clears
   // ────────────────────────────────────────────────────────────────────────
-  console.log("\nSetNull (parent gone, child kept with FK cleared):");
+  console.log("\nFK SetNull:");
 
   const survivingFlag = await db.anomaly_flags.findFirst({
     where: { detector: SENTINEL_DETECTOR },
@@ -385,11 +481,6 @@ async function main() {
     survivingQuery?.session_id === null,
   );
 
-  // ────────────────────────────────────────────────────────────────────────
-  // NoAction on users via audit_logs
-  // ────────────────────────────────────────────────────────────────────────
-  console.log("\nNoAction (audit_logs prevent user delete):");
-
   const auditLog = await db.audit_logs.create({
     data: {
       actor_user_id: appUser.id,
@@ -411,11 +502,6 @@ async function main() {
 
   await db.audit_logs.delete({ where: { id: auditLog.id } });
 
-  // ────────────────────────────────────────────────────────────────────────
-  // SetNull — auth User delete clears users.auth_user_id
-  // ────────────────────────────────────────────────────────────────────────
-  console.log("\nSetNull (NextAuth User delete):");
-
   await db.user.delete({ where: { id: authUser.id } });
   const orphanedAppUser = await db.users.findUnique({
     where: { id: appUser.id },
@@ -427,8 +513,140 @@ async function main() {
   );
 
   // ────────────────────────────────────────────────────────────────────────
-  // Cleanup
+  // Default values
   // ────────────────────────────────────────────────────────────────────────
+  console.log("\nDefault values:");
+
+  const defaultsUser = await db.users.create({
+    data: { email: SENTINEL_DEFAULTS_EMAIL },
+  });
+  check("users.role defaults to 'resident'", defaultsUser.role === "resident");
+  check(
+    "users.preferred_language defaults to 'en'",
+    defaultsUser.preferred_language === "en",
+  );
+  check(
+    "users.created_at is set by default",
+    defaultsUser.created_at instanceof Date,
+  );
+
+  const defaultsSession = await db.screening_sessions.create({ data: {} });
+  check(
+    "screening_sessions.current_step defaults to 0",
+    defaultsSession.current_step === 0,
+  );
+  check(
+    "screening_sessions.preferred_language defaults to 'en'",
+    defaultsSession.preferred_language === "en",
+  );
+  check(
+    "screening_sessions.created_at is set by default",
+    defaultsSession.created_at instanceof Date,
+  );
+
+  const defaultsConvo = await db.ai_conversations.create({
+    data: { session_id: defaultsSession.id },
+  });
+  check(
+    "ai_conversations.language_code defaults to 'en'",
+    defaultsConvo.language_code === "en",
+  );
+  check(
+    "ai_conversations.human_handoff_requested defaults to false",
+    defaultsConvo.human_handoff_requested === false,
+  );
+
+  const defaultsNotif = await db.notification_preferences.create({
+    data: {
+      session_id: defaultsSession.id,
+      channel: "email",
+      destination: "x@y.test",
+    },
+  });
+  check(
+    "notification_preferences.frequency defaults to 'important_only'",
+    defaultsNotif.frequency === "important_only",
+  );
+  check(
+    "notification_preferences.opted_in defaults to true",
+    defaultsNotif.opted_in === true,
+  );
+  check(
+    "notification_preferences.language_code defaults to 'en'",
+    defaultsNotif.language_code === "en",
+  );
+
+  const defaultsRef = await db.referrals.create({
+    data: { session_id: defaultsSession.id, need_category: "housing" },
+  });
+  check(
+    "referrals.status defaults to 'draft'",
+    defaultsRef.status === "draft",
+  );
+
+  const defaultsUpload = await db.document_uploads.create({
+    data: {
+      session_id: defaultsSession.id,
+      file_name: "x.pdf",
+      file_mime_type: "application/pdf",
+      storage_url: "memory://x",
+    },
+  });
+  check(
+    "document_uploads.status defaults to 'uploaded'",
+    defaultsUpload.status === "uploaded",
+  );
+
+  const defaultsRec = await db.ai_recommendations.create({
+    data: {
+      session_id: defaultsSession.id,
+      target_type: "program",
+      target_id: snap.id,
+    },
+  });
+  check(
+    "ai_recommendations.status defaults to 'pending'",
+    defaultsRec.status === "pending",
+  );
+
+  const defaultsFlag = await db.anomaly_flags.create({
+    data: {
+      session_id: defaultsSession.id,
+      flag_type: "other",
+      detector: SENTINEL_DETECTOR,
+    },
+  });
+  check(
+    "anomaly_flags.severity defaults to 'low'",
+    defaultsFlag.severity === "low",
+  );
+  check(
+    "anomaly_flags.status defaults to 'open'",
+    defaultsFlag.status === "open",
+  );
+  check(
+    "anomaly_flags.payload defaults to '{}'",
+    JSON.stringify(defaultsFlag.payload) === "{}",
+  );
+
+  const defaultsCase = await db.cases.create({
+    data: { session_id: defaultsSession.id },
+  });
+  check("cases.status defaults to 'new'", defaultsCase.status === "new");
+  check("cases.priority defaults to 'normal'", defaultsCase.priority === "normal");
+
+  const defaultsOrg = await db.organizations.create({
+    data: { name: "defaults-test-org", organization_type: "nonprofit" },
+  });
+  check(
+    "organizations.service_categories defaults to []",
+    Array.isArray(defaultsOrg.service_categories) &&
+      defaultsOrg.service_categories.length === 0,
+  );
+
+  // Cascade-delete the defaults session to clean up its children
+  await db.screening_sessions.delete({ where: { id: defaultsSession.id } });
+
   await cleanup();
 
   console.log(`\n${passed} passed · ${failed} failed\n`);

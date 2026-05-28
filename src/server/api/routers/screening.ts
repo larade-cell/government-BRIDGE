@@ -1,11 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import {
-  createTRPCContext,
-  createTRPCRouter,
-  publicProcedure,
-} from "~/server/api/trpc";
+import { assertSessionAccess } from "~/server/api/helpers/session";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 /**
  * Screening core router.
@@ -20,38 +17,6 @@ import {
 const SESSION_TTL_DAYS = 30;
 const ttl = () =>
   new Date(Date.now() + SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
-
-type Ctx = Awaited<ReturnType<typeof createTRPCContext>>;
-
-/**
- * Load a session by id, throw NOT_FOUND if missing, and enforce ownership
- * when the session has been claimed. Returns minimal session metadata so
- * callers can apply any further checks (e.g., expiry).
- */
-async function assertSessionAccess(ctx: Ctx, sessionId: string) {
-  const session = await ctx.db.screening_sessions.findUnique({
-    where: { id: sessionId },
-    select: {
-      id: true,
-      user_id: true,
-      expires_at: true,
-      completed_at: true,
-    },
-  });
-  if (!session) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
-  }
-  if (
-    session.user_id !== null &&
-    session.user_id !== ctx.session?.user.appUserId
-  ) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Session belongs to another user",
-    });
-  }
-  return session;
-}
 
 export const screeningSessionRouter = createTRPCRouter({
   create: publicProcedure

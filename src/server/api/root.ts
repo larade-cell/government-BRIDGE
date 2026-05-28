@@ -1,3 +1,5 @@
+import { notificationPreferenceRouter } from "~/server/api/routers/notification";
+import { referralRouter } from "~/server/api/routers/referral";
 import {
   answerRouter,
   eligibilityResultRouter,
@@ -19,6 +21,8 @@ export const appRouter = createTRPCRouter({
   answer: answerRouter,
   eligibility: eligibilityRouter,
   eligibilityResult: eligibilityResultRouter,
+  notificationPreference: notificationPreferenceRouter,
+  referral: referralRouter,
 });
 
 export type AppRouter = typeof appRouter;

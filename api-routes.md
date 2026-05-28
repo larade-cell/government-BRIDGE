@@ -39,11 +39,11 @@ Phases are sized so each one is independently shippable. Tick boxes as work land
 | Route (REST) | tRPC procedure | Designed | Implemented | Tested |
 |---|---|:-:|:-:|:-:|
 | `GET /auth/me` | `user.me` | ✅ | ✅ | ☐ |
-| `PATCH /users/me` | `user.update` | ✅ | ☐ | ☐ |
-| `GET /notification-preferences` | `notificationPreference.list` | ✅ | ☐ | ☐ |
-| `PUT /notification-preferences/:id` | `notificationPreference.upsert` | ✅ | ☐ | ☐ |
-| `POST /referrals` | `referral.create` | ✅ | ☐ | ☐ |
-| `GET /referrals` | `referral.list` | ✅ | ☐ | ☐ |
+| `PATCH /users/me` | `user.update` | ✅ | ✅ | ☐ |
+| `GET /notification-preferences` | `notificationPreference.list` | ✅ | ✅ | ☐ |
+| `PUT /notification-preferences/:id` | `notificationPreference.upsert` | ✅ | ✅ | ☐ |
+| `POST /referrals` | `referral.create` | ✅ | ✅ | ☐ |
+| `GET /referrals` | `referral.list` | ✅ | ✅ | ☐ |
 
 ### Phase 4 — AI, admin, reports (Thursday)
 

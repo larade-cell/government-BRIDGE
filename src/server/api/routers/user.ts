@@ -1,3 +1,6 @@
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 export const userRouter = createTRPCRouter({
@@ -24,4 +27,51 @@ export const userRouter = createTRPCRouter({
 
     return { authUser, appUser };
   }),
+
+  update: protectedProcedure
+    .input(
+      z.object({
+        preferredLanguage: z.string().min(2).max(8).optional(),
+        phone: z.string().trim().min(1).max(32).nullable().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { appUserId } = ctx.session.user;
+      if (!appUserId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "No domain user is linked to this account yet",
+        });
+      }
+
+      if (input.preferredLanguage !== undefined) {
+        const lang = await ctx.db.languages.findUnique({
+          where: { code: input.preferredLanguage },
+          select: { code: true },
+        });
+        if (!lang) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Unsupported language code: ${input.preferredLanguage}`,
+          });
+        }
+      }
+
+      const updated = await ctx.db.users.update({
+        where: { id: appUserId },
+        data: {
+          ...(input.preferredLanguage !== undefined && {
+            preferred_language: input.preferredLanguage,
+          }),
+          ...(input.phone !== undefined && { phone: input.phone }),
+        },
+        select: {
+          id: true,
+          role: true,
+          preferred_language: true,
+          phone: true,
+        },
+      });
+      return updated;
+    }),
 });

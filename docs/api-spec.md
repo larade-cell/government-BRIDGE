@@ -8,6 +8,20 @@ Detailed reference for every user-facing endpoint. Each resource section lists r
 
 ## 1. Conventions
 
+### 1.0 Best practices checklist
+
+These rules apply to every route in this document. If you find a route that violates one, fix the route, not the rule.
+
+- **Resource paths are plural nouns.** `/programs`, not `/program`. Collections are plural; the singular form is the resource within a collection (`/programs/:programId`).
+- **HTTP methods carry the verb.** Use `GET` to read, `POST` to create, `PUT` to replace or upsert, `PATCH` to partially update, `DELETE` to remove. Path verbs are reserved for actions that don't fit CRUD (`/.../complete`, `/.../publish`, `/.../handoff`).
+- **Query parameters for filtering, sorting, pagination, expansion.** See §1.4–§1.7. Bodies are for state, not for selection.
+- **Consistent response envelope.** Lists return `{ data: [...], meta: {...} }`. Single resources return the resource shape directly. Errors return `{ error: { code, message, details? } }` (§1.9).
+- **Use the right HTTP status codes** — see §1.9 for the full table. Quick reference: `200 OK` for reads, `201 Created` for new resources, `204 No Content` for empty success (e.g. `DELETE`), `4xx` for client mistakes, `5xx` for server faults.
+- **Version the API in the URL.** Current is `/api/v1` (§1.1). Breaking changes ship to `/api/v2`; additive changes stay in `v1`.
+- **No PII in URLs.** Identifiers (uuids) only. Emails and phone numbers go in the request body.
+- **All timestamps are ISO 8601 UTC.** Server sends `Z`-suffixed strings; client sends the same.
+- **Idempotent writes.** `PUT` and `DELETE` are idempotent by HTTP contract; `POST` should be made idempotent via `Idempotency-Key` (§1.10).
+
 ### 1.1 Base URL and versioning
 
 ```
@@ -41,8 +55,8 @@ List endpoints accept:
 
 | Query param | Type | Default | Description |
 |---|---|---|---|
+| `page` | integer (≥1) | 1 | One-based page number |
 | `limit` | integer (1-100) | 20 | Page size |
-| `offset` | integer (≥0) | 0 | Row offset |
 
 Responses include a `meta` object:
 
@@ -50,12 +64,15 @@ Responses include a `meta` object:
 {
   "data": [ /* ... */ ],
   "meta": {
+    "page": 1,
     "limit": 20,
-    "offset": 0,
-    "total": 137
+    "total": 137,
+    "totalPages": 7
   }
 }
 ```
+
+Server enforces `limit <= 100`. Requests beyond `totalPages` return an empty `data` array with the correct `meta`.
 
 ### 1.5 Sorting
 
@@ -131,9 +148,76 @@ All error responses share this shape:
 
 ---
 
-## 2. Resources
+## 2. Implementation phases
 
-### 2.1 Screening Sessions
+Routes are grouped into three rollout phases. Phase 1 is the MVP — residents can complete the screener end-to-end. Phase 2 fills in account, staff, and AI features. Phase 3 is polish — advanced search, exports, admin tooling.
+
+Cross-reference with [`api-routes.md`](../api-routes.md) for live implementation status; this section captures *intent*, that file tracks *progress*.
+
+### Phase 1 — Core entities (MVP)
+
+Everything a resident needs to complete the screener and see results. Story coverage: 1, 2, 5, 6, 7, 8, 9, 15 (partial — uploads + classification).
+
+| Resource | Section | Stories | Notes |
+|---|---|---|---|
+| Screening Sessions | §3.1 | 1, 2, 4 (claim) | Anonymous create + session-scoped reads |
+| Questions | §3.2 | 5 | Reference content, read-only for clients |
+| Screening Answers | §3.3 | 5 | Upsert by `(sessionId, questionId)` |
+| Programs (read) | §3.4 | 6, 7, 10 | Catalog browse |
+| Eligibility Results | §3.5 | 6, 7 | Run + list |
+| Document Types (read) | §3.6 | 8 | Reference for checklist |
+| Session Document Checklist | §3.7 | 8 | Generated per session |
+| Document Uploads | §3.8 | 9, 15 | Two-step presigned upload |
+| Users (`/users/me` only) | §3.9 | 4 | Authenticated reads/updates of own profile |
+
+### Phase 2 — Related and admin endpoints
+
+Account features, staff dashboards, AI navigator, search. Story coverage: 3, 4, 10, 11, 12, 13, 14, 16, 18, 20.
+
+| Resource | Section | Stories | Notes |
+|---|---|---|---|
+| Notification Preferences | §3.10 | 12 | Per-user OR per-session |
+| Organizations | §3.11 | 11 | Read public; mutations admin-only |
+| Referrals | §3.12 | 11 | Nullable `organizationId` for in-person help |
+| Life Events | §3.13 | 10 | Browse-by-life-event |
+| AI Conversations & Messages | §3.14 | 13 | Stateful chat + one-shot `/ai/ask` |
+| AI Recommendations | §3.15 | 16 | Polymorphic targets, status workflow |
+| Cases | §3.16 | 18 | Caseworker dashboard |
+| Case Notes | §3.17 | 18 | Internal vs external |
+| Search (`GET /search/*`) | §3.18 | 14, 10 | Natural-language + plain |
+| Reports (read) | §3.19 | 18, 20 | JSON output, role-gated |
+| Eligibility Rule Versions | §4 | 20 | Versioned publishing |
+
+### Phase 3 — Optional enhancements
+
+Polish and admin tooling that can ship after Phase 2 without blocking residents or staff. Story coverage: 17, plus operational concerns from §20.
+
+| Resource | Section | Notes |
+|---|---|---|
+| Advanced Search (`POST /search`) | §3.18 | Structured queries with filters |
+| Report exports (`POST /reports/exports/:report`) | §3.19 | Async CSV jobs |
+| AI Knowledge Sources management | §4 | Admin CRUD + reindex |
+| Anomaly Flags review UI | §4 | Story 17, admin workflow |
+| Audit Logs reads | §4 | Compliance / debugging |
+| Roles & Permissions management | §4 | Admin-only |
+| Account deletion (`DELETE /users/me`) | §3.9 | Soft-delete; depends on retention policy |
+| Webhooks / outbound events | §5 | Future — out of scope for v1 |
+| OpenAPI generation | §5 | Future — convert this doc once contracts stabilise |
+
+### Phase exit criteria
+
+A phase is "done" when:
+
+- Every route in the phase has Designed / Implemented / Tested checkboxes ticked in `api-routes.md`.
+- All status codes from §1.9 are returned correctly for the routes in that phase (verified by integration tests).
+- Pagination, sorting, filtering, and expansion are exercised by at least one test per applicable list endpoint.
+- For Phase 1: the anonymous → claim → eligibility-run → checklist → upload flow runs end-to-end against the deployed stack.
+
+---
+
+## 3. Resources
+
+### 3.1 Screening Sessions
 
 The root resource for the screening flow. Created anonymously; optionally claimed by an account later. The id functions as a bearer token until claimed.
 
@@ -214,13 +298,13 @@ Server sets `userId` to the caller's `appUserId`.
 
 | Query | Type | Default | Description |
 |---|---|---|---|
-| `limit`, `offset` | — | — | Pagination |
+| `page`, `limit` | — | — | Pagination |
 | `sort` | string | `-createdAt` | `createdAt`, `-createdAt`, `completedAt`, `-completedAt` |
 | `filter[completed]` | boolean | — | `true` returns only completed |
 
 ---
 
-### 2.2 Questions
+### 3.2 Questions
 
 Reference content for the screener. Reads are public; mutations are admin-only.
 
@@ -288,7 +372,7 @@ Response:
 
 ---
 
-### 2.3 Screening Answers
+### 3.3 Screening Answers
 
 Per-question responses scoped to a session.
 
@@ -324,7 +408,7 @@ Server validates against the referenced question's `answerType`. Returns the ups
 
 ---
 
-### 2.4 Programs
+### 3.4 Programs
 
 The catalog of benefit programs. Reads are public; mutations are admin-only.
 
@@ -361,11 +445,11 @@ The catalog of benefit programs. Reads are public; mutations are admin-only.
 | `filter[lifeEvent]` | string | — | Match `lifeEvents.eventKey` |
 | `sort` | string | `name` | `name`, `-name`, `category` |
 | `include` | string | — | `lifeEvents`, `documentRequirements` |
-| `limit`, `offset` | — | — |  |
+| `page`, `limit` | — | — |  |
 
 ---
 
-### 2.5 Eligibility Results
+### 3.5 Eligibility Results
 
 Outcome of running the rule engine against a session. One row per program.
 
@@ -412,7 +496,7 @@ Re-running upserts rows in place (per `(sessionId, programId)`).
 
 ---
 
-### 2.6 Document Types
+### 3.6 Document Types
 
 Reference catalog of document categories (`paystub`, `ssn_card`, ...). Read-only for clients.
 
@@ -436,7 +520,7 @@ Reference catalog of document categories (`paystub`, `ssn_card`, ...). Read-only
 
 ---
 
-### 2.7 Session Document Checklist
+### 3.7 Session Document Checklist
 
 The personalised checklist of documents the session needs. Generated from `eligibilityResults` and `programDocumentRequirements`.
 
@@ -469,7 +553,7 @@ The personalised checklist of documents the session needs. Generated from `eligi
 
 ---
 
-### 2.8 Document Uploads
+### 3.8 Document Uploads
 
 Files the resident has uploaded. Storage is delegated to an object store; the API returns a signed URL on upload.
 
@@ -531,7 +615,7 @@ After the client PUTs to `uploadUrl`, the storage service notifies the API which
 
 ---
 
-### 2.9 Users
+### 3.9 Users
 
 The authenticated user's own profile. Other users' profiles are not exposed via v1.
 
@@ -572,7 +656,7 @@ Role and email are immutable via this endpoint.
 
 ---
 
-### 2.10 Notification Preferences
+### 3.10 Notification Preferences
 
 How a user (or session) wants to be notified.
 
@@ -602,7 +686,7 @@ How a user (or session) wants to be notified.
 
 ---
 
-### 2.11 Organizations
+### 3.11 Organizations
 
 Community organizations available for referrals.
 
@@ -637,11 +721,11 @@ Community organizations available for referrals.
 | `filter[category]` | string | — | Match any tag in `serviceCategories` |
 | `filter[postalCode]` | string | — | Five-digit ZIP filter against `address.postalCode` |
 | `sort` | string | `name` |  |
-| `limit`, `offset` | — | — |  |
+| `page`, `limit` | — | — |  |
 
 ---
 
-### 2.12 Referrals
+### 3.12 Referrals
 
 Connections between a session and an organization (or pending in-person help requests with no org yet).
 
@@ -669,7 +753,7 @@ Connections between a session and an organization (or pending in-person help req
 
 ---
 
-### 2.13 Life Events (browse)
+### 3.13 Life Events (browse)
 
 Tags used to surface relevant programs ("had a baby", "lost a job", ...).
 
@@ -689,7 +773,7 @@ Tags used to surface relevant programs ("had a baby", "lost a job", ...).
 
 ---
 
-### 2.14 AI Conversations and Messages
+### 3.14 AI Conversations and Messages
 
 The chatbot. One conversation per topic; many messages per conversation.
 
@@ -759,7 +843,7 @@ Response 200:
 
 ---
 
-### 2.15 AI Recommendations
+### 3.15 AI Recommendations
 
 Personalised suggestions (additional programs, community resources). Distinct from `eligibilityResults` (deterministic) and `aiConversations` (chat).
 
@@ -790,7 +874,7 @@ Personalised suggestions (additional programs, community resources). Distinct fr
 
 ---
 
-### 2.16 Cases (caseworker dashboard)
+### 3.16 Cases (caseworker dashboard)
 
 Open work items derived from sessions that need staff attention.
 
@@ -824,11 +908,11 @@ Open work items derived from sessions that need staff attention.
 | `filter[priority]` | enum | — |  |
 | `filter[assignedTo]` | uuid \| `me` \| `unassigned` | — |  |
 | `sort` | string | `-priority,-createdAt` |  |
-| `limit`, `offset` | — | — |  |
+| `page`, `limit` | — | — |  |
 
 ---
 
-### 2.17 Case Notes
+### 3.17 Case Notes
 
 Notes attached to a case. Internal notes are not exposed to the resident.
 
@@ -854,7 +938,7 @@ Notes attached to a case. Internal notes are not exposed to the resident.
 
 ---
 
-### 2.18 Search
+### 3.18 Search
 
 Two flavors: scoped GET routes for common cases, and a generic `POST /search` for advanced queries.
 
@@ -898,8 +982,8 @@ Response:
   "entity": "programs",
   "query": "childcare",
   "filters": { "category": "childcare", "language": "en" },
-  "limit": 20,
-  "offset": 0
+  "page": 1,
+  "limit": 20
 }
 ```
 
@@ -907,7 +991,7 @@ Response:
 
 ---
 
-### 2.19 Reports (caseworker / admin)
+### 3.19 Reports (caseworker / admin)
 
 Aggregate views for staff. All require `caseworker` or `admin` role and accept the same date-range / program filters.
 
@@ -939,7 +1023,7 @@ Aggregate views for staff. All require `caseworker` or `admin` role and accept t
 
 ---
 
-## 3. Admin-only resources (brief)
+## 4. Admin-only resources (brief)
 
 The following resources have HTTP surface but aren't user-facing; they are documented at the route level only. Schemas track the Prisma models 1:1.
 
@@ -953,7 +1037,7 @@ The following resources have HTTP surface but aren't user-facing; they are docum
 
 ---
 
-## 4. Out of scope for v1
+## 5. Out of scope for v1
 
 - Webhooks / outbound event delivery
 - Bulk import endpoints (`POST /imports`)
@@ -963,8 +1047,9 @@ The following resources have HTTP surface but aren't user-facing; they are docum
 
 ---
 
-## 5. Change log
+## 6. Change log
 
 | Date | Change |
 |---|---|
 | 2026-05-28 | Initial draft |
+| 2026-05-28 | Added §1.0 best-practices checklist, §2 implementation phases; switched pagination to `page`/`limit`. |

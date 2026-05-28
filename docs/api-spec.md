@@ -115,28 +115,251 @@ Translated content is selected by `?language=en|es`. The default is the caller's
 
 ### 1.9 Error format
 
-All error responses share this shape:
+#### Envelope
+
+Every non-2xx response uses this shape:
 
 ```json
 {
   "error": {
     "code": "FORBIDDEN",
     "message": "Session belongs to another user",
-    "details": { /* optional, error-specific */ }
+    "details": null,
+    "requestId": "req_01HN8...",
+    "timestamp": "2026-05-28T13:14:15.000Z"
   }
 }
 ```
 
-| HTTP | `error.code` | When |
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `code` | string (enum) | yes | Machine-readable; values from the status matrix below |
+| `message` | string | yes | Human-readable English. Not localized — clients map `code` to their own strings |
+| `details` | object \| null | no | Shape depends on `code`. Schemas below |
+| `requestId` | string | yes | Echo of the server-assigned trace id (also returned in `X-Request-Id` header) |
+| `timestamp` | datetime | yes | When the error was produced (UTC, ISO 8601) |
+
+#### Status code matrix
+
+| HTTP | `error.code` | `details` shape | Typical trigger |
+|---|---|---|---|
+| 400 | `BAD_REQUEST` | `ValidationDetails` (§1.9.1) or `null` | Schema validation failed, malformed JSON, unknown query param |
+| 401 | `UNAUTHORIZED` | `null` | Missing / invalid session cookie on an authenticated route |
+| 403 | `FORBIDDEN` | `{ reason: string }` (§1.9.3) | Authenticated but lacks permission, or session-ownership mismatch |
+| 404 | `NOT_FOUND` | `{ resource: string, id?: string }` | Resource doesn't exist or caller can't see it |
+| 409 | `CONFLICT` | `{ reason: string, field?: string }` | Unique constraint, state conflict, duplicate `Idempotency-Key` with different body |
+| 413 | `PAYLOAD_TOO_LARGE` | `{ maxBytes: number, receivedBytes: number }` | Upload exceeds the per-file or per-request limit |
+| 415 | `UNSUPPORTED_MEDIA_TYPE` | `{ allowed: string[], received: string }` | `Content-Type` not accepted, or upload mime type rejected |
+| 422 | `UNPROCESSABLE` | `{ reason: string, ...context }` (§1.9.2) | Well-formed request but semantically invalid |
+| 429 | `RATE_LIMITED` | `{ retryAfterSeconds: number, limit: number, window: string }` | Throttle hit; clients should also honor the `Retry-After` header |
+| 500 | `INTERNAL` | `null` | Unhandled server error. `requestId` is the only useful payload; full traces stay server-side |
+| 503 | `SERVICE_UNAVAILABLE` | `{ retryAfterSeconds: number }` | Dependency down (DB, AI provider, storage); transient |
+
+#### 1.9.1 Validation errors (`400 BAD_REQUEST`)
+
+When request input fails schema validation, `details` is the `ValidationDetails` shape. This mirrors what `ZodError.flatten()` produces on the server (`src/server/api/trpc.ts`), translated into the REST envelope:
+
+```json
+{
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "Invalid request",
+    "details": {
+      "fieldErrors": {
+        "email": ["Required", "Invalid email"],
+        "preferredLanguage": ["String must contain at most 8 character(s)"]
+      },
+      "formErrors": []
+    },
+    "requestId": "req_01HN8...",
+    "timestamp": "2026-05-28T13:14:15.000Z"
+  }
+}
+```
+
+`ValidationDetails`:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `fieldErrors` | `{ [field: string]: string[] }` | yes | One entry per offending field. Nested fields use dot paths (`address.postalCode`). Array indices use bracket notation (`items[0].quantity`). Each value is a list — a field can have multiple violations |
+| `formErrors` | `string[]` | yes | Top-level errors not attributable to a single field (e.g., "Either email or phone is required", "Body must be JSON") |
+
+Field paths in `fieldErrors` match the request body shape. For query parameters, the path prefix is the param name (`filter.outcome`, `page`).
+
+Empty `formErrors` and non-empty `fieldErrors` is the common case. The reverse means the request was structurally invalid (e.g., missing body) but no single field was identified.
+
+#### 1.9.2 Domain errors (`422 UNPROCESSABLE`)
+
+Well-formed requests that violate a business rule. `details.reason` is a stable identifier clients can branch on. Additional context fields vary by reason.
+
+| `details.reason` | Trigger | Extra fields |
 |---|---|---|
-| 400 | `BAD_REQUEST` | Validation failure, business-rule violation |
-| 401 | `UNAUTHORIZED` | No or invalid auth |
-| 403 | `FORBIDDEN` | Authenticated but not authorized |
-| 404 | `NOT_FOUND` | Resource missing |
-| 409 | `CONFLICT` | Unique constraint or state conflict |
-| 422 | `UNPROCESSABLE` | Well-formed request but semantically invalid (e.g., expired session) |
-| 429 | `RATE_LIMITED` | Throttle hit |
-| 500 | `INTERNAL` | Unhandled server error |
+| `SESSION_EXPIRED` | Caller acts on a session past `expiresAt` | `expiredAt: datetime` |
+| `SESSION_COMPLETED` | Mutation against a session with `completedAt` set | `completedAt: datetime` |
+| `RULE_NOT_PUBLISHED` | `eligibility.run` finds no published rule for a program | `programId: uuid` |
+| `ANSWER_TYPE_MISMATCH` | `answerValue` doesn't match `question.answerType` | `expectedType: string, receivedType: string` |
+| `UPLOAD_NOT_FINALIZED` | Operating on a `documentUpload` before client PUT to `uploadUrl` completes | `documentUploadId: uuid` |
+| `HANDOFF_ALREADY_REQUESTED` | Calling `/ai/conversations/:id/handoff` more than once | — |
+| `ORGANIZATION_INACTIVE` | Creating a referral pointing at a deactivated organization | `organizationId: uuid` |
+
+Example:
+
+```json
+{
+  "error": {
+    "code": "UNPROCESSABLE",
+    "message": "Session has expired",
+    "details": {
+      "reason": "SESSION_EXPIRED",
+      "expiredAt": "2026-05-25T03:14:15.000Z"
+    },
+    "requestId": "req_01HN8...",
+    "timestamp": "2026-05-28T13:14:15.000Z"
+  }
+}
+```
+
+#### 1.9.3 Authentication and authorization (`401`, `403`)
+
+`401 UNAUTHORIZED` carries no `details` — the caller needs to authenticate before any other discussion is possible. The body is:
+
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Authentication required",
+    "details": null,
+    "requestId": "req_01HN8...",
+    "timestamp": "2026-05-28T13:14:15.000Z"
+  }
+}
+```
+
+`403 FORBIDDEN` includes a `reason` so clients can show specific messaging:
+
+| `details.reason` | Trigger |
+|---|---|
+| `SESSION_OWNER_MISMATCH` | Session has `userId != null` and caller's `appUserId` doesn't match |
+| `ROLE_INSUFFICIENT` | Endpoint requires `navigator`/`caseworker`/`admin` and caller has a lower role |
+| `RESOURCE_OWNER_MISMATCH` | Caller is authenticated but doesn't own the referenced resource (e.g., a conversation belonging to a different user) |
+| `ACCOUNT_DISABLED` | Caller's account is flagged or deactivated |
+
+Example:
+
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Session belongs to another user",
+    "details": { "reason": "SESSION_OWNER_MISMATCH" },
+    "requestId": "req_01HN8...",
+    "timestamp": "2026-05-28T13:14:15.000Z"
+  }
+}
+```
+
+#### 1.9.4 Not found (`404`)
+
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Session not found",
+    "details": { "resource": "screeningSession", "id": "9f7c1c3a-..." },
+    "requestId": "req_01HN8...",
+    "timestamp": "2026-05-28T13:14:15.000Z"
+  }
+}
+```
+
+`details.resource` is the resource name in singular camelCase. For session-scoped endpoints, a "wrong owner" case returns `403 FORBIDDEN` (not `404`) so clients can distinguish "doesn't exist" from "exists but you can't see it" — except when leakage matters; in those cases the server may return `404` to avoid confirming existence.
+
+#### 1.9.5 Conflict (`409`)
+
+Used for unique-constraint violations and state conflicts.
+
+| `details.reason` | Trigger |
+|---|---|
+| `UNIQUE_CONSTRAINT` | Tried to create a row that violates a unique index. `details.field` identifies the column |
+| `IDEMPOTENCY_KEY_MISMATCH` | Same `Idempotency-Key` reused with a different request body within the 24h window |
+| `STATE_CONFLICT` | E.g., publishing an `eligibility_rule_version` that's already published |
+
+```json
+{
+  "error": {
+    "code": "CONFLICT",
+    "message": "A notification preference for this destination already exists",
+    "details": {
+      "reason": "UNIQUE_CONSTRAINT",
+      "field": "destination"
+    },
+    "requestId": "req_01HN8...",
+    "timestamp": "2026-05-28T13:14:15.000Z"
+  }
+}
+```
+
+#### 1.9.6 Rate limiting (`429`)
+
+```json
+{
+  "error": {
+    "code": "RATE_LIMITED",
+    "message": "Too many requests",
+    "details": {
+      "retryAfterSeconds": 30,
+      "limit": 60,
+      "window": "1m"
+    },
+    "requestId": "req_01HN8...",
+    "timestamp": "2026-05-28T13:14:15.000Z"
+  }
+}
+```
+
+The response also includes a `Retry-After: <seconds>` header. Clients should prefer the header if present.
+
+#### 1.9.7 Server errors (`500`, `503`)
+
+`5xx` responses never leak stack traces or internal details. The only client-actionable payload is `requestId` — quote that to support.
+
+```json
+{
+  "error": {
+    "code": "INTERNAL",
+    "message": "An unexpected error occurred",
+    "details": null,
+    "requestId": "req_01HN8...",
+    "timestamp": "2026-05-28T13:14:15.000Z"
+  }
+}
+```
+
+For `503 SERVICE_UNAVAILABLE`, `details.retryAfterSeconds` is set and the `Retry-After` header is included.
+
+#### 1.9.8 Client handling guide
+
+1. **Branch on `error.code` first**, then on `details.reason` for `422`/`403`/`409`. Never branch on `error.message` — it changes without notice.
+2. **Render `fieldErrors`** next to the corresponding form fields. Use `formErrors` for a top-of-form banner.
+3. **Map codes to translated strings** in your client. Don't display `error.message` directly to non-English users.
+4. **Honor `Retry-After`** for `429` and `503`. Implement exponential backoff with jitter on top.
+5. **Log `requestId`** with any error report or support ticket — it's the only correlation key into server logs.
+6. **`5xx` is the server's fault.** Retry once with backoff before surfacing failure; do not loop indefinitely.
+
+#### tRPC ↔ REST error mapping
+
+Because the implementation is tRPC, the wire format differs slightly. The translation:
+
+| tRPC error | REST equivalent |
+|---|---|
+| `TRPCError({ code: "BAD_REQUEST" })` with `ZodError` cause | `400 BAD_REQUEST`, `details = ZodError.flatten()` |
+| `TRPCError({ code: "UNAUTHORIZED" })` | `401 UNAUTHORIZED` |
+| `TRPCError({ code: "FORBIDDEN" })` | `403 FORBIDDEN`, `details.reason = "SESSION_OWNER_MISMATCH"` (or appropriate) |
+| `TRPCError({ code: "NOT_FOUND" })` | `404 NOT_FOUND`, `details.resource = "<resource>"` |
+| `TRPCError({ code: "CONFLICT" })` | `409 CONFLICT` |
+| `TRPCError({ code: "INTERNAL_SERVER_ERROR" })` | `500 INTERNAL` |
+
+The server's `errorFormatter` in `src/server/api/trpc.ts` is the authoritative shape; any divergence between this spec and that file is a bug.
 
 ### 1.10 Common request headers
 
@@ -1053,3 +1276,4 @@ The following resources have HTTP surface but aren't user-facing; they are docum
 |---|---|
 | 2026-05-28 | Initial draft |
 | 2026-05-28 | Added §1.0 best-practices checklist, §2 implementation phases; switched pagination to `page`/`limit`. |
+| 2026-05-28 | Expanded §1.9 with full error envelope (`requestId`, `timestamp`), validation error schema (`fieldErrors`/`formErrors`), domain reason tables for 403/409/422, status matrix incl. 413/415/503, client handling guide, and tRPC↔REST mapping. |

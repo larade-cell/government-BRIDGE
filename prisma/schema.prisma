@@ -140,6 +140,7 @@ model document_types {
   id                              String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   doc_key                         String                          @unique
   category                        String
+  document_classifications        document_classifications[]
   document_type_translations      document_type_translations[]
   document_uploads_confirmed_type document_uploads[]              @relation("document_uploads_confirmed_type")
   document_uploads_predicted_type document_uploads[]              @relation("document_uploads_predicted_type")
@@ -148,20 +149,23 @@ model document_types {
 }
 
 model document_uploads {
-  id                         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  session_id                 String             @db.Uuid
-  document_type_id           String?            @db.Uuid
-  predicted_document_type_id String?            @db.Uuid
-  classification_confidence  Decimal?           @db.Decimal(4, 3)
+  id                         String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id                 String                     @db.Uuid
+  document_type_id           String?                    @db.Uuid
+  predicted_document_type_id String?                    @db.Uuid
+  classification_confidence  Decimal?                   @db.Decimal(4, 3)
+  classified_by              classification_source?
+  classified_at              DateTime?                  @db.Timestamptz(6)
   file_name                  String
   file_mime_type             String
   storage_url                String
-  status                     upload_status      @default(uploaded)
+  status                     upload_status              @default(uploaded)
   ocr_text                   String?
-  created_at                 DateTime           @default(now()) @db.Timestamptz(6)
-  document_types             document_types?    @relation("document_uploads_confirmed_type", fields: [document_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  predicted_document_type    document_types?    @relation("document_uploads_predicted_type", fields: [predicted_document_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  screening_sessions         screening_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  created_at                 DateTime                   @default(now()) @db.Timestamptz(6)
+  document_classifications   document_classifications[]
+  document_types             document_types?            @relation("document_uploads_confirmed_type", fields: [document_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  predicted_document_type    document_types?            @relation("document_uploads_predicted_type", fields: [predicted_document_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  screening_sessions         screening_sessions         @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model eligibility_results {
@@ -224,6 +228,9 @@ model languages {
   program_translations       program_translations[]
   question_translations      question_translations[]
   screening_sessions         screening_sessions[]
+  search_embeddings          search_embeddings[]
+  search_queries             search_queries[]
+  search_synonyms            search_synonyms[]
   users                      users[]
 }
 
@@ -469,6 +476,8 @@ model screening_sessions {
   updated_at                 DateTime                     @default(now()) @db.Timestamptz(6)
   addresses                  addresses[]
   ai_conversations           ai_conversations[]
+  ai_recommendations         ai_recommendations[]
+  anomaly_flags              anomaly_flags[]
   audit_logs                 audit_logs[]
   benefit_estimates          benefit_estimates[]
   cases                      cases[]
@@ -478,6 +487,7 @@ model screening_sessions {
   referrals                  referrals[]
   resume_tokens              resume_tokens[]
   screening_answers          screening_answers[]
+  search_queries             search_queries[]
   languages                  languages?                   @relation(fields: [preferred_language], references: [code], onDelete: NoAction, onUpdate: NoAction)
   users                      users?                       @relation(fields: [user_id], references: [id], onUpdate: NoAction)
   session_document_checklist session_document_checklist[]
@@ -527,23 +537,168 @@ model users {
   created_at                                                   DateTime                    @default(now()) @db.Timestamptz(6)
   addresses                                                    addresses[]
   ai_conversations                                             ai_conversations[]
+  ai_recommendations                                           ai_recommendations[]
+  anomaly_flags_anomaly_flags_reviewed_byTousers               anomaly_flags[]             @relation("anomaly_flags_reviewed_byTousers")
+  anomaly_flags_anomaly_flags_user_idTousers                   anomaly_flags[]             @relation("anomaly_flags_user_idTousers")
   audit_logs                                                   audit_logs[]
   case_notes                                                   case_notes[]
   cases                                                        cases[]
+  document_classifications                                     document_classifications[]
   eligibility_rule_versions                                    eligibility_rule_versions[]
   navigator_clients_navigator_clients_client_user_idTousers    navigator_clients[]         @relation("navigator_clients_client_user_idTousers")
   navigator_clients_navigator_clients_navigator_user_idTousers navigator_clients[]         @relation("navigator_clients_navigator_user_idTousers")
   notification_deliveries                                      notification_deliveries[]
   notification_preferences                                     notification_preferences[]
   screening_sessions                                           screening_sessions[]
+  search_queries                                               search_queries[]
   user_roles                                                   user_roles[]
   user_sessions                                                user_sessions[]
   languages                                                    languages?                  @relation(fields: [preferred_language], references: [code], onDelete: NoAction, onUpdate: NoAction)
 }
 
+// ---------------------------------------------------------------------------
+// AI features: semantic search, document classification, recommendations,
+// anomaly detection (user stories 14–17).
+// Note: search_embeddings uses pgvector. Requires `CREATE EXTENSION vector;`
+// and an HNSW index added via raw SQL migration (Prisma doesn't model HNSW).
+// ---------------------------------------------------------------------------
+
+model ai_recommendations {
+  id                 String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id         String?                    @db.Uuid
+  user_id            String?                    @db.Uuid
+  target_type        recommendation_target_type
+  target_id          String                     @db.Uuid
+  rationale          String?
+  score              Decimal?                   @db.Decimal(4, 3)
+  model_name         String?
+  status             recommendation_status      @default(pending)
+  viewed_at          DateTime?                  @db.Timestamptz(6)
+  accepted_at        DateTime?                  @db.Timestamptz(6)
+  dismissed_at       DateTime?                  @db.Timestamptz(6)
+  created_at         DateTime                   @default(now()) @db.Timestamptz(6)
+  screening_sessions screening_sessions?        @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users              users?                     @relation(fields: [user_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@unique([session_id, target_type, target_id])
+  @@index([session_id, status])
+  @@index([target_type, target_id])
+}
+
+model anomaly_flags {
+  id                                     String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id                             String?             @db.Uuid
+  user_id                                String?             @db.Uuid
+  flag_type                              anomaly_flag_type
+  severity                               anomaly_severity    @default(low)
+  status                                 anomaly_status      @default(open)
+  detector                               String?
+  payload                                Json                @default("{}")
+  reviewed_by                            String?             @db.Uuid
+  reviewed_at                            DateTime?           @db.Timestamptz(6)
+  review_notes                           String?
+  created_at                             DateTime            @default(now()) @db.Timestamptz(6)
+  users_anomaly_flags_reviewed_byTousers users?              @relation("anomaly_flags_reviewed_byTousers", fields: [reviewed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  screening_sessions                     screening_sessions? @relation(fields: [session_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  users_anomaly_flags_user_idTousers     users?              @relation("anomaly_flags_user_idTousers", fields: [user_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([session_id])
+  @@index([status, severity, created_at(sort: Desc)])
+  @@index([payload], type: Gin)
+}
+
+model document_classifications {
+  id                   String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  document_upload_id   String                @db.Uuid
+  document_type_id     String?               @db.Uuid
+  confidence           Decimal?              @db.Decimal(4, 3)
+  classified_by        classification_source
+  model_name           String?
+  corrected_by_user_id String?               @db.Uuid
+  raw_response         Json?
+  created_at           DateTime              @default(now()) @db.Timestamptz(6)
+  users                users?                @relation(fields: [corrected_by_user_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  document_types       document_types?       @relation(fields: [document_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  document_uploads     document_uploads      @relation(fields: [document_upload_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([document_upload_id, created_at(sort: Desc)])
+}
+
+model search_embeddings {
+  id              String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  target_type     search_target_type
+  target_id       String                      @db.Uuid
+  language_code   String
+  content_text    String
+  embedding       Unsupported("vector(1536)")
+  embedding_model String
+  created_at      DateTime                    @default(now()) @db.Timestamptz(6)
+  languages       languages                   @relation(fields: [language_code], references: [code], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([target_type, target_id, language_code, embedding_model])
+  @@index([target_type, language_code])
+}
+
+model search_queries {
+  id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id           String?             @db.Uuid
+  user_id              String?             @db.Uuid
+  query_text           String
+  language_code        String?
+  result_count         Int?
+  selected_target_type search_target_type?
+  selected_target_id   String?             @db.Uuid
+  created_at           DateTime            @default(now()) @db.Timestamptz(6)
+  languages            languages?          @relation(fields: [language_code], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  screening_sessions   screening_sessions? @relation(fields: [session_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  users                users?              @relation(fields: [user_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([session_id])
+}
+
+model search_synonyms {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  language_code String
+  term          String
+  synonyms      String[]  @default([])
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  languages     languages @relation(fields: [language_code], references: [code], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([language_code, term])
+}
+
+enum anomaly_flag_type {
+  duplicate_submission
+  abnormal_upload_rate
+  suspicious_file
+  impossible_answer_pattern
+  rapid_session_creation
+  other
+}
+
+enum anomaly_severity {
+  low
+  medium
+  high
+  critical
+}
+
+enum anomaly_status {
+  open
+  reviewing
+  dismissed
+  confirmed
+}
+
 enum auth_channel {
   email
   sms
+}
+
+enum classification_source {
+  ai
+  user
+  system
 }
 
 enum eligibility_outcome {
@@ -559,11 +714,29 @@ enum notification_channel {
   whatsapp
 }
 
+enum recommendation_status {
+  pending
+  viewed
+  accepted
+  dismissed
+}
+
+enum recommendation_target_type {
+  program
+  organization
+  knowledge_source
+}
+
 enum referral_status {
   draft
   sent
   accepted
   closed
+}
+
+enum search_target_type {
+  program
+  knowledge_source
 }
 
 enum upload_status {

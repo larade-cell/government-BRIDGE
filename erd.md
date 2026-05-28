@@ -192,11 +192,27 @@ erDiagram
         uuid id PK
         uuid session_id FK
         uuid document_type_id FK
+        uuid predicted_document_type_id FK
+        numeric classification_confidence
+        classification_source classified_by
+        timestamptz classified_at
         text file_name
         text file_mime_type
         text storage_url
         upload_status status
         text ocr_text
+        timestamptz created_at
+    }
+
+    DOCUMENT_CLASSIFICATIONS {
+        uuid id PK
+        uuid document_upload_id FK
+        uuid document_type_id FK
+        numeric confidence
+        classification_source classified_by
+        text model_name
+        uuid corrected_by_user_id FK
+        jsonb raw_response
         timestamptz created_at
     }
 
@@ -207,6 +223,37 @@ erDiagram
         text source_url
         text language_code FK
         text content_text
+        timestamptz created_at
+    }
+
+    SEARCH_EMBEDDINGS {
+        uuid id PK
+        search_target_type target_type
+        uuid target_id
+        text language_code FK
+        text content_text
+        vector embedding
+        text embedding_model
+        timestamptz created_at
+    }
+
+    SEARCH_SYNONYMS {
+        uuid id PK
+        text language_code FK
+        text term
+        text[] synonyms
+        timestamptz created_at
+    }
+
+    SEARCH_QUERIES {
+        uuid id PK
+        uuid session_id FK
+        uuid user_id FK
+        text query_text
+        text language_code FK
+        int result_count
+        search_target_type selected_target_type
+        uuid selected_target_id
         timestamptz created_at
     }
 
@@ -225,6 +272,22 @@ erDiagram
         text role
         text content
         jsonb citations
+        timestamptz created_at
+    }
+
+    AI_RECOMMENDATIONS {
+        uuid id PK
+        uuid session_id FK
+        uuid user_id FK
+        recommendation_target_type target_type
+        uuid target_id
+        text rationale
+        numeric score
+        text model_name
+        recommendation_status status
+        timestamptz viewed_at
+        timestamptz accepted_at
+        timestamptz dismissed_at
         timestamptz created_at
     }
 
@@ -360,6 +423,21 @@ erDiagram
         timestamptz created_at
     }
 
+    ANOMALY_FLAGS {
+        uuid id PK
+        uuid session_id FK
+        uuid user_id FK
+        anomaly_flag_type flag_type
+        anomaly_severity severity
+        anomaly_status status
+        text detector
+        jsonb payload
+        uuid reviewed_by FK
+        timestamptz reviewed_at
+        text review_notes
+        timestamptz created_at
+    }
+
     LANGUAGES ||--o{ USERS : preferred_language
     LANGUAGES ||--o{ SCREENING_SESSIONS : preferred_language
     LANGUAGES ||--o{ QUESTION_TRANSLATIONS : translates
@@ -370,6 +448,9 @@ erDiagram
     LANGUAGES ||--o{ AI_CONVERSATIONS : language
     LANGUAGES ||--o{ NOTIFICATION_PREFERENCES : language
     LANGUAGES ||--o{ LIFE_EVENT_TRANSLATIONS : translates
+    LANGUAGES ||--o{ SEARCH_EMBEDDINGS : language
+    LANGUAGES ||--o{ SEARCH_SYNONYMS : language
+    LANGUAGES ||--o{ SEARCH_QUERIES : language
 
     USERS ||--o{ USER_SESSIONS : has
     USERS ||--o{ USER_ROLES : has
@@ -402,6 +483,10 @@ erDiagram
     DOCUMENT_TYPES ||--o{ SESSION_DOCUMENT_CHECKLIST : checklist_item
     SCREENING_SESSIONS ||--o{ DOCUMENT_UPLOADS : uploads
     DOCUMENT_TYPES ||--o{ DOCUMENT_UPLOADS : classifies
+    DOCUMENT_TYPES ||--o{ DOCUMENT_UPLOADS : predicts
+    DOCUMENT_UPLOADS ||--o{ DOCUMENT_CLASSIFICATIONS : history
+    DOCUMENT_TYPES ||--o{ DOCUMENT_CLASSIFICATIONS : labels
+    USERS ||--o{ DOCUMENT_CLASSIFICATIONS : corrects
 
     PROGRAMS ||--o{ KNOWLEDGE_SOURCES : cites
     SCREENING_SESSIONS ||--o{ AI_CONVERSATIONS : has
@@ -436,6 +521,16 @@ erDiagram
 
     USERS ||--o{ AUDIT_LOGS : actor
     SCREENING_SESSIONS ||--o{ AUDIT_LOGS : related_session
+
+    SCREENING_SESSIONS ||--o{ SEARCH_QUERIES : initiates
+    USERS ||--o{ SEARCH_QUERIES : initiates
+
+    SCREENING_SESSIONS ||--o{ AI_RECOMMENDATIONS : receives
+    USERS ||--o{ AI_RECOMMENDATIONS : receives_optional
+
+    SCREENING_SESSIONS ||--o{ ANOMALY_FLAGS : flagged_session
+    USERS ||--o{ ANOMALY_FLAGS : flagged_user
+    USERS ||--o{ ANOMALY_FLAGS : reviewer
 ```
 
 ## Notes
@@ -443,5 +538,8 @@ erDiagram
 - Screening can be anonymous because `screening_sessions.user_id` is nullable.
 - Eligibility determinations are deterministic through `eligibility_rule_versions`; AI tables are separate from rule execution.
 - Multilingual content is modeled through translation tables linked to `languages`.
-- Document uploads support OCR as assistive metadata only through `ocr_text`.
+- Document uploads support OCR as assistive metadata only through `ocr_text`. AI-predicted document type is stored alongside the confirmed type (`predicted_document_type_id`, `classification_confidence`, `classified_by`); `document_classifications` keeps the full history of AI predictions and user corrections.
+- `search_embeddings` is polymorphic over `programs` and `knowledge_sources` (target_type + target_id, no FK); it requires the pgvector extension and an HNSW index applied via raw SQL migration.
+- `ai_recommendations` is polymorphic over `programs`, `organizations`, and `knowledge_sources`. `status` lets the UI track viewed/accepted/dismissed without deleting rows.
+- `anomaly_flags` are advisory: the schema never blocks a user based on a flag. Admins review through the `status` workflow.
 - Audit logs are append-only in practice and should be written by backend services, not directly by public API clients.

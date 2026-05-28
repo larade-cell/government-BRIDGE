@@ -293,6 +293,268 @@ async function main() {
   });
 
   // ────────────────────────────────────────────────────────────────────────
+  // Parent → child query joins (Prisma `include`)
+  // ────────────────────────────────────────────────────────────────────────
+  console.log("\nParent → child joins:");
+
+  // 1. screening_sessions fan-out + nested ai_messages and case_notes
+  const sessJoin = await db.screening_sessions.findUnique({
+    where: { id: session.id },
+    include: {
+      screening_answers: true,
+      resume_tokens: true,
+      eligibility_results: true,
+      document_uploads: true,
+      session_document_checklist: true,
+      ai_conversations: { include: { ai_messages: true } },
+      ai_recommendations: true,
+      anomaly_flags: true,
+      notification_preferences: true,
+      referrals: true,
+      cases: { include: { case_notes: true } },
+      search_queries: true,
+    },
+  });
+  check("session.screening_answers", sessJoin?.screening_answers.length === 1);
+  check("session.resume_tokens", sessJoin?.resume_tokens.length === 1);
+  check("session.eligibility_results", sessJoin?.eligibility_results.length === 1);
+  check("session.document_uploads", sessJoin?.document_uploads.length === 1);
+  check(
+    "session.session_document_checklist",
+    sessJoin?.session_document_checklist.length === 1,
+  );
+  check("session.ai_conversations", sessJoin?.ai_conversations.length === 1);
+  check(
+    "session.ai_conversations[0].ai_messages (nested)",
+    sessJoin?.ai_conversations[0]?.ai_messages.length === 1,
+  );
+  check("session.ai_recommendations", sessJoin?.ai_recommendations.length === 1);
+  check("session.anomaly_flags", sessJoin?.anomaly_flags.length === 1);
+  check(
+    "session.notification_preferences",
+    sessJoin?.notification_preferences.length === 1,
+  );
+  check("session.referrals", sessJoin?.referrals.length === 1);
+  check("session.cases", sessJoin?.cases.length === 1);
+  check(
+    "session.cases[0].case_notes (nested)",
+    sessJoin?.cases[0]?.case_notes.length === 1,
+  );
+  check("session.search_queries", sessJoin?.search_queries.length === 1);
+
+  // 2. users → owned children
+  const userJoin = await db.users.findUnique({
+    where: { id: appUser.id },
+    include: {
+      screening_sessions: true,
+      ai_recommendations: true,
+      anomaly_flags_anomaly_flags_user_idTousers: true,
+      notification_preferences: true,
+      cases: true,
+      search_queries: true,
+      auth_user: true,
+    },
+  });
+  check("user.screening_sessions", userJoin?.screening_sessions.length === 1);
+  check("user.ai_recommendations", userJoin?.ai_recommendations.length === 1);
+  check(
+    "user.anomaly_flags (as flagged user)",
+    userJoin?.anomaly_flags_anomaly_flags_user_idTousers.length === 1,
+  );
+  check(
+    "user.notification_preferences",
+    userJoin?.notification_preferences.length === 1,
+  );
+  check("user.cases", userJoin?.cases.length === 1);
+  check("user.search_queries", userJoin?.search_queries.length === 1);
+  check("user.auth_user link resolves", userJoin?.auth_user?.id === authUser.id);
+
+  // 3. programs → translations + rules + results (3-hop: session → results → program → translations)
+  const programJoin = await db.programs.findUnique({
+    where: { id: snap.id },
+    include: {
+      program_translations: true,
+      eligibility_rule_versions: true,
+      eligibility_results: { where: { session_id: session.id } },
+    },
+  });
+  check(
+    "snap.program_translations (en + es)",
+    (programJoin?.program_translations.length ?? 0) >= 2,
+  );
+  check(
+    "snap.eligibility_rule_versions",
+    (programJoin?.eligibility_rule_versions.length ?? 0) >= 1,
+  );
+  check(
+    "snap.eligibility_results filtered by session",
+    programJoin?.eligibility_results.length === 1,
+  );
+
+  const sessionToProgramTranslation = await db.screening_sessions.findUnique({
+    where: { id: session.id },
+    include: {
+      eligibility_results: {
+        include: {
+          programs: {
+            include: {
+              program_translations: { where: { language_code: "en" } },
+            },
+          },
+        },
+      },
+    },
+  });
+  check(
+    "session → results → program → translations (3-hop nested)",
+    sessionToProgramTranslation?.eligibility_results[0]?.programs
+      ?.program_translations[0]?.name !== undefined,
+  );
+
+  // 4. questions → answer_options → answer_option_translations (3-hop)
+  const citizenship = await db.questions.findUnique({
+    where: { question_key: "citizenship_status" },
+    include: {
+      answer_options: { include: { answer_option_translations: true } },
+      question_translations: true,
+    },
+  });
+  check(
+    "citizenship_status.answer_options (3 options)",
+    citizenship?.answer_options.length === 3,
+  );
+  check(
+    "every answer_option has en+es translations",
+    citizenship?.answer_options.every(
+      (o) => o.answer_option_translations.length === 2,
+    ) === true,
+  );
+  check(
+    "citizenship_status.question_translations (en+es)",
+    (citizenship?.question_translations.length ?? 0) >= 2,
+  );
+
+  // 5. document_types → both named upload relations + classifications
+  const docTypeJoin = await db.document_types.findUnique({
+    where: { id: docType.id },
+    include: {
+      document_uploads_confirmed_type: true,
+      document_uploads_predicted_type: true,
+      document_classifications: true,
+      document_type_translations: true,
+    },
+  });
+  check(
+    "docType.document_uploads_confirmed_type (named relation)",
+    docTypeJoin?.document_uploads_confirmed_type.some(
+      (u) => u.id === upload.id,
+    ) === true,
+  );
+  check(
+    "docType.document_uploads_predicted_type (named relation)",
+    docTypeJoin?.document_uploads_predicted_type.some(
+      (u) => u.id === upload.id,
+    ) === true,
+  );
+  check(
+    "docType.document_classifications",
+    (docTypeJoin?.document_classifications.length ?? 0) >= 1,
+  );
+
+  // 6. document_uploads → both type sides + classifications
+  const uploadJoin = await db.document_uploads.findUnique({
+    where: { id: upload.id },
+    include: {
+      document_types: true,
+      predicted_document_type: true,
+      document_classifications: true,
+    },
+  });
+  check(
+    "upload.document_types (confirmed) resolves",
+    uploadJoin?.document_types?.id === docType.id,
+  );
+  check(
+    "upload.predicted_document_type resolves",
+    uploadJoin?.predicted_document_type?.id === docType.id,
+  );
+  check(
+    "upload.document_classifications",
+    uploadJoin?.document_classifications.length === 1,
+  );
+
+  // 7. languages → multi-table fan-out
+  const enLang = await db.languages.findUnique({
+    where: { code: "en" },
+    include: {
+      program_translations: true,
+      question_translations: true,
+      answer_option_translations: true,
+      document_type_translations: true,
+      ai_conversations: { where: { session_id: session.id } },
+      notification_preferences: { where: { session_id: session.id } },
+      screening_sessions: { where: { id: session.id } },
+      search_queries: { where: { session_id: session.id } },
+    },
+  });
+  check(
+    "en.program_translations",
+    (enLang?.program_translations.length ?? 0) >= 1,
+  );
+  check(
+    "en.question_translations",
+    (enLang?.question_translations.length ?? 0) >= 1,
+  );
+  check(
+    "en.answer_option_translations",
+    (enLang?.answer_option_translations.length ?? 0) >= 1,
+  );
+  check(
+    "en.ai_conversations filtered to scenario",
+    enLang?.ai_conversations.length === 1,
+  );
+  check(
+    "en.screening_sessions filtered to scenario",
+    enLang?.screening_sessions.length === 1,
+  );
+
+  // 8. ai_recommendations → reverse parent (child → parent)
+  const recoWithParents = await db.ai_recommendations.findFirst({
+    where: { session_id: session.id },
+    include: { screening_sessions: true, users: true },
+  });
+  check(
+    "ai_recommendation.screening_sessions back-ref",
+    recoWithParents?.screening_sessions?.id === session.id,
+  );
+  check(
+    "ai_recommendation.users back-ref",
+    recoWithParents?.users?.id === appUser.id,
+  );
+
+  // 9. anomaly_flags → both named user relations resolved (reviewer is null)
+  const flagJoin = await db.anomaly_flags.findFirst({
+    where: { detector: SENTINEL_DETECTOR },
+    include: {
+      users_anomaly_flags_user_idTousers: true,
+      users_anomaly_flags_reviewed_byTousers: true,
+      screening_sessions: true,
+    },
+  });
+  check(
+    "anomaly_flag.flagged_user back-ref",
+    flagJoin?.users_anomaly_flags_user_idTousers?.id === appUser.id,
+  );
+  check(
+    "anomaly_flag.reviewer is null (not yet reviewed)",
+    flagJoin?.users_anomaly_flags_reviewed_byTousers === null,
+  );
+  check(
+    "anomaly_flag.screening_sessions back-ref",
+    flagJoin?.screening_sessions?.id === session.id,
+  );
+
+  // ────────────────────────────────────────────────────────────────────────
   // NOT NULL enforcement (raw SQL — bypasses Prisma client validation)
   // ────────────────────────────────────────────────────────────────────────
   console.log("\nNOT NULL constraints (DB rejects INSERT):");

@@ -13,6 +13,7 @@ erDiagram
         text phone UK
         text preferred_language FK
         user_role role
+        uuid auth_user_id FK
         timestamptz created_at
     }
 
@@ -56,6 +57,9 @@ erDiagram
         int current_step
         timestamptz completed_at
         timestamptz expires_at
+        inet ip_address
+        text user_agent
+        text fingerprint_hash
         timestamptz created_at
         timestamptz updated_at
     }
@@ -169,6 +173,7 @@ erDiagram
         text language_code FK
         text name
         text description
+        text examples
     }
 
     PROGRAM_DOCUMENT_REQUIREMENTS {
@@ -298,7 +303,7 @@ erDiagram
         notification_channel channel
         text destination
         text language_code FK
-        text frequency
+        notification_frequency frequency
         boolean opted_in
         timestamptz created_at
     }
@@ -315,7 +320,7 @@ erDiagram
         uuid notification_event_id FK
         uuid user_id FK
         notification_channel channel
-        text delivery_status
+        notification_delivery_status delivery_status
         text provider_message_id
         timestamptz delivered_at
         timestamptz created_at
@@ -382,8 +387,8 @@ erDiagram
         uuid id PK
         uuid session_id FK
         uuid assigned_to FK
-        text status
-        text priority
+        case_status status
+        case_priority priority
         timestamptz created_at
         timestamptz updated_at
     }
@@ -407,6 +412,14 @@ erDiagram
         text disclaimer
         jsonb calculation_details
         timestamptz created_at
+    }
+
+    AUTH_USER {
+        uuid id PK
+        text name
+        text email UK
+        timestamptz emailVerified
+        text image
     }
 
     AUDIT_LOGS {
@@ -452,6 +465,7 @@ erDiagram
     LANGUAGES ||--o{ SEARCH_SYNONYMS : language
     LANGUAGES ||--o{ SEARCH_QUERIES : language
 
+    AUTH_USER ||--o| USERS : auth_identity
     USERS ||--o{ USER_SESSIONS : has
     USERS ||--o{ USER_ROLES : has
     ROLES ||--o{ USER_ROLES : assigned
@@ -535,7 +549,9 @@ erDiagram
 
 ## Notes
 
-- Screening can be anonymous because `screening_sessions.user_id` is nullable.
+- Screening can be anonymous because `screening_sessions.user_id` is nullable. `screening_sessions.fingerprint_hash` (plus `ip_address` / `user_agent`) is the input for duplicate-submission detection in `anomaly_flags`.
+- `users.auth_user_id` is a unique FK to the NextAuth `User` table. Optional accounts (story 4) are linked through this column rather than via business-logic-only matching on email.
+- `referrals.organization_id` is nullable so a session can record a request for in-person help (story 11) before an organization is assigned.
 - Eligibility determinations are deterministic through `eligibility_rule_versions`; AI tables are separate from rule execution.
 - Multilingual content is modeled through translation tables linked to `languages`.
 - Document uploads support OCR as assistive metadata only through `ocr_text`. AI-predicted document type is stored alongside the confirmed type (`predicted_document_type_id`, `classification_confidence`, `classified_by`); `document_classifications` keeps the full history of AI predictions and user corrections.

@@ -115,8 +115,8 @@ model cases {
   id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   session_id         String             @db.Uuid
   assigned_to        String?            @db.Uuid
-  status             String             @default("new")
-  priority           String?            @default("normal")
+  status             case_status        @default(new)
+  priority           case_priority?     @default(normal)
   created_at         DateTime           @default(now()) @db.Timestamptz(6)
   updated_at         DateTime           @default(now()) @db.Timestamptz(6)
   case_notes         case_notes[]
@@ -263,16 +263,16 @@ model navigator_clients {
 }
 
 model notification_deliveries {
-  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  notification_event_id String?              @db.Uuid
-  user_id               String?              @db.Uuid
+  id                    String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  notification_event_id String?                      @db.Uuid
+  user_id               String?                      @db.Uuid
   channel               notification_channel
-  delivery_status       String
+  delivery_status       notification_delivery_status
   provider_message_id   String?
-  delivered_at          DateTime?            @db.Timestamptz(6)
-  created_at            DateTime             @default(now()) @db.Timestamptz(6)
-  notification_events   notification_events? @relation(fields: [notification_event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users                 users?               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  delivered_at          DateTime?                    @db.Timestamptz(6)
+  created_at            DateTime                     @default(now()) @db.Timestamptz(6)
+  notification_events   notification_events?         @relation(fields: [notification_event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                 users?                       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model notification_events {
@@ -284,18 +284,21 @@ model notification_events {
 }
 
 model notification_preferences {
-  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  session_id         String?              @db.Uuid
-  user_id            String?              @db.Uuid
+  id                 String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id         String?                 @db.Uuid
+  user_id            String?                 @db.Uuid
   channel            notification_channel
   destination        String
-  language_code      String?              @default("en")
-  frequency          String               @default("important_only")
-  opted_in           Boolean              @default(true)
-  created_at         DateTime             @default(now()) @db.Timestamptz(6)
-  languages          languages?           @relation(fields: [language_code], references: [code], onDelete: NoAction, onUpdate: NoAction)
-  screening_sessions screening_sessions?  @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users              users?               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  language_code      String?                 @default("en")
+  frequency          notification_frequency  @default(important_only)
+  opted_in           Boolean                 @default(true)
+  created_at         DateTime                @default(now()) @db.Timestamptz(6)
+  languages          languages?              @relation(fields: [language_code], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  screening_sessions screening_sessions?     @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users              users?                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, channel, destination])
+  @@unique([session_id, channel, destination])
 }
 
 model organizations {
@@ -409,13 +412,13 @@ model questions {
 model referrals {
   id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   session_id         String             @db.Uuid
-  organization_id    String             @db.Uuid
+  organization_id    String?            @db.Uuid
   need_category      String
   status             referral_status    @default(draft)
   notes              String?
   sent_at            DateTime?          @db.Timestamptz(6)
   created_at         DateTime           @default(now()) @db.Timestamptz(6)
-  organizations      organizations      @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organizations      organizations?     @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   screening_sessions screening_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
@@ -472,6 +475,9 @@ model screening_sessions {
   current_step               Int?                         @default(0)
   completed_at               DateTime?                    @db.Timestamptz(6)
   expires_at                 DateTime?                    @db.Timestamptz(6)
+  ip_address                 String?                      @db.Inet
+  user_agent                 String?
+  fingerprint_hash           String?
   created_at                 DateTime                     @default(now()) @db.Timestamptz(6)
   updated_at                 DateTime                     @default(now()) @db.Timestamptz(6)
   addresses                  addresses[]
@@ -491,6 +497,8 @@ model screening_sessions {
   languages                  languages?                   @relation(fields: [preferred_language], references: [code], onDelete: NoAction, onUpdate: NoAction)
   users                      users?                       @relation(fields: [user_id], references: [id], onUpdate: NoAction)
   session_document_checklist session_document_checklist[]
+
+  @@index([fingerprint_hash])
 }
 
 model session_document_checklist {
@@ -534,6 +542,7 @@ model users {
   phone                                                        String?                     @unique
   preferred_language                                           String?                     @default("en")
   role                                                         user_role                   @default(resident)
+  auth_user_id                                                 String?                     @unique @db.Uuid
   created_at                                                   DateTime                    @default(now()) @db.Timestamptz(6)
   addresses                                                    addresses[]
   ai_conversations                                             ai_conversations[]
@@ -554,6 +563,7 @@ model users {
   user_roles                                                   user_roles[]
   user_sessions                                                user_sessions[]
   languages                                                    languages?                  @relation(fields: [preferred_language], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  auth_user                                                    User?                       @relation(fields: [auth_user_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
 }
 
 // ---------------------------------------------------------------------------
@@ -695,6 +705,21 @@ enum auth_channel {
   sms
 }
 
+enum case_priority {
+  low
+  normal
+  high
+  urgent
+}
+
+enum case_status {
+  new
+  in_progress
+  waiting_on_client
+  resolved
+  closed
+}
+
 enum classification_source {
   ai
   user
@@ -712,6 +737,21 @@ enum notification_channel {
   email
   sms
   whatsapp
+}
+
+enum notification_delivery_status {
+  pending
+  sent
+  delivered
+  failed
+  bounced
+}
+
+enum notification_frequency {
+  realtime
+  daily_digest
+  weekly_digest
+  important_only
 }
 
 enum recommendation_status {
@@ -767,6 +807,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  app_user      users?
 }
 
 model Account {

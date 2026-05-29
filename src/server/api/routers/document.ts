@@ -1,6 +1,12 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import {
+  analyzeDocument,
+  classifyDocument,
+  CHAT_MODEL,
+  isAiEnabled,
+} from "../../../../lib/ai-service";
 import { assertSessionAccess } from "~/server/api/helpers/session";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -23,6 +29,11 @@ const ALLOWED_MIME = [
 ] as const;
 
 const UPLOAD_SLOT_TTL_MS = 20 * 60 * 1000; // 20 minutes
+
+// The vision model reads raster images directly. PDF/HEIC uploads are accepted
+// for storage but can't be sent to the vision endpoint as-is, so analysis skips
+// them (a separate OCR/convert step would feed `classifyDocument` text instead).
+const VISION_MIME = ["image/jpeg", "image/png"] as const;
 
 export const documentChecklistRouter = createTRPCRouter({
   bySession: publicProcedure
@@ -291,6 +302,134 @@ export const documentUploadRouter = createTRPCRouter({
           classified_at: new Date(),
         },
       });
+    }),
+
+  /**
+   * AI analysis of an uploaded image (Story 8/15): vision-OCR the document,
+   * map the extracted text to a known document type, and persist the result
+   * plus an audit row. Advisory only — a user-confirmed type is never
+   * overwritten, and the prediction is recorded separately for review.
+   *
+   * Returns `{ analyzed: false, reason }` (rather than throwing) when AI is
+   * disabled or the file can't be analyzed, so the upload flow degrades cleanly.
+   */
+  analyze: publicProcedure
+    .input(z.object({ session_id: z.string().uuid(), id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      await assertSessionAccess(ctx, input.session_id);
+      const upload = await ctx.db.document_uploads.findUnique({
+        where: { id: input.id },
+        select: {
+          id: true,
+          session_id: true,
+          storage_url: true,
+          file_mime_type: true,
+          classified_by: true,
+        },
+      });
+      if (upload?.session_id !== input.session_id) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Upload not found" });
+      }
+      // Nothing to fetch behind a still-pending upload slot.
+      if (upload.storage_url.startsWith("pending://")) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Upload is not available yet",
+        });
+      }
+      if (
+        !VISION_MIME.includes(
+          upload.file_mime_type as (typeof VISION_MIME)[number],
+        )
+      ) {
+        return { analyzed: false as const, reason: "unsupported_mime" as const };
+      }
+      if (!isAiEnabled()) {
+        return { analyzed: false as const, reason: "ai_disabled" as const };
+      }
+
+      await ctx.db.document_uploads.update({
+        where: { id: upload.id },
+        data: { status: "ocr_pending" },
+      });
+
+      const analysis = await analyzeDocument({ imageUrl: upload.storage_url });
+      if (!analysis) {
+        await ctx.db.document_uploads.update({
+          where: { id: upload.id },
+          data: { status: "failed" },
+        });
+        return { analyzed: false as const, reason: "analysis_failed" as const };
+      }
+
+      // Map the OCR text onto a known document type.
+      const types = await ctx.db.document_types.findMany({
+        select: {
+          id: true,
+          doc_key: true,
+          document_type_translations: {
+            where: { language_code: "en" },
+            select: { description: true },
+            take: 1,
+          },
+        },
+      });
+      const classification = analysis.extracted_text
+        ? await classifyDocument({
+            text: analysis.extracted_text,
+            candidates: types.map((t) => ({
+              doc_key: t.doc_key,
+              description:
+                t.document_type_translations[0]?.description ?? t.doc_key,
+            })),
+          })
+        : null;
+      const predicted = classification?.doc_key
+        ? (types.find((t) => t.doc_key === classification.doc_key) ?? null)
+        : null;
+
+      // Persist OCR + prediction. A user-confirmed type wins, so only set the
+      // confirmed `document_type_id` when the user hasn't already chosen one.
+      const userConfirmed = upload.classified_by === "user";
+      const updated = await ctx.db.document_uploads.update({
+        where: { id: upload.id },
+        data: {
+          ocr_text: analysis.extracted_text,
+          status: "ocr_complete",
+          predicted_document_type_id: predicted?.id ?? null,
+          ...(predicted && !userConfirmed
+            ? {
+                document_type_id: predicted.id,
+                classification_confidence: classification?.confidence ?? null,
+                classified_by: "ai",
+                classified_at: new Date(),
+              }
+            : {}),
+        },
+      });
+
+      await ctx.db.document_classifications.create({
+        data: {
+          document_upload_id: upload.id,
+          document_type_id: predicted?.id ?? null,
+          confidence: classification?.confidence ?? null,
+          classified_by: "ai",
+          model_name: CHAT_MODEL,
+          raw_response: {
+            summary: analysis.summary,
+            suggested_type: analysis.suggested_type,
+          },
+        },
+      });
+
+      return {
+        analyzed: true as const,
+        ocr_text: updated.ocr_text,
+        summary: analysis.summary,
+        suggested_type: analysis.suggested_type,
+        predicted_document_type_id: predicted?.id ?? null,
+        confidence: classification?.confidence ?? null,
+      };
     }),
 
   /** Soft-delete: retains the row, flips status to `deleted` (Story 9). */

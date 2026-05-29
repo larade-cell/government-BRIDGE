@@ -31,8 +31,8 @@ import { env } from "~/env";
 // Models — centralized so a model bump is a one-line change.
 // ---------------------------------------------------------------------------
 
-const CHAT_MODEL = "gpt-4o-mini";
-const EMBEDDING_MODEL = "text-embedding-3-small";
+export const CHAT_MODEL = "gpt-4o-mini";
+export const EMBEDDING_MODEL = "text-embedding-3-small";
 /** Dimensionality produced by EMBEDDING_MODEL — useful for sizing pgvector columns. */
 export const EMBEDDING_DIMENSIONS = 1536;
 
@@ -100,6 +100,15 @@ export interface DocumentClassification {
   doc_key: string | null;
   /** Model confidence in [0, 1]. */
   confidence: number;
+}
+
+export interface DocumentAnalysis {
+  /** Plain-text transcription of the document's readable content (OCR). */
+  extracted_text: string;
+  /** One- or two-sentence plain-language summary of what the document is. */
+  summary: string;
+  /** Free-text best guess at the document category (advisory, not a doc_key). */
+  suggested_type: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -286,6 +295,66 @@ export async function classifyDocument(params: {
         ? Math.max(0, Math.min(1, parsed.confidence))
         : 0;
     return { doc_key, confidence };
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Document analysis (vision OCR) — read an uploaded image/scan directly.
+// ---------------------------------------------------------------------------
+
+const ANALYZER_SYSTEM_PROMPT = `You read an image of a benefits-application document and extract its contents.
+
+Transcribe the readable text, then summarize in plain language what the document is. Do not invent information that is not visible in the image. Do not make eligibility decisions.
+
+Return ONLY a JSON object: { "extracted_text": string, "summary": string, "suggested_type": string | null }
+- extracted_text: the document's readable text, or "" if unreadable.
+- summary: one or two short sentences describing the document.
+- suggested_type: a short free-text category (e.g. "pay stub", "utility bill"), or null if unclear.`;
+
+/**
+ * Analyze a document image with the vision model: OCR-transcribe it and
+ * summarize what it is. `imageUrl` may be a publicly reachable URL or a base64
+ * `data:` URL. Returns `null` when AI is disabled. Advisory only — never a
+ * source of truth for eligibility.
+ */
+export async function analyzeDocument(params: {
+  imageUrl: string;
+  language_code?: string;
+}): Promise<DocumentAnalysis | null> {
+  const client = getClient();
+  if (!client) return null;
+
+  const lang = params.language_code ?? "en";
+  const completion = await client.chat.completions.create({
+    model: CHAT_MODEL,
+    temperature: 0,
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: ANALYZER_SYSTEM_PROMPT },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: `Analyze this document. Respond in ${lang}.` },
+          { type: "image_url", image_url: { url: params.imageUrl } },
+        ],
+      },
+    ],
+  });
+
+  const raw = completion.choices[0]?.message.content;
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<DocumentAnalysis>;
+    return {
+      extracted_text:
+        typeof parsed.extracted_text === "string" ? parsed.extracted_text : "",
+      summary: typeof parsed.summary === "string" ? parsed.summary : "",
+      suggested_type:
+        typeof parsed.suggested_type === "string" ? parsed.suggested_type : null,
+    };
   } catch {
     return null;
   }

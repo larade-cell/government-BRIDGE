@@ -37,3 +37,36 @@ export async function assertSessionAccess(ctx: Ctx, sessionId: string) {
   }
   return session;
 }
+
+/** Roles in ascending privilege order. */
+export type AppRole = "resident" | "navigator" | "caseworker" | "admin";
+
+/**
+ * Require the caller to be signed in AND hold one of `allowed` roles. The
+ * NextAuth session only carries `appUserId`, not the domain role, so we look
+ * it up. Throws UNAUTHORIZED when not signed in / no domain user, FORBIDDEN
+ * when the role is insufficient (mirrors spec §1.9.3 `ROLE_INSUFFICIENT`).
+ *
+ * Returns the loaded `{ id, role }` so callers can scope further (e.g. a
+ * caseworker only seeing their assigned cases).
+ */
+export async function requireRole(ctx: Ctx, allowed: AppRole[]) {
+  const appUserId = ctx.session?.user.appUserId;
+  if (!appUserId) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Authentication required",
+    });
+  }
+  const user = await ctx.db.users.findUnique({
+    where: { id: appUserId },
+    select: { id: true, role: true },
+  });
+  if (!user || !allowed.includes(user.role)) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Your role does not permit this action",
+    });
+  }
+  return user;
+}

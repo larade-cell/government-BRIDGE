@@ -12,6 +12,8 @@ Base URL:
 
 Phases are sized so each one is independently shippable. Tick boxes as work lands.
 
+> **Tested** means covered by the Vitest API suite in `src/server/api/__tests__/api.test.ts` (run with `npm test`), which exercises positive and negative paths (ownership, expiry, validation, role-gating, state conflicts) through the tRPC caller against the local Postgres.
+
 ### Phase 1 — Screening core (today)
 
 | Route (REST) | tRPC procedure | Designed | Implemented | Tested |
@@ -27,12 +29,14 @@ Phases are sized so each one is independently shippable. Tick boxes as work land
 
 | Route (REST) | tRPC procedure | Designed | Implemented | Tested |
 |---|---|:-:|:-:|:-:|
-| `GET /programs` | `program.list` | ✅ | ☐ | ☐ |
-| `GET /programs/:id` | `program.byId` | ✅ | ☐ | ☐ |
-| `GET /search/programs?q=…` | `program.search` | ✅ | ☐ | ☐ |
-| `GET /screening-sessions/:id/document-checklist` | `documentChecklist.bySession` | ✅ | ☐ | ☐ |
-| `POST /document-uploads` | `documentUpload.create` | ✅ | ☐ | ☐ |
-| `DELETE /document-uploads/:id` | `documentUpload.delete` | ✅ | ☐ | ☐ |
+| `GET /programs` | `program.list` | ✅ | ✅ | ✅ |
+| `GET /programs/:id` | `program.byId` | ✅ | ✅ | ✅ |
+| `GET /search/programs?q=…` | `program.search` | ✅ | ✅ | ✅ |
+| `GET /document-types` | `documentType.list` / `.byId` | ✅ | ✅ | ☐ |
+| `GET /screening-sessions/:id/document-checklist` | `documentChecklist.bySession` | ✅ | ✅ | ✅ |
+| `POST /screening-sessions/:id/document-checklist/generate` | `documentChecklist.generate` | ✅ | ✅ | ✅ |
+| `POST /document-uploads` | `documentUpload.create` | ✅ | ✅ | ✅ |
+| `DELETE /document-uploads/:id` | `documentUpload.delete` | ✅ | ✅ | ✅ |
 
 ### Phase 3 — Profile, notifications, referrals (Wednesday)
 
@@ -49,11 +53,11 @@ Phases are sized so each one is independently shippable. Tick boxes as work land
 
 | Route (REST) | tRPC procedure | Designed | Implemented | Tested |
 |---|---|:-:|:-:|:-:|
-| `POST /ai/ask` | `ai.ask` | ✅ | ☐ | ☐ |
-| `GET /reports/overview` | `report.overview` | ✅ | ☐ | ☐ |
-| `GET /cases` | `case.list` | ✅ | ☐ | ☐ |
-| `PATCH /cases/:id` | `case.update` | ✅ | ☐ | ☐ |
-| `POST /eligibility-rules` | `eligibilityRule.publish` | ✅ | ☐ | ☐ |
+| `POST /ai/ask` | `ai.ask` | ✅ | ✅ | ✅ |
+| `GET /reports/overview` | `report.overview` | ✅ | ✅ | ✅ |
+| `GET /cases` | `case.list` | ✅ | ✅ | ✅ |
+| `PATCH /cases/:id` | `case.update` | ✅ | ✅ | ☐ |
+| `POST .../rule-versions/:id/publish` | `eligibilityRule.publish` | ✅ | ✅ | ✅ |
 
 ---
 

@@ -32,7 +32,9 @@ Breaking changes ship under `/api/v2`. Additive changes go to `v1`.
 
 ### 1.2 Field naming
 
-API payloads use `camelCase`. The database is `snake_case` (Prisma introspected). The API layer translates at the boundary.
+**The wire contract is `snake_case`**, matching the Prisma/Postgres layer end to end. The tRPC procedures take and return `snake_case` fields directly (e.g. `session_id`, `preferred_language`, `answer_value`); there is no camelCase translation layer. The REST examples in this document use `snake_case` field names accordingly.
+
+> **Known inconsistency.** The Phase 3 procedures (`user.update`, `notificationPreference.*`, `referral.create`) currently accept **`camelCase` inputs** (`preferredLanguage`, `sessionId`, `needCategory`) while still returning `snake_case`. Their outputs match the contract; their inputs are a wart to be normalized to `snake_case`. New routers (Phase 1/2/4) are `snake_case` in and out.
 
 ### 1.3 Authentication
 
@@ -360,6 +362,8 @@ Because the implementation is tRPC, the wire format differs slightly. The transl
 | `TRPCError({ code: "INTERNAL_SERVER_ERROR" })` | `500 INTERNAL` |
 
 The server's `errorFormatter` in `src/server/api/trpc.ts` is the authoritative shape; any divergence between this spec and that file is a bug.
+
+> **Implementation status (2026-05-29).** The current `errorFormatter` returns the default tRPC shape plus a flattened `zodError` (validation errors, §1.9.1). The richer REST envelope — `requestId`, `timestamp`, and the `details.reason` discriminators for `403`/`409`/`422` (§1.9.2–§1.9.5) — is **not yet emitted**; it is the target contract for the planned REST/error-mapping middleware. Today, clients should branch on the tRPC error `code` and, for validation failures, read `data.zodError.fieldErrors`. The domain `reason` codes are surfaced in the human-readable `message` until the middleware lands.
 
 ### 1.10 Common request headers
 
@@ -1277,3 +1281,4 @@ The following resources have HTTP surface but aren't user-facing; they are docum
 | 2026-05-28 | Initial draft |
 | 2026-05-28 | Added §1.0 best-practices checklist, §2 implementation phases; switched pagination to `page`/`limit`. |
 | 2026-05-28 | Expanded §1.9 with full error envelope (`requestId`, `timestamp`), validation error schema (`fieldErrors`/`formErrors`), domain reason tables for 403/409/422, status matrix incl. 413/415/503, client handling guide, and tRPC↔REST mapping. |
+| 2026-05-29 | §1.2 corrected to document the actual `snake_case` wire contract (was aspirational camelCase) and flag the Phase 3 camelCase-input wart. §1.9 annotated with current `errorFormatter` status (rich envelope not yet emitted). Phase 2 (programs/checklist/uploads/search) and Phase 4 (ai.ask, reports, cases, rule-versions) procedures implemented and covered by Vitest API tests. |

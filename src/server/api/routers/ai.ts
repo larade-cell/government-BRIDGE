@@ -3,10 +3,12 @@ import { z } from "zod";
 
 import {
   embedText,
+  explainEligibility,
   generateGroundedAnswer,
   isAiEnabled,
   type ChatTurn,
   type Citation,
+  type EligibilityExplanation,
   type RetrievedPassage,
 } from "../../../../lib/ai-service";
 import { assertSessionAccess } from "~/server/api/helpers/session";
@@ -152,6 +154,54 @@ async function assertConversationAccess(ctx: Ctx, conversationId: string) {
     await assertSessionAccess(ctx, convo.session_id);
   }
   return convo;
+}
+
+/** Human-readable labels for the deterministic outcome enum (English base). */
+const OUTCOME_LABELS: Record<string, string> = {
+  likely_eligible: "Likely eligible",
+  may_be_eligible: "May be eligible",
+  unlikely_eligible: "Unlikely eligible",
+  needs_more_info: "Needs more information",
+};
+
+/** Pull the `reasons` string array out of the rules engine's explanation JSON. */
+export function extractReasons(explanation: unknown): string[] {
+  if (
+    explanation &&
+    typeof explanation === "object" &&
+    "reasons" in explanation
+  ) {
+    const { reasons } = explanation;
+    if (Array.isArray(reasons)) {
+      return reasons.filter((r): r is string => typeof r === "string");
+    }
+  }
+  return [];
+}
+
+/**
+ * Deterministic, non-AI explanation. Always available, used as the fallback
+ * when the model is disabled, times out, or errors — so the explainer endpoint
+ * never fails to return something useful. Exported for testing.
+ */
+export function buildFallbackExplanation(
+  outcome: string,
+  programName: string,
+  reasons: string[],
+): EligibilityExplanation {
+  const label = (OUTCOME_LABELS[outcome] ?? outcome).toLowerCase();
+  const explanation =
+    `Based on your screening answers, you are ${label} for ${programName}. ` +
+    `This is an estimate from your responses, not an official decision — the agency that runs ${programName} makes the final determination.`;
+  return {
+    explanation,
+    key_factors: reasons,
+    next_steps: [
+      `Review the eligibility details for ${programName}.`,
+      "Gather the documents on your checklist before applying.",
+      "Open the official application to confirm and apply.",
+    ],
+  };
 }
 
 export const aiRouter = createTRPCRouter({
@@ -305,5 +355,78 @@ export const aiRouter = createTRPCRouter({
         where: { id: convo.id },
         data: { human_handoff_requested: true },
       });
+    }),
+
+  /**
+   * Plain-language explanation of an eligibility result (eligibility explainer).
+   * The deterministic rules engine owns the `outcome`; this only rephrases it.
+   * Rate-limited (aiProcedure) and always returns a usable payload — when AI is
+   * unavailable or fails it falls back to `buildFallbackExplanation`, flagged by
+   * `ai_generated: false`.
+   */
+  explainEligibility: aiProcedure
+    .input(
+      z.object({
+        session_id: z.string().uuid(),
+        program_id: z.string().uuid(),
+        language_code: langSchema,
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      await assertSessionAccess(ctx, input.session_id);
+
+      const result = await ctx.db.eligibility_results.findUnique({
+        where: {
+          session_id_program_id: {
+            session_id: input.session_id,
+            program_id: input.program_id,
+          },
+        },
+        select: {
+          outcome: true,
+          explanation: true,
+          programs: {
+            select: {
+              program_key: true,
+              program_translations: {
+                where: { language_code: input.language_code },
+                select: { name: true },
+                take: 1,
+              },
+            },
+          },
+        },
+      });
+      if (!result) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No eligibility result for this program in this session",
+        });
+      }
+
+      const programName =
+        result.programs.program_translations[0]?.name ??
+        result.programs.program_key;
+      const reasons = extractReasons(result.explanation);
+
+      const ai = await explainEligibility({
+        program_name: programName,
+        outcome: result.outcome,
+        outcome_label: OUTCOME_LABELS[result.outcome] ?? result.outcome,
+        reasons,
+        language_code: input.language_code,
+      });
+
+      const payload =
+        ai ?? buildFallbackExplanation(result.outcome, programName, reasons);
+
+      return {
+        outcome: result.outcome,
+        outcome_label: OUTCOME_LABELS[result.outcome] ?? result.outcome,
+        program_name: programName,
+        ...payload,
+        ai_generated: ai !== null,
+        disclaimer: disclaimerFor(input.language_code),
+      };
     }),
 });

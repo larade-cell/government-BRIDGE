@@ -10,6 +10,10 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 vi.mock("~/server/auth", () => ({ auth: () => Promise.resolve(null) }));
 
 import {
+  buildFallbackExplanation,
+  extractReasons,
+} from "~/server/api/routers/ai";
+import {
   checkRateLimit,
   checkRateLimitPg,
 } from "~/server/api/helpers/rate-limit";
@@ -460,5 +464,37 @@ describe("Rate limiting", () => {
     } finally {
       await db.rate_limits.delete({ where: { key } }).catch(() => undefined);
     }
+  });
+});
+
+describe("Eligibility explainer", () => {
+  it("extracts reasons from the rules-engine explanation JSON", () => {
+    expect(extractReasons({ reasons: ["a", "b"] })).toEqual(["a", "b"]);
+    expect(extractReasons({ reasons: ["a", 2, null] })).toEqual(["a"]);
+    expect(extractReasons({})).toEqual([]);
+    expect(extractReasons(null)).toEqual([]);
+    expect(extractReasons("not an object")).toEqual([]);
+  });
+
+  it("builds a deterministic fallback explanation for any outcome", () => {
+    const fb = buildFallbackExplanation("may_be_eligible", "SNAP", [
+      "Income within range",
+    ]);
+    expect(fb.explanation).toContain("SNAP");
+    expect(fb.explanation.toLowerCase()).toContain("may be eligible");
+    expect(fb.key_factors).toEqual(["Income within range"]);
+    expect(fb.next_steps.length).toBeGreaterThan(0);
+  });
+
+  it("returns NOT_FOUND when the program has no result in the session", async () => {
+    const session = await newSession();
+    await expectCode(
+      caller(null).ai.explainEligibility({
+        session_id: session.id,
+        program_id: randomUUID(),
+        language_code: "en",
+      }),
+      "NOT_FOUND",
+    );
   });
 });

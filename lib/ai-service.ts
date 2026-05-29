@@ -422,3 +422,96 @@ export async function analyzeDocument(params: {
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Eligibility explainer — turn a deterministic rules-engine outcome into a
+// plain-language explanation. The rules engine OWNS the decision; AI only
+// rephrases it. It must not change the outcome or invent new criteria.
+// ---------------------------------------------------------------------------
+
+export interface EligibilityExplanation {
+  /** Plain-language paragraph explaining the outcome. */
+  explanation: string;
+  /** Short bullets naming what drove the outcome. */
+  key_factors: string[];
+  /** Suggested concrete next actions for the resident. */
+  next_steps: string[];
+}
+
+const EXPLAINER_SYSTEM_PROMPT = `You help a resident understand a benefit-eligibility screening result.
+
+The OUTCOME has already been decided by a deterministic rules engine — it is the source of truth. Your job is ONLY to explain it in plain language.
+
+Strict rules:
+- Do NOT change, second-guess, or re-derive the outcome. Restate it as given.
+- Explain using ONLY the outcome and the REASONS provided. Do not invent eligibility criteria, dollar thresholds, or program rules that are not in the reasons.
+- This is general information, never an official eligibility decision.
+- Write warmly and plainly, around a 6th-grade reading level. Respond in the requested language.
+
+Return ONLY a JSON object with this exact shape:
+{
+  "explanation": string,        // 2-4 sentences explaining what the result means
+  "key_factors": string[],      // short phrases describing what mattered (may be [])
+  "next_steps": string[]        // concrete actions the person can take (may be [])
+}`;
+
+/**
+ * Explain an eligibility outcome in plain language. Returns `null` when AI is
+ * disabled or the call fails (after retries/timeout) so the caller can fall
+ * back to a deterministic explanation. The outcome is passed in, not decided
+ * here — this function never determines eligibility.
+ */
+export async function explainEligibility(params: {
+  program_name: string;
+  outcome: string;
+  outcome_label: string;
+  reasons: string[];
+  language_code: string;
+}): Promise<EligibilityExplanation | null> {
+  const client = getClient();
+  if (!client) return null;
+
+  const completion = await safeCall("explainEligibility", () =>
+    client.chat.completions.create({
+      model: CHAT_MODEL,
+      temperature: 0.3,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: EXPLAINER_SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: [
+            `Language: ${params.language_code}`,
+            `Program: ${params.program_name}`,
+            `Outcome (source of truth): ${params.outcome_label} (${params.outcome})`,
+            "",
+            "REASONS from the rules engine:",
+            params.reasons.length
+              ? params.reasons.map((r) => `- ${r}`).join("\n")
+              : "- (no specific reasons were recorded)",
+          ].join("\n"),
+        },
+      ],
+    }),
+  );
+  if (!completion) return null;
+
+  const raw = completion.choices[0]?.message.content;
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<EligibilityExplanation>;
+    if (typeof parsed.explanation !== "string" || !parsed.explanation.trim()) {
+      return null;
+    }
+    const asStrings = (v: unknown): string[] =>
+      Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+    return {
+      explanation: parsed.explanation,
+      key_factors: asStrings(parsed.key_factors),
+      next_steps: asStrings(parsed.next_steps),
+    };
+  } catch {
+    return null;
+  }
+}

@@ -10,6 +10,8 @@ import {
 } from "~/components/ui/card";
 import { api } from "~/trpc/server";
 
+import { EligibilityExplainer } from "./eligibility-explainer";
+
 const outcomeLabel: Record<string, { label: string; tone: string }> = {
   likely_eligible: {
     label: "Likely eligible",
@@ -113,6 +115,10 @@ export default async function ResultsPage({
                     >
                       Open the {r.program.name} application →
                     </Link>
+                    <EligibilityExplainer
+                      sessionId={sessionId}
+                      programId={r.program.id}
+                    />
                   </CardContent>
                 </Card>
               );

@@ -2,7 +2,11 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { embedText, isAiEnabled } from "../../../../lib/ai-service";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  searchProcedure,
+} from "~/server/api/trpc";
 import { type createTRPCContext } from "~/server/api/trpc";
 
 type Ctx = Awaited<ReturnType<typeof createTRPCContext>>;
@@ -211,7 +215,7 @@ export const programRouter = createTRPCRouter({
    * ranked program summaries; an empty result set means no matches or nothing
    * indexed yet.
    */
-  search: publicProcedure
+  search: searchProcedure
     .input(searchInput)
     .query(async ({ ctx, input }) => {
       const rankById = await rankPrograms(ctx, input);

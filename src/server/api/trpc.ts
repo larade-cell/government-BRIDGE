@@ -11,6 +11,12 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
+import { env } from "~/env";
+import {
+  checkRateLimit,
+  checkRateLimitPg,
+  clientId,
+} from "~/server/api/helpers/rate-limit";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 
@@ -131,3 +137,44 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+/**
+ * Rate-limit middleware factory. Keys by endpoint group + caller (client IP,
+ * else authenticated user, else a shared anonymous bucket) and rejects with
+ * `TOO_MANY_REQUESTS` (HTTP 429) when the limit is exceeded. Backed by an
+ * in-memory sliding window — see `helpers/rate-limit.ts` for the per-instance
+ * caveat and how to swap in a shared store.
+ */
+const rateLimit = (config: { name: string; limit: number; windowMs: number }) =>
+  t.middleware(async ({ ctx, next }) => {
+    const key = `${config.name}:${clientId(
+      ctx.headers,
+      ctx.session?.user?.appUserId ?? null,
+    )}`;
+    const { allowed, resetMs } =
+      env.RATE_LIMIT_BACKEND === "postgres"
+        ? await checkRateLimitPg(ctx.db, key, config)
+        : checkRateLimit(key, config);
+    if (!allowed) {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: `Too many requests. Retry in ${Math.ceil(resetMs / 1000)}s.`,
+      });
+    }
+    return next();
+  });
+
+/**
+ * Public procedure for OpenAI-backed AI endpoints (chatbot). Tighter limit
+ * because each call can incur model cost. 10 requests/minute per caller.
+ */
+export const aiProcedure = publicProcedure.use(
+  rateLimit({ name: "ai", limit: 10, windowMs: 60_000 }),
+);
+
+/**
+ * Public procedure for natural-language search. 30 requests/minute per caller.
+ */
+export const searchProcedure = publicProcedure.use(
+  rateLimit({ name: "search", limit: 30, windowMs: 60_000 }),
+);

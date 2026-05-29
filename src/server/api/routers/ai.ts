@@ -11,6 +11,7 @@ import {
 } from "../../../../lib/ai-service";
 import { assertSessionAccess } from "~/server/api/helpers/session";
 import {
+  aiProcedure,
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
@@ -155,7 +156,7 @@ async function assertConversationAccess(ctx: Ctx, conversationId: string) {
 
 export const aiRouter = createTRPCRouter({
   /** One-shot stateless ask: creates a conversation + first exchange. */
-  ask: publicProcedure
+  ask: aiProcedure
     .input(
       z.object({
         session_id: z.string().uuid().optional(),
@@ -239,7 +240,7 @@ export const aiRouter = createTRPCRouter({
       return convo;
     }),
 
-  sendMessage: publicProcedure
+  sendMessage: aiProcedure
     .input(
       z.object({
         conversation_id: z.string().uuid(),

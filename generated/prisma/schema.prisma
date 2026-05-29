@@ -677,6 +677,18 @@ model search_synonyms {
   @@unique([language_code, term])
 }
 
+/// Fixed-window API rate-limit counters. One row per (caller × endpoint-group)
+/// key; `count` resets when a request lands in a new window. Shared across app
+/// instances, unlike the in-memory limiter. See helpers/rate-limit.ts.
+model rate_limits {
+  key          String   @id
+  window_start DateTime @db.Timestamptz(6)
+  count        Int      @default(0)
+  updated_at   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([window_start])
+}
+
 enum anomaly_flag_type {
   duplicate_submission
   abnormal_upload_rate

@@ -14,6 +14,7 @@ export const env = createEnv({
     EMAIL_FROM: z.string().email(),
     OPENAI_API_KEY: z.string().optional(),
     DATABASE_URL: z.string().url(),
+    RATE_LIMIT_BACKEND: z.enum(["memory", "postgres"]).default("memory"),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -37,6 +38,7 @@ export const env = createEnv({
     EMAIL_FROM: process.env.EMAIL_FROM,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     DATABASE_URL: process.env.DATABASE_URL,
+    RATE_LIMIT_BACKEND: process.env.RATE_LIMIT_BACKEND,
     NODE_ENV: process.env.NODE_ENV,
   },
   /**

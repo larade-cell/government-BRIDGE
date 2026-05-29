@@ -9,6 +9,10 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 // `auth()`, so a stub is sufficient.
 vi.mock("~/server/auth", () => ({ auth: () => Promise.resolve(null) }));
 
+import {
+  checkRateLimit,
+  checkRateLimitPg,
+} from "~/server/api/helpers/rate-limit";
 import { createCaller } from "~/server/api/root";
 import { db } from "~/server/db";
 
@@ -402,5 +406,59 @@ describe("Phase 3 — profile, notifications, referrals", () => {
       }),
       "NOT_FOUND",
     );
+  });
+});
+
+describe("Rate limiting", () => {
+  it("allows up to the limit, blocks within the window, then recovers", () => {
+    const key = `unit-${randomUUID()}`;
+    const opts = { limit: 3, windowMs: 1000 };
+    const t0 = 1_000_000;
+
+    expect(checkRateLimit(key, opts, t0).allowed).toBe(true);
+    expect(checkRateLimit(key, opts, t0 + 1).allowed).toBe(true);
+    const third = checkRateLimit(key, opts, t0 + 2);
+    expect(third.allowed).toBe(true);
+    expect(third.remaining).toBe(0);
+
+    const blocked = checkRateLimit(key, opts, t0 + 3);
+    expect(blocked.allowed).toBe(false);
+    expect(blocked.remaining).toBe(0);
+
+    // Once the window slides past the first hit, a slot frees up.
+    expect(checkRateLimit(key, opts, t0 + 1001).allowed).toBe(true);
+  });
+
+  it("returns TOO_MANY_REQUESTS once the AI limit is exceeded", async () => {
+    // Unique client IP so this bucket is isolated from other tests.
+    const headers = new Headers({ "x-forwarded-for": `rl-${randomUUID()}` });
+    const client = createCaller({ db, session: null, headers });
+
+    // The AI procedure allows 10/min; the 11th call from this client is blocked.
+    for (let i = 0; i < 10; i++) {
+      const res = await client.ai.ask({ question: `rate-limit probe ${i}` });
+      createdConversationIds.push(res.conversation_id);
+    }
+    await expectCode(
+      client.ai.ask({ question: "one too many" }),
+      "TOO_MANY_REQUESTS",
+    );
+  });
+
+  it("enforces the limit via the Postgres backend", async () => {
+    const key = `pg-${randomUUID()}`;
+    const opts = { limit: 2, windowMs: 60_000 };
+    try {
+      expect((await checkRateLimitPg(db, key, opts)).allowed).toBe(true);
+      const second = await checkRateLimitPg(db, key, opts);
+      expect(second.allowed).toBe(true);
+      expect(second.remaining).toBe(0);
+
+      const blocked = await checkRateLimitPg(db, key, opts);
+      expect(blocked.allowed).toBe(false);
+      expect(blocked.remaining).toBe(0);
+    } finally {
+      await db.rate_limits.delete({ where: { key } }).catch(() => undefined);
+    }
   });
 });

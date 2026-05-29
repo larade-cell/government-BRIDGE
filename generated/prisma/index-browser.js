@@ -561,6 +561,13 @@ exports.Prisma.Search_synonymsScalarFieldEnum = {
   created_at: 'created_at'
 };
 
+exports.Prisma.Rate_limitsScalarFieldEnum = {
+  key: 'key',
+  window_start: 'window_start',
+  count: 'count',
+  updated_at: 'updated_at'
+};
+
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -791,6 +798,7 @@ exports.Prisma.ModelName = {
   search_embeddings: 'search_embeddings',
   search_queries: 'search_queries',
   search_synonyms: 'search_synonyms',
+  rate_limits: 'rate_limits',
   User: 'User',
   Account: 'Account',
   Session: 'Session',

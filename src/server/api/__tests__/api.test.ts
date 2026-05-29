@@ -331,3 +331,76 @@ describe("Phase 4 — AI, reports, cases, rule versions", () => {
     );
   });
 });
+
+describe("Phase 3 — profile, notifications, referrals", () => {
+  it("updates the caller's profile and rejects an unknown language", async () => {
+    const me = caller(residentId);
+    const updated = await me.user.update({ preferred_language: "en" });
+    expect(updated.preferred_language).toBe("en");
+
+    const withPhone = await me.user.update({ phone: "+15551234567" });
+    expect(withPhone.phone).toBe("+15551234567");
+
+    await expectCode(me.user.update({ preferred_language: "zz" }), "BAD_REQUEST");
+  });
+
+  it("requires auth for user.update", async () => {
+    await expectCode(
+      caller(null).user.update({ preferred_language: "en" }),
+      "UNAUTHORIZED",
+    );
+  });
+
+  it("upserts a session-scoped notification preference idempotently", async () => {
+    const session = await newSession();
+    const me = caller(null);
+
+    const pref = await me.notificationPreference.upsert({
+      session_id: session.id,
+      channel: "email",
+      destination: "resident@example.test",
+    });
+    expect(pref.session_id).toBe(session.id);
+    expect(pref.channel).toBe("email");
+
+    // Same (session, channel, destination) updates in place rather than duping.
+    await me.notificationPreference.upsert({
+      session_id: session.id,
+      channel: "email",
+      destination: "resident@example.test",
+      frequency: "daily_digest",
+    });
+    const list = await me.notificationPreference.list({ session_id: session.id });
+    expect(list.length).toBe(1);
+    expect(list[0]?.frequency).toBe("daily_digest");
+  });
+
+  it("requires auth or a session id to list preferences", async () => {
+    await expectCode(caller(null).notificationPreference.list(), "UNAUTHORIZED");
+  });
+
+  it("creates a referral and lists it; 404s on an unknown org", async () => {
+    const session = await newSession();
+    const me = caller(null);
+
+    const referral = await me.referral.create({
+      session_id: session.id,
+      need_category: "food",
+      notes: "Needs a food bank nearby",
+    });
+    expect(referral.session_id).toBe(session.id);
+    expect(referral.need_category).toBe("food");
+
+    const list = await me.referral.list({ session_id: session.id });
+    expect(list.find((r) => r.id === referral.id)).toBeTruthy();
+
+    await expectCode(
+      me.referral.create({
+        session_id: session.id,
+        need_category: "housing",
+        organization_id: randomUUID(),
+      }),
+      "NOT_FOUND",
+    );
+  });
+});

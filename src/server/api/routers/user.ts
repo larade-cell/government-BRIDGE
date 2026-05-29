@@ -31,7 +31,7 @@ export const userRouter = createTRPCRouter({
   update: protectedProcedure
     .input(
       z.object({
-        preferredLanguage: z.string().min(2).max(8).optional(),
+        preferred_language: z.string().min(2).max(8).optional(),
         phone: z.string().trim().min(1).max(32).nullable().optional(),
       }),
     )
@@ -44,15 +44,15 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      if (input.preferredLanguage !== undefined) {
+      if (input.preferred_language !== undefined) {
         const lang = await ctx.db.languages.findUnique({
-          where: { code: input.preferredLanguage },
+          where: { code: input.preferred_language },
           select: { code: true },
         });
         if (!lang) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Unsupported language code: ${input.preferredLanguage}`,
+            message: `Unsupported language code: ${input.preferred_language}`,
           });
         }
       }
@@ -60,8 +60,8 @@ export const userRouter = createTRPCRouter({
       const updated = await ctx.db.users.update({
         where: { id: appUserId },
         data: {
-          ...(input.preferredLanguage !== undefined && {
-            preferred_language: input.preferredLanguage,
+          ...(input.preferred_language !== undefined && {
+            preferred_language: input.preferred_language,
           }),
           ...(input.phone !== undefined && { phone: input.phone }),
         },

@@ -23,14 +23,14 @@ export const notificationPreferenceRouter = createTRPCRouter({
   list: publicProcedure
     .input(
       z
-        .object({ sessionId: z.string().uuid().optional() })
+        .object({ session_id: z.string().uuid().optional() })
         .optional(),
     )
     .query(async ({ ctx, input }) => {
-      if (input?.sessionId) {
-        await assertSessionAccess(ctx, input.sessionId);
+      if (input?.session_id) {
+        await assertSessionAccess(ctx, input.session_id);
         return ctx.db.notification_preferences.findMany({
-          where: { session_id: input.sessionId },
+          where: { session_id: input.session_id },
           orderBy: { created_at: "asc" },
         });
       }
@@ -50,27 +50,27 @@ export const notificationPreferenceRouter = createTRPCRouter({
   upsert: publicProcedure
     .input(
       z.object({
-        sessionId: z.string().uuid().optional(),
+        session_id: z.string().uuid().optional(),
         channel: channelSchema,
         destination: z.string().trim().min(1).max(254),
-        languageCode: z.string().min(2).max(8).default("en"),
+        language_code: z.string().min(2).max(8).default("en"),
         frequency: frequencySchema.default("important_only"),
-        optedIn: z.boolean().default(true),
+        opted_in: z.boolean().default(true),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const update = {
-        language_code: input.languageCode,
+        language_code: input.language_code,
         frequency: input.frequency,
-        opted_in: input.optedIn,
+        opted_in: input.opted_in,
       };
 
-      if (input.sessionId) {
-        await assertSessionAccess(ctx, input.sessionId);
+      if (input.session_id) {
+        await assertSessionAccess(ctx, input.session_id);
         return ctx.db.notification_preferences.upsert({
           where: {
             session_id_channel_destination: {
-              session_id: input.sessionId,
+              session_id: input.session_id,
               channel: input.channel,
               destination: input.destination,
             },
@@ -78,7 +78,7 @@ export const notificationPreferenceRouter = createTRPCRouter({
           update,
           create: {
             ...update,
-            session_id: input.sessionId,
+            session_id: input.session_id,
             channel: input.channel,
             destination: input.destination,
           },

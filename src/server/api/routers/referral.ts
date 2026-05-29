@@ -15,18 +15,18 @@ export const referralRouter = createTRPCRouter({
   create: publicProcedure
     .input(
       z.object({
-        sessionId: z.string().uuid(),
-        organizationId: z.string().uuid().nullable().optional(),
-        needCategory: z.string().trim().min(1).max(64),
+        session_id: z.string().uuid(),
+        organization_id: z.string().uuid().nullable().optional(),
+        need_category: z.string().trim().min(1).max(64),
         notes: z.string().trim().max(2000).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertSessionAccess(ctx, input.sessionId);
+      await assertSessionAccess(ctx, input.session_id);
 
-      if (input.organizationId) {
+      if (input.organization_id) {
         const org = await ctx.db.organizations.findUnique({
-          where: { id: input.organizationId },
+          where: { id: input.organization_id },
           select: { id: true },
         });
         if (!org) {
@@ -39,9 +39,9 @@ export const referralRouter = createTRPCRouter({
 
       return ctx.db.referrals.create({
         data: {
-          session_id: input.sessionId,
-          organization_id: input.organizationId ?? null,
-          need_category: input.needCategory,
+          session_id: input.session_id,
+          organization_id: input.organization_id ?? null,
+          need_category: input.need_category,
           notes: input.notes ?? null,
         },
       });
@@ -50,14 +50,14 @@ export const referralRouter = createTRPCRouter({
   list: publicProcedure
     .input(
       z
-        .object({ sessionId: z.string().uuid().optional() })
+        .object({ session_id: z.string().uuid().optional() })
         .optional(),
     )
     .query(async ({ ctx, input }) => {
-      if (input?.sessionId) {
-        await assertSessionAccess(ctx, input.sessionId);
+      if (input?.session_id) {
+        await assertSessionAccess(ctx, input.session_id);
         return ctx.db.referrals.findMany({
-          where: { session_id: input.sessionId },
+          where: { session_id: input.session_id },
           orderBy: { created_at: "desc" },
           include: { organizations: true },
         });

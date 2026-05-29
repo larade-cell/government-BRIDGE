@@ -32,9 +32,9 @@ Breaking changes ship under `/api/v2`. Additive changes go to `v1`.
 
 ### 1.2 Field naming
 
-**The wire contract is `snake_case`**, matching the Prisma/Postgres layer end to end. The tRPC procedures take and return `snake_case` fields directly (e.g. `session_id`, `preferred_language`, `answer_value`); there is no camelCase translation layer. The REST examples in this document use `snake_case` field names accordingly.
+**The wire contract is `snake_case`**, matching the Prisma/Postgres layer end to end. Every tRPC procedure takes and returns `snake_case` fields directly (e.g. `session_id`, `preferred_language`, `answer_value`); there is no camelCase translation layer. The REST examples in this document use `snake_case` field names accordingly.
 
-> **Known inconsistency.** The Phase 3 procedures (`user.update`, `notificationPreference.*`, `referral.create`) currently accept **`camelCase` inputs** (`preferredLanguage`, `sessionId`, `needCategory`) while still returning `snake_case`. Their outputs match the contract; their inputs are a wart to be normalized to `snake_case`. New routers (Phase 1/2/4) are `snake_case` in and out.
+This is uniform across all phases. (The Phase 3 procedures — `user.update`, `notificationPreference.*`, `referral.*` — previously accepted camelCase inputs; they were normalized to `snake_case` on 2026-05-29.)
 
 ### 1.3 Authentication
 
@@ -1282,3 +1282,4 @@ The following resources have HTTP surface but aren't user-facing; they are docum
 | 2026-05-28 | Added §1.0 best-practices checklist, §2 implementation phases; switched pagination to `page`/`limit`. |
 | 2026-05-28 | Expanded §1.9 with full error envelope (`requestId`, `timestamp`), validation error schema (`fieldErrors`/`formErrors`), domain reason tables for 403/409/422, status matrix incl. 413/415/503, client handling guide, and tRPC↔REST mapping. |
 | 2026-05-29 | §1.2 corrected to document the actual `snake_case` wire contract (was aspirational camelCase) and flag the Phase 3 camelCase-input wart. §1.9 annotated with current `errorFormatter` status (rich envelope not yet emitted). Phase 2 (programs/checklist/uploads/search) and Phase 4 (ai.ask, reports, cases, rule-versions) procedures implemented and covered by Vitest API tests. |
+| 2026-05-29 | Normalized Phase 3 inputs (`user.update`, `notificationPreference.*`, `referral.*`) from camelCase to `snake_case` so the whole API is uniform; added Vitest coverage for all three. |

@@ -37,6 +37,22 @@ export const EMBEDDING_MODEL = "text-embedding-3-small";
 export const EMBEDDING_DIMENSIONS = 1536;
 
 // ---------------------------------------------------------------------------
+// Resilience — timeouts and retries.
+// ---------------------------------------------------------------------------
+
+/** Per-request timeout (ms). The SDK aborts and (within MAX_RETRIES) retries a
+ * request that exceeds this. */
+const REQUEST_TIMEOUT_MS = 30_000;
+/** Vision/OCR requests are heavier, so they get a longer per-request timeout. */
+const VISION_TIMEOUT_MS = 60_000;
+/**
+ * Automatic retries with exponential backoff, handled by the SDK. It retries
+ * connection errors and HTTP 408/409/429/>=500, honoring any `Retry-After`
+ * header. Total attempts per call = MAX_RETRIES + 1.
+ */
+const MAX_RETRIES = 2;
+
+// ---------------------------------------------------------------------------
 // Client singleton (mirrors src/server/db.ts so dev hot-reload reuses one).
 // ---------------------------------------------------------------------------
 
@@ -46,7 +62,13 @@ const globalForAi = globalThis as unknown as {
 
 function getClient(): OpenAI | null {
   if (!env.OPENAI_API_KEY) return null;
-  const client = globalForAi.openai ?? new OpenAI({ apiKey: env.OPENAI_API_KEY });
+  const client =
+    globalForAi.openai ??
+    new OpenAI({
+      apiKey: env.OPENAI_API_KEY,
+      timeout: REQUEST_TIMEOUT_MS,
+      maxRetries: MAX_RETRIES,
+    });
   if (env.NODE_ENV !== "production") globalForAi.openai = client;
   return client;
 }
@@ -54,6 +76,32 @@ function getClient(): OpenAI | null {
 /** Whether AI features are wired up (an API key is present). */
 export function isAiEnabled(): boolean {
   return Boolean(env.OPENAI_API_KEY);
+}
+
+/** Log an OpenAI/SDK error (with HTTP status when present) without leaking the key. */
+function logAiError(op: string, err: unknown): void {
+  const detail =
+    err instanceof OpenAI.APIError
+      ? `${err.status ?? "no-status"} ${err.name}: ${err.message}`
+      : err instanceof Error
+        ? `${err.name}: ${err.message}`
+        : String(err);
+  console.error(`[ai-service] ${op} failed after retries: ${detail}`);
+}
+
+/**
+ * Run an OpenAI call with graceful degradation. The SDK handles timeouts and
+ * retries internally; if those are exhausted (or any other error is thrown),
+ * this logs and resolves to `null` so callers fall back to deterministic
+ * behaviour instead of surfacing a 500.
+ */
+async function safeCall<T>(op: string, fn: () => Promise<T>): Promise<T | null> {
+  try {
+    return await fn();
+  } catch (err) {
+    logAiError(op, err);
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -123,10 +171,10 @@ export async function embedTexts(input: string[]): Promise<number[][] | null> {
   const client = getClient();
   if (!client || input.length === 0) return null;
 
-  const res = await client.embeddings.create({
-    model: EMBEDDING_MODEL,
-    input,
-  });
+  const res = await safeCall("embedTexts", () =>
+    client.embeddings.create({ model: EMBEDDING_MODEL, input }),
+  );
+  if (!res) return null;
   // The API preserves request order, but sort by index to be safe.
   return res.data
     .sort((a, b) => a.index - b.index)
@@ -188,26 +236,29 @@ export async function generateGroundedAnswer(params: {
 
   const { question, passages, language_code, history = [] } = params;
 
-  const completion = await client.chat.completions.create({
-    model: CHAT_MODEL,
-    temperature: 0.2,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: NAVIGATOR_SYSTEM_PROMPT },
-      ...history.map((t) => ({ role: t.role, content: t.content }) as const),
-      {
-        role: "user",
-        content: [
-          `Language: ${language_code}`,
-          "",
-          "SOURCE PASSAGES:",
-          buildPassageBlock(passages),
-          "",
-          `QUESTION: ${question}`,
-        ].join("\n"),
-      },
-    ],
-  });
+  const completion = await safeCall("generateGroundedAnswer", () =>
+    client.chat.completions.create({
+      model: CHAT_MODEL,
+      temperature: 0.2,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: NAVIGATOR_SYSTEM_PROMPT },
+        ...history.map((t) => ({ role: t.role, content: t.content }) as const),
+        {
+          role: "user",
+          content: [
+            `Language: ${language_code}`,
+            "",
+            "SOURCE PASSAGES:",
+            buildPassageBlock(passages),
+            "",
+            `QUESTION: ${question}`,
+          ].join("\n"),
+        },
+      ],
+    }),
+  );
+  if (!completion) return null;
 
   const raw = completion.choices[0]?.message.content;
   if (!raw) return null;
@@ -263,24 +314,27 @@ export async function classifyDocument(params: {
   const client = getClient();
   if (!client || params.candidates.length === 0) return null;
 
-  const completion = await client.chat.completions.create({
-    model: CHAT_MODEL,
-    temperature: 0,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: CLASSIFIER_SYSTEM_PROMPT },
-      {
-        role: "user",
-        content: [
-          "CANDIDATE DOCUMENT TYPES:",
-          ...params.candidates.map((c) => `- ${c.doc_key}: ${c.description}`),
-          "",
-          "DOCUMENT TEXT:",
-          params.text.slice(0, 8000),
-        ].join("\n"),
-      },
-    ],
-  });
+  const completion = await safeCall("classifyDocument", () =>
+    client.chat.completions.create({
+      model: CHAT_MODEL,
+      temperature: 0,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: CLASSIFIER_SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: [
+            "CANDIDATE DOCUMENT TYPES:",
+            ...params.candidates.map((c) => `- ${c.doc_key}: ${c.description}`),
+            "",
+            "DOCUMENT TEXT:",
+            params.text.slice(0, 8000),
+          ].join("\n"),
+        },
+      ],
+    }),
+  );
+  if (!completion) return null;
 
   const raw = completion.choices[0]?.message.content;
   if (!raw) return null;
@@ -327,21 +381,30 @@ export async function analyzeDocument(params: {
   if (!client) return null;
 
   const lang = params.language_code ?? "en";
-  const completion = await client.chat.completions.create({
-    model: CHAT_MODEL,
-    temperature: 0,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: ANALYZER_SYSTEM_PROMPT },
+  const completion = await safeCall("analyzeDocument", () =>
+    client.chat.completions.create(
       {
-        role: "user",
-        content: [
-          { type: "text", text: `Analyze this document. Respond in ${lang}.` },
-          { type: "image_url", image_url: { url: params.imageUrl } },
+        model: CHAT_MODEL,
+        temperature: 0,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: ANALYZER_SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `Analyze this document. Respond in ${lang}.`,
+              },
+              { type: "image_url", image_url: { url: params.imageUrl } },
+            ],
+          },
         ],
       },
-    ],
-  });
+      { timeout: VISION_TIMEOUT_MS },
+    ),
+  );
+  if (!completion) return null;
 
   const raw = completion.choices[0]?.message.content;
   if (!raw) return null;

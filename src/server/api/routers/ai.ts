@@ -1,6 +1,14 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import {
+  embedText,
+  generateGroundedAnswer,
+  isAiEnabled,
+  type ChatTurn,
+  type Citation,
+  type RetrievedPassage,
+} from "../../../../lib/ai-service";
 import { assertSessionAccess } from "~/server/api/helpers/session";
 import {
   createTRPCRouter,
@@ -10,6 +18,9 @@ import {
 import { type createTRPCContext } from "~/server/api/trpc";
 
 type Ctx = Awaited<ReturnType<typeof createTRPCContext>>;
+
+/** How many knowledge-base passages to ground an answer on. */
+const KB_TOP_K = 4;
 
 /**
  * AI navigator (Story 13). The model integration is stubbed — these
@@ -30,10 +41,17 @@ const DISCLAIMER: Record<string, string> = {
   es: "Esta es información general, no una decisión oficial de elegibilidad. Las determinaciones finales las realiza la agencia administradora.",
 };
 
-function buildAnswer(question: string, lang: string) {
-  const disclaimer = DISCLAIMER[lang] ?? DISCLAIMER.en!;
+function disclaimerFor(lang: string) {
+  return DISCLAIMER[lang] ?? DISCLAIMER.en!;
+}
+
+/** Deterministic, safe fallback used when AI is unavailable or unable to ground an answer. */
+function buildAnswer(question: string, lang: string): {
+  answer: string;
+  citations: Citation[];
+} {
   return {
-    answer: `Thanks for your question: "${question}". ${disclaimer}`,
+    answer: `Thanks for your question: "${question}". ${disclaimerFor(lang)}`,
     citations: [
       {
         title: "Benefits.gov — Eligibility Basics",
@@ -42,6 +60,72 @@ function buildAnswer(question: string, lang: string) {
       },
     ],
   };
+}
+
+/**
+ * Retrieve the top-k vetted knowledge-base passages for a question via
+ * pgvector similarity. Returns `[]` (so the caller falls back to the
+ * deterministic answer) when AI is disabled or the KB is not yet indexed —
+ * the latter check also avoids spending an embedding call on an empty corpus.
+ */
+async function retrieveKnowledge(
+  ctx: Ctx,
+  question: string,
+  lang: string,
+): Promise<RetrievedPassage[]> {
+  if (!isAiEnabled()) return [];
+
+  const indexed = await ctx.db.search_embeddings.count({
+    where: { target_type: "knowledge_source", language_code: lang },
+  });
+  if (indexed === 0) return [];
+
+  const queryVec = await embedText(question);
+  if (!queryVec) return [];
+  const literal = `[${queryVec.join(",")}]`;
+
+  return ctx.db.$queryRaw<RetrievedPassage[]>`
+    SELECT ks.id::text                  AS source_id,
+           ks.title                     AS title,
+           ks.source_url                AS url,
+           COALESCE(ks.content_text, '') AS content
+    FROM search_embeddings se
+    JOIN knowledge_sources ks ON ks.id = se.target_id
+    WHERE se.target_type = 'knowledge_source'
+      AND se.language_code = ${lang}
+    ORDER BY se.embedding <=> ${literal}::vector
+    LIMIT ${KB_TOP_K}
+  `;
+}
+
+/**
+ * Produce an answer for a user message: RAG-grounded via the model when the
+ * knowledge base supports it, otherwise the deterministic safe fallback. The
+ * policy disclaimer is always appended.
+ */
+async function answerQuestion(
+  ctx: Ctx,
+  question: string,
+  lang: string,
+  history: ChatTurn[] = [],
+): Promise<{ answer: string; citations: Citation[] }> {
+  const passages = await retrieveKnowledge(ctx, question, lang);
+  if (passages.length > 0) {
+    const generated = await generateGroundedAnswer({
+      question,
+      passages,
+      language_code: lang,
+      history,
+    });
+    if (generated?.grounded) {
+      return {
+        answer: `${generated.answer}\n\n${disclaimerFor(lang)}`,
+        citations: generated.citations,
+      };
+    }
+  }
+  // AI disabled, KB unindexed, or the model refused for lack of grounding.
+  return buildAnswer(question, lang);
 }
 
 /**
@@ -83,7 +167,8 @@ export const aiRouter = createTRPCRouter({
       if (input.session_id) {
         await assertSessionAccess(ctx, input.session_id);
       }
-      const { answer, citations } = buildAnswer(
+      const { answer, citations } = await answerQuestion(
+        ctx,
         input.question,
         input.language_code,
       );
@@ -163,9 +248,23 @@ export const aiRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const convo = await assertConversationAccess(ctx, input.conversation_id);
-      const { answer, citations } = buildAnswer(
+      const lang = convo.language_code ?? "en";
+
+      // Prior turns give the model conversational context for follow-ups.
+      const prior = await ctx.db.ai_messages.findMany({
+        where: { conversation_id: input.conversation_id },
+        orderBy: { created_at: "asc" },
+        select: { role: true, content: true },
+      });
+      const history: ChatTurn[] = prior
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((m) => ({ role: m.role as ChatTurn["role"], content: m.content }));
+
+      const { answer, citations } = await answerQuestion(
+        ctx,
         input.content,
-        convo.language_code ?? "en",
+        lang,
+        history,
       );
 
       await ctx.db.ai_messages.create({

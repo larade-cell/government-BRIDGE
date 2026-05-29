@@ -1,7 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { embedText, isAiEnabled } from "../../../../lib/ai-service";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { type createTRPCContext } from "~/server/api/trpc";
+
+type Ctx = Awaited<ReturnType<typeof createTRPCContext>>;
 
 /**
  * Programs catalog (Story 6/7/10) and document-type reference (Story 8).
@@ -49,6 +53,63 @@ function flattenProgram(
         life_events: p.program_life_events.map((e) => e.life_events.event_key),
       }),
   };
+}
+
+const searchInput = z.object({
+  q: z.string().trim().min(1).max(200),
+  language_code: langSchema,
+  limit: z.number().int().min(1).max(50).default(10),
+});
+type SearchInput = z.infer<typeof searchInput>;
+
+/**
+ * Rank programs for a query, returning a `programId -> score` map. Prefers
+ * semantic (vector) search when embeddings are indexed for the language;
+ * otherwise falls back to the Postgres full-text `search_vector` index. An
+ * empty map means no matches (or nothing indexed yet) — the route then returns
+ * an empty envelope.
+ */
+async function rankPrograms(
+  ctx: Ctx,
+  input: SearchInput,
+): Promise<Map<string, number>> {
+  if (isAiEnabled()) {
+    const indexed = await ctx.db.search_embeddings.count({
+      where: { target_type: "program", language_code: input.language_code },
+    });
+    if (indexed > 0) {
+      const queryVec = await embedText(input.q);
+      if (queryVec) {
+        const literal = `[${queryVec.join(",")}]`;
+        const rows = await ctx.db.$queryRaw<{ id: string; score: number }[]>`
+          SELECT se.target_id::text                  AS id,
+                 1 - (se.embedding <=> ${literal}::vector) AS score
+          FROM search_embeddings se
+          JOIN programs p ON p.id = se.target_id
+          WHERE se.target_type = 'program'
+            AND se.language_code = ${input.language_code}
+            AND p.is_active = true
+          ORDER BY se.embedding <=> ${literal}::vector
+          LIMIT ${input.limit}
+        `;
+        if (rows.length > 0) {
+          return new Map(rows.map((r) => [r.id, Number(r.score)]));
+        }
+      }
+    }
+  }
+
+  // Full-text fallback. `websearch_to_tsquery` accepts plain user phrases. If
+  // `search_vector` is unpopulated the result set is simply empty.
+  const ranked = await ctx.db.$queryRaw<{ id: string; rank: number }[]>`
+    SELECT id, ts_rank(search_vector, websearch_to_tsquery('english', ${input.q})) AS rank
+    FROM programs
+    WHERE is_active = true
+      AND search_vector @@ websearch_to_tsquery('english', ${input.q})
+    ORDER BY rank DESC
+    LIMIT ${input.limit}
+  `;
+  return new Map(ranked.map((r) => [r.id, Number(r.rank)]));
 }
 
 export const programRouter = createTRPCRouter({
@@ -144,40 +205,26 @@ export const programRouter = createTRPCRouter({
     }),
 
   /**
-   * Natural-language search over programs (Story 14). Uses the Postgres
-   * full-text `search_vector` GIN index. `websearch_to_tsquery` accepts plain
-   * user phrases. Returns ranked program summaries; if `search_vector` has not
-   * been populated yet the result set is simply empty (the route is wired,
-   * indexing is a separate data task).
+   * Natural-language search over programs (Story 14). Uses semantic vector
+   * search when program embeddings are indexed for the language, otherwise the
+   * Postgres full-text `search_vector` GIN index (see `rankPrograms`). Returns
+   * ranked program summaries; an empty result set means no matches or nothing
+   * indexed yet.
    */
   search: publicProcedure
-    .input(
-      z.object({
-        q: z.string().trim().min(1).max(200),
-        language_code: langSchema,
-        limit: z.number().int().min(1).max(50).default(10),
-      }),
-    )
+    .input(searchInput)
     .query(async ({ ctx, input }) => {
-      const ranked = await ctx.db.$queryRaw<{ id: string; rank: number }[]>`
-        SELECT id, ts_rank(search_vector, websearch_to_tsquery('english', ${input.q})) AS rank
-        FROM programs
-        WHERE is_active = true
-          AND search_vector @@ websearch_to_tsquery('english', ${input.q})
-        ORDER BY rank DESC
-        LIMIT ${input.limit}
-      `;
+      const rankById = await rankPrograms(ctx, input);
 
-      if (ranked.length === 0) {
+      if (rankById.size === 0) {
         return {
           data: [],
           meta: { query: input.q, language: input.language_code, count: 0 },
         };
       }
 
-      const rankById = new Map(ranked.map((r) => [r.id, r.rank]));
       const programs = await ctx.db.programs.findMany({
-        where: { id: { in: ranked.map((r) => r.id) } },
+        where: { id: { in: [...rankById.keys()] } },
         select: {
           id: true,
           program_key: true,

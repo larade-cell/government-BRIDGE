@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 
+import { getLocale } from "~/i18n/server";
 import { api } from "~/trpc/server";
 
 export default async function ScreeningStartPage() {
-  const session = await api.screeningSession.create({ preferred_language: "en" });
+  const preferred_language = await getLocale();
+  const session = await api.screeningSession.create({ preferred_language });
   redirect(`/screening/${session.id}`);
 }

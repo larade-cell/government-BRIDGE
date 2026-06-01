@@ -13,24 +13,19 @@ import {
 } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { useI18n } from "~/i18n/client";
+import { fmt } from "~/i18n/config";
 import { api } from "~/trpc/react";
-
-const LANGUAGES = [
-  { code: "en", label: "English" },
-  { code: "es", label: "Español" },
-];
 
 export function ProfileForm({
   email,
-  initialLanguage,
   initialPhone,
 }: {
   email: string | null;
-  initialLanguage: string;
   initialPhone: string | null;
 }) {
+  const { locale, t } = useI18n();
   const utils = api.useUtils();
-  const [language, setLanguage] = useState(initialLanguage);
   const [phone, setPhone] = useState(initialPhone ?? "");
   const [saved, setSaved] = useState(false);
 
@@ -57,9 +52,11 @@ export function ProfileForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Account details</CardTitle>
+        <CardTitle>{t.account.accountDetails}</CardTitle>
         <CardDescription>
-          {email ? `Signed in as ${email}` : "Manage your preferences"}
+          {email
+            ? `${t.home.signedInAs} ${email}`
+            : t.account.managePreferences}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
@@ -68,29 +65,13 @@ export function ProfileForm({
           onSubmit={(e) => {
             e.preventDefault();
             update.mutate({
-              preferred_language: language,
               phone: phone.trim() === "" ? null : phone.trim(),
             });
           }}
         >
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:max-w-xs">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="language">Preferred language</Label>
-              <select
-                id="language"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-              >
-                {LANGUAGES.map((l) => (
-                  <option key={l.code} value={l.code}>
-                    {l.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="phone">Phone (optional)</Label>
+              <Label htmlFor="phone">{t.account.phoneOptional}</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -102,10 +83,10 @@ export function ProfileForm({
           </div>
           <div>
             <Button type="submit" size="sm" disabled={update.isPending}>
-              {update.isPending ? "Saving…" : "Save changes"}
+              {update.isPending ? t.common.saving : t.account.saveChanges}
             </Button>
           </div>
-          {saved && <Alert variant="success">Your changes were saved.</Alert>}
+          {saved && <Alert variant="success">{t.account.saved}</Alert>}
           {update.error && (
             <Alert variant="error">{update.error.message}</Alert>
           )}
@@ -114,10 +95,9 @@ export function ProfileForm({
         {email && (
           <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/40 px-3 py-2.5">
             <div>
-              <p className="text-sm font-medium">Email me updates</p>
+              <p className="text-sm font-medium">{t.account.emailUpdates}</p>
               <p className="text-xs text-muted-foreground">
-                Get notified at {email} when there&apos;s news about your
-                benefits.
+                {fmt(t.account.emailUpdatesDesc, { email })}
               </p>
             </div>
             <Button
@@ -130,12 +110,12 @@ export function ProfileForm({
                 savePref.mutate({
                   channel: "email",
                   destination: email,
-                  language_code: language,
+                  language_code: locale,
                   opted_in: next,
                 });
               }}
             >
-              {optedIn ? "On" : "Off"}
+              {optedIn ? t.account.on : t.account.off}
             </Button>
           </div>
         )}

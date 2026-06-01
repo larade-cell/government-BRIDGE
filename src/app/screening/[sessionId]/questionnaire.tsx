@@ -7,8 +7,11 @@ import { Brand } from "~/components/ui/brand";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { LocaleToggle } from "~/components/ui/locale-toggle";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { Spinner } from "~/components/ui/spinner";
+import { useI18n } from "~/i18n/client";
+import { fmt } from "~/i18n/config";
 import { api, type RouterOutputs } from "~/trpc/react";
 
 type Question = RouterOutputs["question"]["list"][number];
@@ -16,8 +19,11 @@ type Question = RouterOutputs["question"]["list"][number];
 export function Questionnaire({ sessionId }: { sessionId: string }) {
   const router = useRouter();
   const utils = api.useUtils();
+  const { locale, t } = useI18n();
 
-  const [questions] = api.question.list.useSuspenseQuery({ language_code: "en" });
+  const [questions] = api.question.list.useSuspenseQuery({
+    language_code: locale,
+  });
   const [session] = api.screeningSession.byId.useSuspenseQuery({ id: sessionId });
 
   // Build a map from question id → stored answer so we can pre-fill on resume.
@@ -54,7 +60,7 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
     if (!current) return;
     if (current.is_required && (draft === null || draft === "")) {
       // Surface a clear, friendly prompt rather than a silently-disabled button.
-      setError("Please answer this question to continue.");
+      setError(t.screening.validationRequired);
       return;
     }
     setError(null);
@@ -75,7 +81,7 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
   if (!current) {
     return (
       <main className="brand-gradient flex min-h-screen items-center justify-center text-white">
-        <p>No questions configured.</p>
+        <p>{t.screening.noQuestions}</p>
       </main>
     );
   }
@@ -84,14 +90,18 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
 
   return (
     <main className="brand-gradient flex min-h-screen flex-col items-center px-4 py-8 text-white sm:py-12">
-      <div className="mb-8 w-full max-w-xl">
+      <div className="mb-8 flex w-full max-w-xl items-center justify-between gap-3">
         <Brand href="/" />
+        <LocaleToggle variant="dark" />
       </div>
       <div className="w-full max-w-xl">
         <div className="mb-8">
           <div className="mb-2 flex justify-between text-sm text-white/70">
             <span>
-              Question {index + 1} of {questions.length}
+              {fmt(t.screening.questionCounter, {
+                n: index + 1,
+                total: questions.length,
+              })}
             </span>
             <span className="tabular-nums">{Math.round(progress)}%</span>
           </div>
@@ -143,17 +153,17 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
               disabled={index === 0}
               className="text-white hover:bg-white/10 hover:text-white"
             >
-              Back
+              {t.common.back}
             </Button>
             <Button onClick={handleNext} disabled={upsert.isPending}>
               {upsert.isPending ? (
                 <>
-                  <Spinner className="size-4" /> Saving…
+                  <Spinner className="size-4" /> {t.common.saving}
                 </>
               ) : isLast ? (
-                "See results"
+                t.screening.seeResults
               ) : (
-                "Next"
+                t.screening.next
               )}
             </Button>
           </div>
@@ -177,6 +187,7 @@ function QuestionInput({
   value: unknown;
   onChange: (v: unknown) => void;
 }) {
+  const { t } = useI18n();
   switch (question.answer_type) {
     case "integer":
       return (
@@ -214,11 +225,11 @@ function QuestionInput({
         >
           <div className="flex items-center gap-3">
             <RadioGroupItem id={`${question.id}-yes`} value="yes" />
-            <Label htmlFor={`${question.id}-yes`}>Yes</Label>
+            <Label htmlFor={`${question.id}-yes`}>{t.screening.yes}</Label>
           </div>
           <div className="flex items-center gap-3">
             <RadioGroupItem id={`${question.id}-no`} value="no" />
-            <Label htmlFor={`${question.id}-no`}>No</Label>
+            <Label htmlFor={`${question.id}-no`}>{t.screening.no}</Label>
           </div>
         </RadioGroup>
       );

@@ -7,6 +7,8 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { ConfirmButton } from "~/components/ui/confirm";
 import { Label } from "~/components/ui/label";
+import { useI18n } from "~/i18n/client";
+import { fmt } from "~/i18n/config";
 import { api } from "~/trpc/react";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -16,16 +18,23 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export function DocumentsManager({ sessionId }: { sessionId: string }) {
+  const { locale, t } = useI18n();
   const utils = api.useUtils();
   const fileRef = useRef<HTMLInputElement>(null);
   const [docTypeId, setDocTypeId] = useState<string>("");
 
+  const statusLabel: Record<string, string> = {
+    verified: t.account.docs.statusVerified,
+    uploaded: t.account.docs.statusUploaded,
+    missing: t.account.docs.statusMissing,
+  };
+
   const checklist = api.documentChecklist.bySession.useQuery({
     session_id: sessionId,
-    language_code: "en",
+    language_code: locale,
   });
   const uploads = api.documentUpload.list.useQuery({ session_id: sessionId });
-  const docTypes = api.documentType.list.useQuery({ language_code: "en" });
+  const docTypes = api.documentType.list.useQuery({ language_code: locale });
 
   const generate = api.documentChecklist.generate.useMutation({
     onSuccess: () =>
@@ -74,9 +83,11 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
         {/* Checklist */}
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold">Required documents</h3>
+            <h3 className="text-sm font-semibold">
+              {t.account.docs.requiredTitle}
+            </h3>
             <p className="text-xs text-muted-foreground">
-              Based on the programs you matched.
+              {t.account.docs.requiredDesc}
             </p>
           </div>
           <Button
@@ -85,14 +96,15 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
             disabled={generate.isPending}
             onClick={() => generate.mutate({ session_id: sessionId })}
           >
-            {generate.isPending ? "Refreshing…" : "Refresh checklist"}
+            {generate.isPending
+              ? t.account.docs.refreshing
+              : t.account.docs.refresh}
           </Button>
         </div>
 
         {items.length === 0 ? (
           <p className="rounded-lg border border-dashed bg-muted/30 px-3 py-4 text-center text-sm text-muted-foreground">
-            No specific documents required yet. You can still upload anything
-            you have below.
+            {t.account.docs.none}
           </p>
         ) : (
           <ul className="flex flex-col gap-1.5">
@@ -107,7 +119,7 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
                     STATUS_STYLES[item.upload_status] ?? STATUS_STYLES.missing
                   }`}
                 >
-                  {item.upload_status}
+                  {statusLabel[item.upload_status] ?? item.upload_status}
                 </span>
               </li>
             ))}
@@ -116,14 +128,16 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
 
         {/* Uploader */}
         <div className="flex flex-col gap-2 rounded-lg border bg-muted/40 p-3">
-          <Label className="text-sm font-medium">Upload a document</Label>
+          <Label className="text-sm font-medium">
+            {t.account.docs.uploadTitle}
+          </Label>
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={docTypeId}
               onChange={(e) => setDocTypeId(e.target.value)}
               className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <option value="">Document type (optional)</option>
+              <option value="">{t.account.docs.docTypeOptional}</option>
               {(docTypes.data?.data ?? []).map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}
@@ -137,11 +151,11 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
               className="text-sm file:mr-2 file:rounded-md file:border file:bg-background file:px-2 file:py-1 file:text-sm"
             />
             <Button size="sm" onClick={handleAdd} disabled={createUpload.isPending}>
-              {createUpload.isPending ? "Adding…" : "Add"}
+              {createUpload.isPending ? t.account.docs.adding : t.account.docs.add}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Accepted: JPG, PNG, PDF, HEIC.
+            {t.account.docs.accepted}
           </p>
           {createUpload.error && (
             <Alert variant="error">{createUpload.error.message}</Alert>
@@ -161,15 +175,17 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
                   size="xs"
                   variant="destructive"
                   confirmVariant="destructive"
-                  title="Remove this document?"
-                  description={`"${u.file_name}" will be removed from your documents.`}
-                  confirmLabel="Remove"
+                  title={t.account.docs.removeConfirmTitle}
+                  description={fmt(t.account.docs.removeConfirmDesc, {
+                    file: u.file_name,
+                  })}
+                  confirmLabel={t.account.docs.remove}
                   disabled={deleteUpload.isPending}
                   onConfirm={() =>
                     deleteUpload.mutateAsync({ session_id: sessionId, id: u.id })
                   }
                 >
-                  Remove
+                  {t.account.docs.remove}
                 </ConfirmButton>
               </li>
             ))}

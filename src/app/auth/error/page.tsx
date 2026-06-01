@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Brand } from "~/components/ui/brand";
 import { WarningIcon } from "~/components/ui/icons";
+import { getI18n } from "~/i18n/server";
 
 // NextAuth passes an error code (Configuration | AccessDenied | Verification |
 // Default | …); we look it up in `messages` and fall back to Default.
@@ -31,7 +32,7 @@ export default async function AuthErrorPage({
 }: {
   searchParams: Promise<{ error?: ErrorCode }>;
 }) {
-  const { error } = await searchParams;
+  const [{ error }, { t }] = await Promise.all([searchParams, getI18n()]);
   const { title, body } = messages[error ?? "Default"] ?? messages.Default!;
 
   return (
@@ -53,13 +54,13 @@ export default async function AuthErrorPage({
               href="/auth/magic-link"
               className="rounded-full bg-white px-5 py-2.5 font-semibold text-slate-900 shadow-sm transition hover:bg-white/90 active:translate-y-px"
             >
-              Request a new link
+              {t.auth.errorRequestNew}
             </Link>
             <Link
               href="/"
               className="rounded-full bg-white/10 px-5 py-2.5 font-semibold ring-1 ring-white/15 transition hover:bg-white/20 active:translate-y-px"
             >
-              Go home
+              {t.auth.errorGoHome}
             </Link>
           </div>
         </div>

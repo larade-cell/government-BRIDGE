@@ -1,0 +1,158 @@
+import type { Messages } from "./en";
+
+/** Spanish catalog. Must mirror the shape of `en` (enforced by `Messages`). */
+export const es: Messages = {
+  common: {
+    signIn: "Iniciar sesión",
+    signOut: "Cerrar sesión",
+    dashboard: "Panel",
+    back: "Atrás",
+    saving: "Guardando…",
+    loading: "Cargando…",
+  },
+  home: {
+    badge: "Motor de Inteligencia de Recursos y Orientación Digital de Beneficios",
+    title: "Encuentre los beneficios para los que califica",
+    subtitle:
+      "BRIDGE lo evalúa en minutos para programas federales y estatales, y luego le ayuda a reunir documentos y solicitar.",
+    signedInAs: "Sesión iniciada como",
+    startScreening: "Comenzar evaluación",
+    goToDashboard: "Ir a mi panel",
+    staffSignIn: "Acceso para personal →",
+  },
+  auth: {
+    signInTitle: "Iniciar sesión",
+    staffTitle: "Acceso para personal",
+    signInSubtitle:
+      "Le enviaremos por correo un enlace de acceso de un solo uso — sin contraseña.",
+    staffSubtitle:
+      "Use su correo de personal. Le enviaremos un enlace de acceso de un solo uso.",
+    name: "Nombre",
+    namePlaceholder: "Su nombre",
+    email: "Correo electrónico",
+    sendLink: "Enviar enlace mágico",
+    toStaff: "¿Es personal? Inicie sesión aquí →",
+    toResident: "¿No es personal? Acceso para residentes →",
+    errorRequestNew: "Solicitar un nuevo enlace",
+    errorGoHome: "Ir al inicio",
+  },
+  screening: {
+    questionCounter: "Pregunta {n} de {total}",
+    yes: "Sí",
+    no: "No",
+    validationRequired: "Responda esta pregunta para continuar.",
+    next: "Siguiente",
+    seeResults: "Ver resultados",
+    noQuestions: "No hay preguntas configuradas.",
+  },
+  results: {
+    title: "Sus resultados",
+    subtitle:
+      "Según sus respuestas, estos son los programas para los que podría calificar. Son solo estimaciones — la elegibilidad final la determina la agencia que administra cada programa.",
+    noMatch:
+      "No coincidió ningún programa. Intente ajustar sus respuestas o explore todos los programas.",
+    nextSteps: "Próximos pasos",
+    openApplication: "Abrir la solicitud de {program} →",
+    adjustedFor: "Ajustado para {state}",
+    adjustedFallback: "Se aplicaron reglas específicas del estado.",
+    backHome: "Volver al inicio",
+    outcomes: {
+      likely_eligible: {
+        label: "Probablemente elegible",
+        help: "Sus respuestas cumplen los criterios de evaluación de este programa. La elegibilidad final se confirma al solicitar.",
+      },
+      may_be_eligible: {
+        label: "Podría ser elegible",
+        help: "Podría calificar — algunas respuestas son limítrofes o faltan. Vale la pena solicitar.",
+      },
+      needs_more_info: {
+        label: "Se necesita más información",
+        help: "Necesitamos un poco más de información para estimar la elegibilidad de este programa.",
+      },
+      unlikely_eligible: {
+        label: "Poco probable que sea elegible",
+        help: "Sus respuestas sugieren que probablemente no cumple los criterios de este programa por ahora.",
+      },
+    },
+    help: {
+      title: "¿Necesita ayuda para solicitar?",
+      body: "Solicite que un trabajador de casos revise sus resultados y le ayude a solicitar. Agregue una nota si hay algo que deban saber.",
+      placeholder: "Opcional: díganos cómo podemos ayudar…",
+      button: "Solicitar ayuda",
+      requesting: "Solicitando…",
+      doneNew:
+        "Gracias — un trabajador de casos revisará su evaluación y se comunicará con usted.",
+      doneAlready:
+        "Ya solicitó ayuda — un trabajador de casos se pondrá en contacto.",
+    },
+    explainer: {
+      button: "✨ Explicar mi resultado con IA",
+      title: "Sugerencias de IA",
+      about:
+        "Esta explicación es generada por IA a partir de su resultado de evaluación. Es información general, no una decisión oficial de elegibilidad.",
+      loading: "Generando una explicación en lenguaje sencillo…",
+      errorBody:
+        "No pudimos generar una explicación con IA en este momento. Sus resultados anteriores siguen siendo precisos.",
+      tryAgain: "Intentar de nuevo",
+      whatMattered: "Qué influyó",
+      suggestedNextSteps: "Próximos pasos sugeridos",
+      aiGenerated: "Generado por IA",
+      standard: "Explicación estándar",
+    },
+  },
+  account: {
+    welcome: "Bienvenido/a",
+    welcomeNamed: "Bienvenido/a, {name}",
+    subtitle:
+      "Siga sus evaluaciones de beneficios, resultados y documentos en un solo lugar.",
+    startNewScreening: "Comenzar nueva evaluación",
+    resumeTitle: "Continúe donde lo dejó",
+    resumeDescOne: "Tiene {n} evaluación en curso.",
+    resumeDescMany: "Tiene {n} evaluaciones en curso.",
+    startedOn: "Comenzada el {date}",
+    answersSoFar: "{n} respuestas hasta ahora",
+    resume: "Reanudar",
+    yourScreenings: "Sus evaluaciones",
+    newScreening: "Nueva evaluación",
+    noScreenings: "Aún no ha comenzado una evaluación.",
+    startOne: "Comience una ahora",
+    screeningOn: "Evaluación · {date}",
+    completed: "Completada",
+    inProgress: "En curso",
+    programsMatched: "{n} programas coincidieron",
+    viewResults: "Ver resultados",
+    documentsTitle: "Sus documentos",
+    completeToSeeDocs:
+      "Complete una evaluación para ver qué documentos necesitará y subirlos aquí.",
+    profileTitle: "Perfil y preferencias",
+    accountDetails: "Detalles de la cuenta",
+    managePreferences: "Administre sus preferencias",
+    preferredLanguage: "Idioma preferido",
+    phoneOptional: "Teléfono (opcional)",
+    saveChanges: "Guardar cambios",
+    saved: "Sus cambios se guardaron.",
+    emailUpdates: "Enviarme actualizaciones por correo",
+    emailUpdatesDesc:
+      "Reciba avisos en {email} cuando haya novedades sobre sus beneficios.",
+    on: "Activado",
+    off: "Desactivado",
+    docs: {
+      requiredTitle: "Documentos requeridos",
+      requiredDesc: "Según los programas que coincidieron.",
+      refresh: "Actualizar lista",
+      refreshing: "Actualizando…",
+      none: "Aún no se requieren documentos específicos. Aun así puede subir lo que tenga a continuación.",
+      uploadTitle: "Subir un documento",
+      docTypeOptional: "Tipo de documento (opcional)",
+      accepted: "Aceptados: JPG, PNG, PDF, HEIC.",
+      add: "Agregar",
+      adding: "Agregando…",
+      remove: "Eliminar",
+      removeConfirmTitle: "¿Eliminar este documento?",
+      removeConfirmDesc: 'Se eliminará "{file}" de sus documentos.',
+      statusVerified: "verificado",
+      statusUploaded: "subido",
+      statusMissing: "faltante",
+    },
+  },
+};

@@ -515,6 +515,29 @@ describe("Citizen & admin views — dashboards", () => {
 
     await expectCode(caller(adminId).question.delete({ id: q.id }), "NOT_FOUND");
   });
+
+  it("completing a session stamps completed_at (idempotent) and counts in reports", async () => {
+    const session = await newSession(null);
+    const before = await db.screening_sessions.findUnique({
+      where: { id: session.id },
+      select: { completed_at: true },
+    });
+    expect(before?.completed_at).toBeNull();
+
+    const done = await caller(null).screeningSession.complete({
+      session_id: session.id,
+    });
+    expect(done.completed_at).toBeTruthy();
+
+    // Idempotent — a second call keeps the original timestamp.
+    const again = await caller(null).screeningSession.complete({
+      session_id: session.id,
+    });
+    expect(again.completed_at?.getTime()).toBe(done.completed_at?.getTime());
+
+    const overview = await caller(adminId).report.overview({});
+    expect(overview.completed_sessions).toBeGreaterThanOrEqual(1);
+  });
 });
 
 describe("Phase 3 — profile, notifications, referrals", () => {

@@ -59,6 +59,26 @@ export const screeningSessionRouter = createTRPCRouter({
     }),
 
   /**
+   * Mark a screening finished. Idempotent — stamps `completed_at` once so the
+   * session counts as completed in reports and shows as "Completed" on the
+   * resident dashboard. Called when the resident reaches the end of the
+   * questionnaire.
+   */
+  complete: publicProcedure
+    .input(z.object({ session_id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const session = await assertSessionAccess(ctx, input.session_id);
+      if (session.completed_at) {
+        return { id: session.id, completed_at: session.completed_at };
+      }
+      return ctx.db.screening_sessions.update({
+        where: { id: input.session_id },
+        data: { completed_at: new Date(), updated_at: new Date() },
+        select: { id: true, completed_at: true },
+      });
+    }),
+
+  /**
    * The signed-in user's own screening sessions, newest first, with a small
    * summary (answer + result counts and a completed flag) for the resident
    * dashboard's history list.

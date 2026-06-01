@@ -35,13 +35,23 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
     return map;
   }, [session.screening_answers]);
 
-  const [index, setIndex] = useState(0);
+  // Resume where they left off: jump to the first unanswered question (or the
+  // last question if everything's answered), instead of restarting at 0.
+  const resumeIndex = useMemo(() => {
+    const firstUnanswered = questions.findIndex((q) => !storedAnswers.has(q.id));
+    return firstUnanswered === -1
+      ? Math.max(0, questions.length - 1)
+      : firstUnanswered;
+  }, [questions, storedAnswers]);
+
+  const [index, setIndex] = useState(resumeIndex);
   const current = questions[index];
   const isLast = index === questions.length - 1;
 
   const upsert = api.answer.upsert.useMutation({
     onSuccess: () => utils.screeningSession.byId.invalidate({ id: sessionId }),
   });
+  const complete = api.screeningSession.complete.useMutation();
 
   const [draft, setDraft] = useState<unknown>(
     current ? storedAnswers.get(current.id) ?? null : null,
@@ -72,6 +82,9 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
     });
 
     if (isLast) {
+      // Mark the session complete so it counts in reports and shows as
+      // "Completed" on the resident's dashboard.
+      await complete.mutateAsync({ session_id: sessionId });
       router.push(`/screening/${sessionId}/results`);
     } else {
       goTo(index + 1);
@@ -155,8 +168,11 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
             >
               {t.common.back}
             </Button>
-            <Button onClick={handleNext} disabled={upsert.isPending}>
-              {upsert.isPending ? (
+            <Button
+              onClick={handleNext}
+              disabled={upsert.isPending || complete.isPending}
+            >
+              {upsert.isPending || complete.isPending ? (
                 <>
                   <Spinner className="size-4" /> {t.common.saving}
                 </>

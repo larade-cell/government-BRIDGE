@@ -60,6 +60,14 @@ export default async function Home() {
                 </Link>
               )}
             </div>
+            {!session?.user && (
+              <Link
+                href="/auth/magic-link?staff=1"
+                className="text-sm text-white/70 transition hover:text-white hover:underline"
+              >
+                Staff sign-in →
+              </Link>
+            )}
           </div>
         </div>
       </main>

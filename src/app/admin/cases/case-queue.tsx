@@ -91,7 +91,7 @@ export function CaseQueue({ currentUserId }: { currentUserId: string | null }) {
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium">
-                    {c.status.replace(/_/g, " ")}
+                    {c.contact_name ?? "Anonymous resident"}
                   </span>
                   {c.priority && (
                     <span
@@ -105,7 +105,7 @@ export function CaseQueue({ currentUserId }: { currentUserId: string | null }) {
                 </div>
                 <div className="mt-1 flex items-center justify-between gap-2">
                   <span className="text-xs text-muted-foreground">
-                    Session {c.session_id.slice(0, 8)} ·{" "}
+                    {c.status.replace(/_/g, " ")} ·{" "}
                     {mine
                       ? "assigned to you"
                       : c.assigned_to
@@ -275,6 +275,41 @@ function CaseDetail({
                 {c.assigned_to ? "Reassign to me" : "Claim"}
               </Button>
             ))}
+        </div>
+
+        {/* Who needs help + how to reach them */}
+        <div className="rounded-lg border bg-background p-3 text-sm">
+          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            Contact
+          </p>
+          <p className="mt-1 font-medium">
+            {c.contact_name ?? "Anonymous resident"}
+          </p>
+          {c.contact_email && (
+            <p className="text-muted-foreground">{c.contact_email}</p>
+          )}
+          {c.contact_phone && (
+            <p className="text-muted-foreground">{c.contact_phone}</p>
+          )}
+          {c.contact_email ? (
+            <Button
+              size="sm"
+              className="mt-2"
+              render={
+                <a
+                  href={`mailto:${c.contact_email}?subject=${encodeURIComponent(
+                    "Your BRIDGE benefits screening",
+                  )}`}
+                />
+              }
+            >
+              Email {c.contact_name ?? "resident"}
+            </Button>
+          ) : (
+            <p className="mt-1 text-xs text-muted-foreground">
+              No contact info provided — follow up via the screening session.
+            </p>
+          )}
         </div>
 
         <div className="rounded-lg border bg-muted/40 p-3 text-sm">

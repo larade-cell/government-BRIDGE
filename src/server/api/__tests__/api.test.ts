@@ -409,8 +409,13 @@ describe("Citizen & admin views — dashboards", () => {
     const first = await caller(residentId).case.create({
       session_id: owned.id,
       message: "Please help me apply.",
+      contact_name: "Jordan Rivera",
+      contact_email: "jordan@example.test",
+      contact_phone: "555-0100",
     });
     expect(first.created).toBe(true);
+    expect(first.contact_name).toBe("Jordan Rivera");
+    expect(first.contact_email).toBe("jordan@example.test");
 
     // A second request reuses the open case instead of duplicating it.
     const second = await caller(residentId).case.create({
@@ -419,9 +424,23 @@ describe("Citizen & admin views — dashboards", () => {
     expect(second.created).toBe(false);
     expect(second.id).toBe(first.id);
 
+    // Caseworkers see who needs help + their contact details.
+    const detail = await caller(adminId).case.byId({ id: first.id });
+    expect(detail.contact_name).toBe("Jordan Rivera");
+    expect(detail.contact_email).toBe("jordan@example.test");
+
     // It shows up in the staff queue.
     const queue = await caller(adminId).case.list({ limit: 100 });
     expect(queue.data.some((c) => c.id === first.id)).toBe(true);
+
+    // Invalid contact email is rejected.
+    await expectCode(
+      caller(null).case.create({
+        session_id: (await newSession(null)).id,
+        contact_email: "not-an-email",
+      }),
+      "BAD_REQUEST",
+    );
 
     // Anonymous sessions can self-serve too.
     const anonSession = await newSession(null);

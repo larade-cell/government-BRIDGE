@@ -88,6 +88,10 @@ export const en = {
       placeholder: "Optional: tell us how we can help…",
       button: "Request help",
       requesting: "Requesting…",
+      name: "Your name",
+      email: "Email",
+      phone: "Phone (optional)",
+      contactHint: "Share at least one way to reach you so a caseworker can follow up.",
       doneNew:
         "Thanks — a caseworker will review your screening and follow up.",
       doneAlready:

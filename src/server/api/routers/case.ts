@@ -40,9 +40,17 @@ export const caseRouter = createTRPCRouter({
         session_id: z.string().uuid(),
         priority: prioritySchema.optional(),
         message: z.string().trim().min(1).max(5000).optional(),
+        contact_name: z.string().trim().min(1).max(200).optional(),
+        contact_email: z.string().trim().email().max(254).optional(),
+        contact_phone: z.string().trim().min(1).max(64).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const contact = {
+        ...(input.contact_name && { contact_name: input.contact_name }),
+        ...(input.contact_email && { contact_email: input.contact_email }),
+        ...(input.contact_phone && { contact_phone: input.contact_phone }),
+      };
       const appUserId = ctx.session?.user.appUserId ?? null;
       const role = appUserId
         ? (
@@ -72,7 +80,15 @@ export const caseRouter = createTRPCRouter({
         orderBy: { created_at: "desc" },
       });
       if (existing) {
-        // Attach the resident's message to the case they already have open.
+        // Attach the resident's message and fill in any contact info they
+        // provided this time, on the case they already have open.
+        if (Object.keys(contact).length > 0) {
+          await ctx.db.cases.update({
+            where: { id: existing.id },
+            data: { ...contact, updated_at: new Date() },
+          });
+          Object.assign(existing, contact);
+        }
         if (input.message) {
           await ctx.db.case_notes.create({
             data: {
@@ -91,6 +107,7 @@ export const caseRouter = createTRPCRouter({
           session_id: input.session_id,
           status: "new",
           ...(input.priority && { priority: input.priority }),
+          ...contact,
         },
       });
 

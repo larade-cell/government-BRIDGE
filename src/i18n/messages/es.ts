@@ -85,6 +85,10 @@ export const es: Messages = {
       placeholder: "Opcional: díganos cómo podemos ayudar…",
       button: "Solicitar ayuda",
       requesting: "Solicitando…",
+      name: "Su nombre",
+      email: "Correo electrónico",
+      phone: "Teléfono (opcional)",
+      contactHint: "Comparta al menos una forma de contactarlo para que un trabajador de casos pueda comunicarse.",
       doneNew:
         "Gracias — un trabajador de casos revisará su evaluación y se comunicará con usted.",
       doneAlready:

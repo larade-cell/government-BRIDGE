@@ -11,6 +11,7 @@ import {
 import { api } from "~/trpc/server";
 
 import { EligibilityExplainer } from "./eligibility-explainer";
+import { RequestHelp } from "./request-help";
 
 const outcomeLabel: Record<string, { label: string; tone: string }> = {
   likely_eligible: {
@@ -123,6 +124,12 @@ export default async function ResultsPage({
                 </Card>
               );
             })}
+          </div>
+        )}
+
+        {results.length > 0 && (
+          <div className="mt-8">
+            <RequestHelp sessionId={sessionId} />
           </div>
         )}
 

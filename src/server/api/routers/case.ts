@@ -1,13 +1,14 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { requireRole } from "~/server/api/helpers/session";
+import { assertSessionAccess, requireRole } from "~/server/api/helpers/session";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 /**
- * Caseworker dashboard (Story 18). All routes are role-gated to
- * caseworker/admin. A caseworker may only read a case assigned to them;
- * admins see everything.
+ * Caseworker dashboard (Story 18). Reads/writes are role-gated to
+ * caseworker/admin (a caseworker may only read a case assigned to them; admins
+ * see everything) — except `create`, which residents can also call to request
+ * help on their own screening session.
  */
 
 const STAFF = ["caseworker", "admin"] as const;
@@ -21,7 +22,93 @@ const statusSchema = z.enum([
 ]);
 const prioritySchema = z.enum(["low", "normal", "high", "urgent"]);
 
+// Statuses that count as an active case (used for idempotency on create).
+const OPEN_STATUSES = ["new", "in_progress", "waiting_on_client"] as const;
+
 export const caseRouter = createTRPCRouter({
+  /**
+   * Open a case for a screening session. Two callers:
+   *   - a resident requesting help (must have access to the session), or
+   *   - staff opening a case for any session.
+   * Idempotent: if an open case already exists for the session it's returned
+   * (`created: false`) rather than spawning a duplicate, so a resident tapping
+   * "request help" twice never floods the queue.
+   */
+  create: publicProcedure
+    .input(
+      z.object({
+        session_id: z.string().uuid(),
+        priority: prioritySchema.optional(),
+        message: z.string().trim().min(1).max(5000).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const appUserId = ctx.session?.user.appUserId ?? null;
+      const role = appUserId
+        ? (
+            await ctx.db.users.findUnique({
+              where: { id: appUserId },
+              select: { role: true },
+            })
+          )?.role
+        : null;
+      const isStaff = role === "caseworker" || role === "admin";
+
+      if (isStaff) {
+        const session = await ctx.db.screening_sessions.findUnique({
+          where: { id: input.session_id },
+          select: { id: true },
+        });
+        if (!session) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
+        }
+      } else {
+        // Resident self-service: enforces ownership / anonymous access.
+        await assertSessionAccess(ctx, input.session_id);
+      }
+
+      const existing = await ctx.db.cases.findFirst({
+        where: { session_id: input.session_id, status: { in: [...OPEN_STATUSES] } },
+        orderBy: { created_at: "desc" },
+      });
+      if (existing) {
+        // Attach the resident's message to the case they already have open.
+        if (input.message) {
+          await ctx.db.case_notes.create({
+            data: {
+              case_id: existing.id,
+              author_id: isStaff ? appUserId : null,
+              note: input.message,
+              is_internal: isStaff,
+            },
+          });
+        }
+        return { ...existing, created: false };
+      }
+
+      const created = await ctx.db.cases.create({
+        data: {
+          session_id: input.session_id,
+          status: "new",
+          ...(input.priority && { priority: input.priority }),
+        },
+      });
+
+      if (input.message) {
+        await ctx.db.case_notes.create({
+          data: {
+            case_id: created.id,
+            author_id: isStaff ? appUserId : null,
+            note: input.message,
+            // A resident's message is client-facing context, not an internal note.
+            is_internal: isStaff,
+          },
+        });
+      }
+
+      return { ...created, created: true };
+    }),
+
   list: publicProcedure
     .input(
       z

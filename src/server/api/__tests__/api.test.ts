@@ -398,6 +398,37 @@ describe("Citizen & admin views — dashboards", () => {
     await db.programs.delete({ where: { id: created.id } });
   });
 
+  it("residents open a case from their session; create is idempotent", async () => {
+    // Owned session: anonymous callers can't open a case on it.
+    const owned = await newSession(residentId);
+    await expectCode(
+      caller(null).case.create({ session_id: owned.id }),
+      "FORBIDDEN",
+    );
+
+    const first = await caller(residentId).case.create({
+      session_id: owned.id,
+      message: "Please help me apply.",
+    });
+    expect(first.created).toBe(true);
+
+    // A second request reuses the open case instead of duplicating it.
+    const second = await caller(residentId).case.create({
+      session_id: owned.id,
+    });
+    expect(second.created).toBe(false);
+    expect(second.id).toBe(first.id);
+
+    // It shows up in the staff queue.
+    const queue = await caller(adminId).case.list({ limit: 100 });
+    expect(queue.data.some((c) => c.id === first.id)).toBe(true);
+
+    // Anonymous sessions can self-serve too.
+    const anonSession = await newSession(null);
+    const anon = await caller(null).case.create({ session_id: anonSession.id });
+    expect(anon.created).toBe(true);
+  });
+
   it("question create/update is admin-gated and validates single_select", async () => {
     const key = `test_q_${randomUUID().slice(0, 8)}`;
     await expectCode(

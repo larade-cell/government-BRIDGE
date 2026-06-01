@@ -1,8 +1,16 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { type Prisma } from "../../../../generated/prisma";
 import { assertSessionAccess } from "~/server/api/helpers/session";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import {
+  buildFacts,
+  evaluateProgram,
+  OUTCOME_WEIGHT,
+  parseProgramRules,
+  type ProgramEvaluation,
+} from "~/server/lib/eligibility";
 
 /**
  * Screening core router.
@@ -185,6 +193,21 @@ export const eligibilityRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       await assertSessionAccess(ctx, input.session_id);
 
+      // Derive the fact set once from this session's answers (keyed by
+      // question_key, the stable identifier the rules reference).
+      const answers = await ctx.db.screening_answers.findMany({
+        where: { session_id: input.session_id },
+        select: {
+          answer_value: true,
+          questions: { select: { question_key: true } },
+        },
+      });
+      const answersByKey: Record<string, unknown> = {};
+      for (const a of answers) {
+        answersByKey[a.questions.question_key] = a.answer_value;
+      }
+      const facts = buildFacts(answersByKey);
+
       // Pull the latest rule version per active program.
       const programs = await ctx.db.programs.findMany({
         where: { is_active: true },
@@ -193,45 +216,69 @@ export const eligibilityRouter = createTRPCRouter({
           eligibility_rule_versions: {
             orderBy: { version: "desc" },
             take: 1,
-            select: { id: true },
+            select: { id: true, rules_json: true, false_positive_bias: true },
           },
         },
       });
 
-      // Placeholder logic: every program with a rule version gets
-      // `may_be_eligible`. Real rule evaluation comes with the rule-engine
-      // story.
+      // Evaluate each program against the rules stored in its latest version.
+      // A rule version whose JSON isn't in the rule format (legacy placeholder,
+      // malformed admin draft) degrades to `needs_more_info` rather than
+      // throwing or silently passing.
+      const evaluations = programs
+        .filter((p) => p.eligibility_rule_versions[0])
+        .map((p) => {
+          const rv = p.eligibility_rule_versions[0]!;
+          const rules = parseProgramRules(rv.rules_json);
+          const evaluation: ProgramEvaluation = rules
+            ? evaluateProgram(rules, facts, rv.false_positive_bias)
+            : {
+                outcome: "needs_more_info",
+                reasons: [
+                  "Initial screening only — final determination requires application.",
+                ],
+                criteria: [],
+              };
+          return { programId: p.id, ruleVersionId: rv.id, evaluation };
+        });
+
+      // Best-matched programs first (likely → may_be → needs_more_info →
+      // unlikely), so `priority_rank` drives a useful results ordering.
+      evaluations.sort(
+        (a, b) =>
+          OUTCOME_WEIGHT[a.evaluation.outcome] -
+          OUTCOME_WEIGHT[b.evaluation.outcome],
+      );
+
       const results = await Promise.all(
-        programs
-          .filter((p) => p.eligibility_rule_versions[0])
-          .map((p, i) =>
-            ctx.db.eligibility_results.upsert({
-              where: {
-                session_id_program_id: {
-                  session_id: input.session_id,
-                  program_id: p.id,
-                },
-              },
-              update: {
-                outcome: "may_be_eligible",
-                priority_rank: i,
-                rule_version_id: p.eligibility_rule_versions[0]!.id,
-                explanation: {
-                  reasons: ["Initial screening only — final determination requires application."],
-                },
-              },
-              create: {
+        evaluations.map((e, i) => {
+          const explanation = {
+            reasons: e.evaluation.reasons,
+            criteria: e.evaluation.criteria,
+          } as unknown as Prisma.InputJsonValue;
+          return ctx.db.eligibility_results.upsert({
+            where: {
+              session_id_program_id: {
                 session_id: input.session_id,
-                program_id: p.id,
-                rule_version_id: p.eligibility_rule_versions[0]!.id,
-                outcome: "may_be_eligible",
-                priority_rank: i,
-                explanation: {
-                  reasons: ["Initial screening only — final determination requires application."],
-                },
+                program_id: e.programId,
               },
-            }),
-          ),
+            },
+            update: {
+              outcome: e.evaluation.outcome,
+              priority_rank: i,
+              rule_version_id: e.ruleVersionId,
+              explanation,
+            },
+            create: {
+              session_id: input.session_id,
+              program_id: e.programId,
+              rule_version_id: e.ruleVersionId,
+              outcome: e.evaluation.outcome,
+              priority_rank: i,
+              explanation,
+            },
+          });
+        }),
       );
 
       return { count: results.length };

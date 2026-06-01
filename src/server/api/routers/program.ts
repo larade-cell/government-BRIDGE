@@ -4,6 +4,7 @@ import { z } from "zod";
 import { type PrismaClient } from "../../../../generated/prisma";
 import { embedText, isAiEnabled } from "../../../../lib/ai-service";
 import { requireRole } from "~/server/api/helpers/session";
+import { parseProgramRules } from "~/server/lib/eligibility";
 import {
   createTRPCRouter,
   publicProcedure,
@@ -340,13 +341,20 @@ export const programRouter = createTRPCRouter({
         eligibility_rule_versions: {
           orderBy: { version: "desc" },
           take: 1,
-          select: { id: true, version: true, effective_from: true, false_positive_bias: true },
+          select: {
+            id: true,
+            version: true,
+            effective_from: true,
+            false_positive_bias: true,
+            rules_json: true,
+          },
         },
       },
     });
     const now = Date.now();
     return rows.map((p) => {
       const latest = p.eligibility_rule_versions[0];
+      const parsed = latest ? parseProgramRules(latest.rules_json) : null;
       return {
         id: p.id,
         program_key: p.program_key,
@@ -362,6 +370,7 @@ export const programRouter = createTRPCRouter({
               version: latest.version,
               is_published: latest.effective_from.getTime() <= now,
               false_positive_bias: latest.false_positive_bias,
+              states: parsed?.states ? Object.keys(parsed.states) : [],
             }
           : null,
       };

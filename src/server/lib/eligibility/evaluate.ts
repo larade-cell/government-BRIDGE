@@ -8,6 +8,7 @@
  */
 import type {
   Condition,
+  Criterion,
   CriterionResult,
   EligibilityOutcome,
   EvalStatus,
@@ -17,6 +18,31 @@ import type {
   ProgramRules,
   Scalar,
 } from "./types";
+
+/**
+ * Resolve the requirements that actually apply to a resident, merging the
+ * program's base requirements with any state-specific variation. `override`
+ * entries replace a base requirement with the same `key` (or append if none
+ * matches); `add` entries are appended. Returns the applied state + its note
+ * when a variation was used, for transparency in the explanation and admin UI.
+ */
+export function effectiveRequirements(
+  rules: ProgramRules,
+  state: string | undefined,
+): { requirements: Criterion[]; appliedState?: string; note?: string } {
+  const base = [...rules.requirements];
+  const stateRules = state && rules.states ? rules.states[state] : undefined;
+  if (!stateRules) return { requirements: base };
+
+  const requirements = [...base];
+  for (const ov of stateRules.override ?? []) {
+    const idx = requirements.findIndex((r) => r.key === ov.key);
+    if (idx >= 0) requirements[idx] = ov;
+    else requirements.push(ov);
+  }
+  requirements.push(...(stateRules.add ?? []));
+  return { requirements, appliedState: state, note: stateRules.note };
+}
 
 function compare(actual: Scalar, op: Leaf["op"], value: Scalar | Scalar[]): boolean {
   switch (op) {
@@ -109,7 +135,10 @@ export function evaluateProgram(
   facts: Facts,
   bias: boolean,
 ): ProgramEvaluation {
-  const evaluated = rules.requirements.map((r) => ({
+  const state = typeof facts.state === "string" ? facts.state : undefined;
+  const { requirements, appliedState, note } = effectiveRequirements(rules, state);
+
+  const evaluated = requirements.map((r) => ({
     result: {
       key: r.key,
       status: evalCondition(r.condition, facts),
@@ -137,6 +166,9 @@ export function evaluateProgram(
   }
 
   const reasons = evaluated.map((e) => reasonFor(e.result, e.unmet_en));
+  if (appliedState && note) {
+    reasons.unshift(`Adjusted for your state (${appliedState}): ${note}`);
+  }
 
-  return { outcome, reasons, criteria };
+  return { outcome, reasons, criteria, applied_state: appliedState ?? null };
 }

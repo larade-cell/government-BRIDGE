@@ -15,7 +15,119 @@
  * Income thresholds reference the `income_pct_fpl` fact (annual household
  * income as a percent of the federal poverty line for the household size).
  */
-import type { ProgramRules } from "./types";
+import { STATE_PROFILES, type StateProfile } from "./stateData";
+import type { Criterion, ProgramRules, StateRules } from "./types";
+
+/* -------------------------------------------------------------------------- */
+/* State-specific variations                                                  */
+/*                                                                            */
+/* Generated for all 50 states + DC from the STATE_PROFILES table in          */
+/* stateData.ts. An override is emitted only when a state's value differs      */
+/* from the program's federal base, so states matching the base fall through  */
+/* to it. Medicaid expansion status is reliable; SNAP/CHIP/TANF/CCDF income    */
+/* limits are best-effort screening approximations (see stateData.ts) and are  */
+/* editable per program via rules_json in the admin console.                  */
+/* -------------------------------------------------------------------------- */
+
+const PROFILES = Object.values(STATE_PROFILES);
+
+/** A soft income-limit override at `pct`% FPL with bilingual labels. */
+function incomeLimitOverride(pct: number, programEn: string, programEs: string): Criterion {
+  return {
+    key: "income",
+    condition: { fact: "income_pct_fpl", op: "lte", value: pct },
+    label_en: `Household income within this state's ${programEn} limit (about ${pct}% of the federal poverty level)`,
+    label_es: `Ingreso del hogar dentro del límite de ${programEs} de este estado (~${pct}% del nivel federal de pobreza)`,
+    unmet_en: `Your household income may be above this state's ${programEn} limit (about ${pct}% of the federal poverty level).`,
+    unmet_es: `El ingreso de su hogar podría superar el límite de ${programEs} de este estado (~${pct}% del nivel federal de pobreza).`,
+  };
+}
+
+/**
+ * Build a per-state override map. `valueFor` returns the state's income limit
+ * (% FPL) or null to skip (state matches the federal base). `note`/`criterion`
+ * describe the variation.
+ */
+function buildStateRules(
+  valueFor: (p: StateProfile) => number | null,
+  note: (p: StateProfile, value: number) => string,
+  criterion: (value: number) => Criterion,
+): Record<string, StateRules> {
+  const out: Record<string, StateRules> = {};
+  for (const p of PROFILES) {
+    const value = valueFor(p);
+    if (value === null) continue;
+    out[p.code] = { note: note(p, value), override: [criterion(value)] };
+  }
+  return out;
+}
+
+// SNAP — broad-based categorical eligibility raises the 130% federal gross
+// limit (states at 130 fall through to the base requirement).
+const SNAP_STATES = buildStateRules(
+  (p) => (p.snapGrossLimitPct === 130 ? null : p.snapGrossLimitPct),
+  (p, v) =>
+    `${p.name} uses broad-based categorical eligibility, raising the SNAP gross income limit to about ${v}% of the federal poverty level (approximate — verify with the state).`,
+  (v) => incomeLimitOverride(v, "SNAP", "SNAP"),
+);
+
+// Medicaid — non-expansion states have no general 138% adult pathway; coverage
+// is limited to pregnant people, parents/caretakers, and the disabled.
+const medicaidNonExpansionOverride: Criterion = {
+  key: "income",
+  hard: true,
+  condition: {
+    any: [
+      { all: [{ fact: "is_pregnant", op: "eq", value: true }, { fact: "income_pct_fpl", op: "lte", value: 205 }] },
+      { all: [{ fact: "has_children", op: "eq", value: true }, { fact: "income_pct_fpl", op: "lte", value: 205 }] },
+      { all: [{ fact: "has_disability", op: "eq", value: true }, { fact: "income_pct_fpl", op: "lte", value: 100 }] },
+    ],
+  },
+  label_en:
+    "Pregnant, raising children, or disabled with low income (this state has not expanded Medicaid)",
+  label_es:
+    "Embarazada, criando hijos, o con una discapacidad e ingresos bajos (este estado no amplió Medicaid)",
+  unmet_en:
+    "This state has not expanded Medicaid, so adults without children or a disability generally don't qualify regardless of income — but you may qualify for Marketplace subsidies instead.",
+  unmet_es:
+    "Este estado no amplió Medicaid, por lo que los adultos sin hijos o sin una discapacidad generalmente no califican sin importar sus ingresos — pero podría calificar para los subsidios del Mercado.",
+};
+
+const MEDICAID_STATES: Record<string, StateRules> = Object.fromEntries(
+  PROFILES.filter((p) => !p.medicaidExpanded).map((p) => [
+    p.code,
+    {
+      note: `${p.name} has not expanded Medicaid. Coverage for adults is limited to pregnant people, parents/caretakers, and people with disabilities; childless adults generally don't qualify regardless of income.`,
+      override: [medicaidNonExpansionOverride],
+    } satisfies StateRules,
+  ]),
+);
+
+// CHIP — children's coverage upper limit varies widely by state (~200%–400% FPL).
+const CHIP_STATES = buildStateRules(
+  (p) => (p.chipUpperPct === 250 ? null : p.chipUpperPct),
+  (p, v) =>
+    `${p.name} covers children under CHIP up to about ${v}% of the federal poverty level (approximate — verify with the state).`,
+  (v) => incomeLimitOverride(v, "CHIP", "CHIP"),
+);
+
+// TANF — state benefit standards are dollar-based and generally well below
+// 100% FPL; approximated here per state.
+const TANF_STATES = buildStateRules(
+  (p) => (p.tanfLimitPct === 100 ? null : p.tanfLimitPct),
+  (p, v) =>
+    `${p.name}'s TANF income limit is roughly ${v}% of the federal poverty level (approximate — real limits are set in dollars by household size; verify with the state).`,
+  (v) => incomeLimitOverride(v, "TANF", "TANF"),
+);
+
+// Child care assistance (CCDF) — states set entry income limits up to 85% of
+// state median income; approximated here as % FPL per state.
+const CCDF_STATES = buildStateRules(
+  (p) => (p.ccdfLimitPct === 200 ? null : p.ccdfLimitPct),
+  (p, v) =>
+    `${p.name} sets child care assistance eligibility around ${v}% of the federal poverty level (approximate — verify with the state).`,
+  (v) => incomeLimitOverride(v, "child care assistance", "asistencia para el cuidado infantil"),
+);
 
 export const PROGRAM_RULES: Record<string, ProgramRules> = {
   snap: {
@@ -37,6 +149,7 @@ export const PROGRAM_RULES: Record<string, ProgramRules> = {
         label_es: "Ciudadano/a estadounidense o estado migratorio calificado",
       },
     ],
+    states: SNAP_STATES,
   },
 
   medicaid: {
@@ -64,6 +177,7 @@ export const PROGRAM_RULES: Record<string, ProgramRules> = {
         label_es: "Ciudadano/a estadounidense o estado migratorio calificado",
       },
     ],
+    states: MEDICAID_STATES,
   },
 
   tanf: {
@@ -94,6 +208,7 @@ export const PROGRAM_RULES: Record<string, ProgramRules> = {
         label_es: "Ciudadano/a estadounidense o estado migratorio calificado",
       },
     ],
+    states: TANF_STATES,
   },
 
   wic: {
@@ -195,6 +310,7 @@ export const PROGRAM_RULES: Record<string, ProgramRules> = {
         label_es: "El niño es ciudadano estadounidense o inmigrante calificado",
       },
     ],
+    states: CHIP_STATES,
   },
 
   liheap: {
@@ -442,6 +558,7 @@ export const PROGRAM_RULES: Record<string, ProgramRules> = {
         unmet_es: "Su ingreso podría superar el límite de asistencia para el cuidado infantil de su estado.",
       },
     ],
+    states: CCDF_STATES,
   },
 
   va_health: {

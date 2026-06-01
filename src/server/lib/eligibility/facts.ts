@@ -4,6 +4,7 @@
  * `undefined`, which conditions treat as "unknown" rather than a failure.
  */
 import { fplPercent } from "./fpl";
+import { normalizeState } from "./states";
 import type { Facts } from "./types";
 
 /** Immigration statuses generally treated as qualified for federal benefits. */
@@ -63,6 +64,7 @@ export function buildFacts(answers: Record<string, unknown>): Facts {
     unearned_income: unearned,
     assets,
     income_pct_fpl: incomePctFpl,
+    state: normalizeState(answers.state_residence),
     citizenship,
     is_citizen_or_qualified:
       citizenship === undefined

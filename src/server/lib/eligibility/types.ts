@@ -60,10 +60,27 @@ export interface Criterion {
   unmet_es?: string;
 }
 
+/**
+ * State-specific variation of a program's requirements. Programs like SNAP and
+ * Medicaid differ by state (broad-based categorical eligibility, Medicaid
+ * expansion, etc.). When the resident's `state` fact matches a key in
+ * `ProgramRules.states`, these are merged onto the base requirements.
+ */
+export interface StateRules {
+  /** Admin/resident-facing explanation of how this state differs. */
+  note?: string;
+  /** Criteria that replace a base requirement with the same `key`. */
+  override?: Criterion[];
+  /** Extra criteria that only apply to residents of this state. */
+  add?: Criterion[];
+}
+
 export interface ProgramRules {
   /** Maintainer note on the screening basis (federal heuristic, % FPL, etc.). */
   summary?: string;
   requirements: Criterion[];
+  /** Per-state overrides, keyed by 2-letter state code (uppercase). */
+  states?: Record<string, StateRules>;
 }
 
 export type FactValue = number | string | boolean | undefined;
@@ -91,4 +108,6 @@ export interface ProgramEvaluation {
   reasons: string[];
   /** Structured per-criterion results, for future localized rendering. */
   criteria: CriterionResult[];
+  /** State code whose specific rules were applied, if any. */
+  applied_state?: string | null;
 }

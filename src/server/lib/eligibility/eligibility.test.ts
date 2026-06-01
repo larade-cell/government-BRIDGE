@@ -2,12 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildFacts,
+  effectiveRequirements,
   evalCondition,
   evaluateProgram,
   federalPovertyLine,
   fplPercent,
+  normalizeState,
   parseProgramRules,
   PROGRAM_RULES,
+  STATE_PROFILES,
   type Facts,
 } from "./index";
 
@@ -166,6 +169,104 @@ describe("evaluateProgram", () => {
     const res = evaluateProgram(snapRules, facts, true);
     expect(res.reasons).toHaveLength(snapRules.requirements.length);
     expect(res.reasons.every((r) => typeof r === "string" && r.length > 0)).toBe(true);
+  });
+});
+
+describe("normalizeState", () => {
+  it("accepts 2-letter codes (any case)", () => {
+    expect(normalizeState("CA")).toBe("CA");
+    expect(normalizeState("ca")).toBe("CA");
+    expect(normalizeState("  ny ")).toBe("NY");
+  });
+  it("accepts full names and aliases", () => {
+    expect(normalizeState("California")).toBe("CA");
+    expect(normalizeState("texas")).toBe("TX");
+    expect(normalizeState("district of columbia")).toBe("DC");
+    expect(normalizeState("Washington DC")).toBe("DC");
+  });
+  it("returns undefined for unrecognized / empty input", () => {
+    expect(normalizeState("Narnia")).toBeUndefined();
+    expect(normalizeState("")).toBeUndefined();
+    expect(normalizeState(undefined)).toBeUndefined();
+  });
+});
+
+describe("state-specific rules", () => {
+  it("covers all 50 states + DC, with the correct Medicaid non-expansion set", () => {
+    expect(Object.keys(STATE_PROFILES)).toHaveLength(51);
+    const nonExpansion = Object.values(STATE_PROFILES)
+      .filter((p) => !p.medicaidExpanded)
+      .map((p) => p.code)
+      .sort();
+    expect(nonExpansion).toEqual([
+      "AL", "FL", "GA", "KS", "MS", "SC", "TN", "TX", "WI", "WY",
+    ]);
+    // SNAP and Medicaid both carry state variations spanning many states.
+    expect(Object.keys(PROGRAM_RULES.snap!.states ?? {}).length).toBeGreaterThan(20);
+    expect(Object.keys(PROGRAM_RULES.medicaid!.states ?? {})).toHaveLength(10);
+    // TANF varies in every state (limit ≠ 100% base everywhere).
+    expect(Object.keys(PROGRAM_RULES.tanf!.states ?? {})).toHaveLength(51);
+  });
+
+  it("effectiveRequirements overrides a base criterion by key for the state", () => {
+    const base = PROGRAM_RULES.snap!;
+    const fed = effectiveRequirements(base, undefined);
+    const ca = effectiveRequirements(base, "CA");
+    expect(fed.appliedState).toBeUndefined();
+    expect(ca.appliedState).toBe("CA");
+    // Same number of requirements — the income criterion is replaced, not added.
+    expect(ca.requirements).toHaveLength(fed.requirements.length);
+    const fedIncome = fed.requirements.find((r) => r.key === "income");
+    const caIncome = ca.requirements.find((r) => r.key === "income");
+    expect((fedIncome!.condition as { value: number }).value).toBe(130);
+    expect((caIncome!.condition as { value: number }).value).toBe(200);
+  });
+
+  it("SNAP: a BBCE state raises the income limit (160% FPL passes in CA, not in TX)", () => {
+    const snap = PROGRAM_RULES.snap!;
+    // ~160% FPL for a household of 1.
+    const answers = {
+      household_size: 1,
+      monthly_household_income: Math.round((15_060 * 1.6) / 12),
+      citizenship_status: "us_citizen",
+    };
+    const ca = evaluateProgram(snap, buildFacts({ ...answers, state_residence: "California" }), true);
+    expect(ca.outcome).toBe("likely_eligible");
+    expect(ca.applied_state).toBe("CA");
+    expect(ca.reasons[0]).toContain("Adjusted for your state (CA)");
+
+    // Georgia uses the 130% federal gross limit (no BBCE override).
+    const ga = evaluateProgram(snap, buildFacts({ ...answers, state_residence: "Georgia" }), true);
+    // 160% is over the 130% base — soft miss, generous bias → may_be.
+    expect(ga.outcome).toBe("may_be_eligible");
+    expect(ga.applied_state).toBeNull();
+  });
+
+  it("Medicaid: non-expansion state excludes a childless adult (hard), expansion state covers them", () => {
+    const medicaid = PROGRAM_RULES.medicaid!;
+    const childlessAdult = {
+      household_size: 1,
+      monthly_household_income: Math.round((15_060 * 1.2) / 12), // 120% FPL
+      num_children_under_18: 0,
+      is_pregnant: false,
+      has_disability: false,
+      citizenship_status: "us_citizen",
+    };
+    // Expansion state (not in the non-expansion list) → base 138% pathway.
+    const ca = evaluateProgram(medicaid, buildFacts({ ...childlessAdult, state_residence: "CA" }), true);
+    expect(ca.outcome).toBe("likely_eligible");
+    // Non-expansion state → hard exclusion, not rescued by bias.
+    const tx = evaluateProgram(medicaid, buildFacts({ ...childlessAdult, state_residence: "TX" }), true);
+    expect(tx.outcome).toBe("unlikely_eligible");
+    expect(tx.applied_state).toBe("TX");
+
+    // A pregnant resident in the same non-expansion state still qualifies.
+    const pregnantTx = evaluateProgram(
+      medicaid,
+      buildFacts({ ...childlessAdult, is_pregnant: true, state_residence: "TX" }),
+      true,
+    );
+    expect(pregnantTx.outcome).toBe("likely_eligible");
   });
 });
 

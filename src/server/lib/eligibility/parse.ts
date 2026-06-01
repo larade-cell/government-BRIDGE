@@ -35,9 +35,16 @@ const criterion = z.object({
   unmet_es: z.string().optional(),
 });
 
+const stateRules = z.object({
+  note: z.string().optional(),
+  override: z.array(criterion).optional(),
+  add: z.array(criterion).optional(),
+});
+
 const programRules = z.object({
   summary: z.string().optional(),
   requirements: z.array(criterion).min(1),
+  states: z.record(z.string(), stateRules).optional(),
 });
 
 /** Returns typed rules, or `null` when `rules_json` is not in the rule format. */

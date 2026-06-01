@@ -452,6 +452,7 @@ export const eligibilityRouter = createTRPCRouter({
           const explanation = {
             reasons: e.evaluation.reasons,
             criteria: e.evaluation.criteria,
+            applied_state: e.evaluation.applied_state ?? null,
           } as unknown as Prisma.InputJsonValue;
           return ctx.db.eligibility_results.upsert({
             where: {

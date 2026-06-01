@@ -5,7 +5,29 @@ import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
+import { US_STATES } from "~/server/lib/eligibility/states";
 import { api } from "~/trpc/react";
+
+/** Loose view of the state-specific section of a rules_json blob. */
+type StateCriterionView = { key?: string; label_en?: string };
+type StateRulesView = {
+  note?: string;
+  override?: StateCriterionView[];
+  add?: StateCriterionView[];
+};
+
+function readStates(rulesJson: unknown): Record<string, StateRulesView> {
+  if (
+    rulesJson &&
+    typeof rulesJson === "object" &&
+    "states" in rulesJson &&
+    rulesJson.states &&
+    typeof rulesJson.states === "object"
+  ) {
+    return rulesJson.states as Record<string, StateRulesView>;
+  }
+  return {};
+}
 
 export function RuleManager() {
   const programs = api.program.adminList.useQuery();
@@ -30,6 +52,10 @@ export function RuleManager() {
               {p.latest_rule_version
                 ? ` (v${p.latest_rule_version.version}${
                     p.latest_rule_version.is_published ? "" : " draft"
+                  }${
+                    p.latest_rule_version.states.length > 0
+                      ? `, ${p.latest_rule_version.states.length} state rules`
+                      : ""
                   })`
                 : " (no rules)"}
             </option>
@@ -183,6 +209,9 @@ function RuleVersions({ programId }: { programId: string }) {
                     )}
                   </div>
                 </div>
+
+                <StateVariations rulesJson={v.rules_json} />
+
                 <pre className="max-h-48 overflow-auto rounded-lg bg-muted/60 p-2 text-xs">
                   {JSON.stringify(v.rules_json, null, 2)}
                 </pre>
@@ -191,6 +220,61 @@ function RuleVersions({ programId }: { programId: string }) {
           ))
         )}
       </div>
+    </div>
+  );
+}
+
+/** Renders the state-specific variations encoded in a version's rules_json. */
+function StateVariations({ rulesJson }: { rulesJson: unknown }) {
+  const states = readStates(rulesJson);
+  const codes = Object.keys(states).sort();
+  if (codes.length === 0) return null;
+
+  return (
+    <div className="rounded-lg border border-sky-200 bg-sky-50/60 p-3">
+      <p className="text-sm font-semibold text-sky-900">
+        State-specific variations ({codes.length})
+      </p>
+      <ul className="mt-2 flex flex-col gap-2">
+        {codes.map((code) => {
+          const sr = states[code]!;
+          const changes = [
+            ...(sr.override ?? []).map((c) => ({ kind: "override", c })),
+            ...(sr.add ?? []).map((c) => ({ kind: "add", c })),
+          ];
+          return (
+            <li key={code} className="rounded-md bg-background p-2 text-xs">
+              <div className="font-medium">
+                {code}
+                <span className="text-muted-foreground">
+                  {" "}
+                  · {US_STATES[code] ?? code}
+                </span>
+              </div>
+              {sr.note && <p className="mt-0.5 text-muted-foreground">{sr.note}</p>}
+              {changes.length > 0 && (
+                <ul className="mt-1 flex flex-col gap-0.5">
+                  {changes.map((ch, i) => (
+                    <li key={i}>
+                      <span
+                        className={`mr-1 rounded px-1 py-0.5 text-[10px] font-semibold uppercase ${
+                          ch.kind === "override"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-emerald-100 text-emerald-700"
+                        }`}
+                      >
+                        {ch.kind}
+                      </span>
+                      <span className="font-mono">{ch.c.key}</span>
+                      {ch.c.label_en ? ` — ${ch.c.label_en}` : ""}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

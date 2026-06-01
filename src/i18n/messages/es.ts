@@ -10,6 +10,11 @@ export const es: Messages = {
     saving: "Guardando…",
     loading: "Cargando…",
   },
+  nav: {
+    overview: "Resumen",
+    documents: "Documentos",
+    profile: "Perfil",
+  },
   home: {
     badge: "Motor de Inteligencia de Recursos y Orientación Digital de Beneficios",
     title: "Encuentre los beneficios para los que califica",

@@ -1,19 +1,11 @@
 import Link from "next/link";
 
 import { Button } from "~/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import { PageContainer, PageHeader } from "~/components/ui/page";
 import { fmt, type Locale } from "~/i18n/config";
 import { getI18n } from "~/i18n/server";
 import { api } from "~/trpc/server";
-
-import { DocumentsManager } from "./documents-manager";
-import { ProfileForm } from "./profile-form";
 
 function formatDate(d: Date, locale: Locale) {
   return new Date(d).toLocaleDateString(locale, {
@@ -23,7 +15,7 @@ function formatDate(d: Date, locale: Locale) {
   });
 }
 
-export default async function AccountPage() {
+export default async function AccountOverviewPage() {
   const [{ locale, t }, me, sessions] = await Promise.all([
     getI18n(),
     api.user.me(),
@@ -31,21 +23,23 @@ export default async function AccountPage() {
   ]);
 
   const inProgress = sessions.filter((s) => !s.completed_at);
-  const completed = sessions.filter((s) => s.completed_at);
-  const latestCompleted = completed[0];
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="font-heading text-3xl font-bold">
-          {me.authUser?.name
+    <PageContainer>
+      <PageHeader
+        title={
+          me.authUser?.name
             ? fmt(t.account.welcomeNamed, { name: me.authUser.name })
-            : t.account.welcome}
-        </h1>
-        <p className="mt-1 text-muted-foreground">{t.account.subtitle}</p>
-      </div>
+            : t.account.welcome
+        }
+        description={t.account.subtitle}
+        actions={
+          <Button size="sm" render={<Link href="/screening/start" />}>
+            {t.account.newScreening}
+          </Button>
+        }
+      />
 
-      {/* Resume in-progress screening */}
       {inProgress.length > 0 && (
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader>
@@ -80,20 +74,10 @@ export default async function AccountPage() {
         </Card>
       )}
 
-      {/* Screening history & results */}
       <section className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-heading text-xl font-semibold">
-            {t.account.yourScreenings}
-          </h2>
-          <Button
-            variant="outline"
-            size="sm"
-            render={<Link href="/screening/start" />}
-          >
-            {t.account.newScreening}
-          </Button>
-        </div>
+        <h2 className="font-heading text-xl font-semibold">
+          {t.account.yourScreenings}
+        </h2>
 
         {sessions.length === 0 ? (
           <Card>
@@ -157,33 +141,6 @@ export default async function AccountPage() {
           </div>
         )}
       </section>
-
-      {/* Documents */}
-      <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-xl font-semibold">
-          {t.account.documentsTitle}
-        </h2>
-        {latestCompleted ? (
-          <DocumentsManager sessionId={latestCompleted.id} />
-        ) : (
-          <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
-              {t.account.completeToSeeDocs}
-            </CardContent>
-          </Card>
-        )}
-      </section>
-
-      {/* Profile & preferences */}
-      <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-xl font-semibold">
-          {t.account.profileTitle}
-        </h2>
-        <ProfileForm
-          email={me.authUser?.email ?? null}
-          initialPhone={me.appUser?.phone ?? null}
-        />
-      </section>
-    </div>
+    </PageContainer>
   );
 }

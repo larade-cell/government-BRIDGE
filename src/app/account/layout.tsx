@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-import { DashboardHeader } from "~/components/ui/dashboard-header";
-import { LocaleToggle } from "~/components/ui/locale-toggle";
+import { type NavItem } from "~/components/nav/dashboard-nav";
+import { DashboardShell } from "~/components/nav/dashboard-shell";
 import { getI18n } from "~/i18n/server";
 import { requireUser } from "~/server/auth/page-guards";
 
@@ -12,20 +12,27 @@ export default async function AccountLayout({
 }) {
   const [session, { t }] = await Promise.all([requireUser(), getI18n()]);
 
+  const items: NavItem[] = [
+    { href: "/account", label: t.nav.overview, exact: true },
+    { href: "/account/documents", label: t.nav.documents },
+    { href: "/account/profile", label: t.nav.profile },
+  ];
+
   return (
-    <div className="min-h-screen bg-muted/30 text-foreground">
-      <DashboardHeader userLabel={session.user.name ?? session.user.email}>
-        <LocaleToggle />
+    <DashboardShell
+      userLabel={session.user.name ?? session.user.email}
+      items={items}
+      signOutLabel={t.common.signOut}
+      headerActions={
         <Link
           href="/screening/start"
-          className="rounded-lg px-2.5 py-1.5 font-medium text-primary transition-colors hover:bg-primary/10"
+          className="hidden rounded-lg px-2.5 py-1.5 font-medium text-primary transition-colors hover:bg-primary/10 sm:inline-block"
         >
           {t.account.startNewScreening}
         </Link>
-      </DashboardHeader>
-      <main className="mx-auto max-w-5xl px-4 py-8 duration-300 animate-in fade-in sm:px-6 lg:px-8">
-        {children}
-      </main>
-    </div>
+      }
+    >
+      {children}
+    </DashboardShell>
   );
 }

@@ -15,6 +15,11 @@ export const en = {
     saving: "Saving…",
     loading: "Loading…",
   },
+  nav: {
+    overview: "Overview",
+    documents: "Documents",
+    profile: "Profile",
+  },
   home: {
     badge: "Benefits Resource Intelligence & Digital Guidance Engine",
     title: "Find the benefits you qualify for",

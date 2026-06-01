@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import { PageContainer, PageHeader } from "~/components/ui/page";
 import { api } from "~/trpc/server";
 
 const OUTCOME_LABELS: Record<string, string> = {
@@ -36,13 +37,11 @@ export default async function AdminOverviewPage() {
   const maxOutcome = Math.max(1, ...outcomes.data.map((o) => o.count));
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="font-heading text-2xl font-bold">Overview</h1>
-        <p className="mt-1 text-muted-foreground">
-          Aggregate screening activity. No personal information is shown.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Overview"
+        description="Aggregate screening activity. No personal information is shown."
+      />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Stat label="Total screenings" value={overview.total_sessions} />
@@ -117,6 +116,6 @@ export default async function AdminOverviewPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

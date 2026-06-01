@@ -18,6 +18,7 @@ export function DashboardShell({
   items,
   headerActions,
   signOutLabel = "Sign out",
+  showLocaleToggle = true,
   children,
 }: {
   userLabel?: string | null;
@@ -25,6 +26,8 @@ export function DashboardShell({
   items: NavItem[];
   headerActions?: ReactNode;
   signOutLabel?: string;
+  /** Resident areas are bilingual; the admin console is English-only. */
+  showLocaleToggle?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -37,7 +40,7 @@ export function DashboardShell({
           </div>
           <div className="flex items-center gap-2 text-sm sm:gap-3">
             {headerActions}
-            <LocaleToggle />
+            {showLocaleToggle && <LocaleToggle />}
             {userLabel && (
               <span className="hidden max-w-40 truncate text-muted-foreground md:inline">
                 {userLabel}

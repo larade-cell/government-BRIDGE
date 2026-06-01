@@ -24,6 +24,7 @@ export default async function AdminLayout({
     <DashboardShell
       userLabel={session.user.name ?? session.user.email}
       items={items}
+      showLocaleToggle={false}
       badge={
         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold tracking-wide text-primary uppercase">
           {role === "admin" ? "Admin" : "Staff"} console

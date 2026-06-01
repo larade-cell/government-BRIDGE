@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 
+import { Alert } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
+import { ConfirmButton } from "~/components/ui/confirm";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { api, type RouterOutputs } from "~/trpc/react";
@@ -94,15 +96,31 @@ function ProgramsPanel() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    onClick={() =>
-                      setActive.mutate({ id: p.id, is_active: !p.is_active })
-                    }
-                  >
-                    {p.is_active ? "Deactivate" : "Activate"}
-                  </Button>
+                  {p.is_active ? (
+                    <ConfirmButton
+                      size="xs"
+                      variant="outline"
+                      confirmVariant="destructive"
+                      title="Deactivate this program?"
+                      description={`"${p.name}" will stop appearing in new screenings until you reactivate it.`}
+                      confirmLabel="Deactivate"
+                      onConfirm={() =>
+                        setActive.mutateAsync({ id: p.id, is_active: false })
+                      }
+                    >
+                      Deactivate
+                    </ConfirmButton>
+                  ) : (
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      onClick={() =>
+                        setActive.mutate({ id: p.id, is_active: true })
+                      }
+                    >
+                      Activate
+                    </Button>
+                  )}
                   <Button
                     size="xs"
                     variant="outline"
@@ -235,7 +253,9 @@ function ProgramForm({
           {busy ? "Saving…" : isEdit ? "Save changes" : "Create program"}
         </Button>
         {error && (
-          <span className="text-sm text-destructive">{error.message}</span>
+          <Alert variant="error" className="flex-1">
+            {error.message}
+          </Alert>
         )}
       </div>
     </div>
@@ -508,7 +528,9 @@ function QuestionForm({
           {busy ? "Saving…" : isEdit ? "Save changes" : "Create question"}
         </Button>
         {error && (
-          <span className="text-sm text-destructive">{error.message}</span>
+          <Alert variant="error" className="flex-1">
+            {error.message}
+          </Alert>
         )}
       </div>
     </div>

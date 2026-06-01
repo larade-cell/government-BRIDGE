@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 
+import { Alert } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
+import { ConfirmButton } from "~/components/ui/confirm";
+import { HelpIcon } from "~/components/ui/icons";
 import { Label } from "~/components/ui/label";
+import { Tooltip } from "~/components/ui/tooltip";
 import { US_STATES } from "~/server/lib/eligibility/states";
 import { api } from "~/trpc/react";
 
@@ -145,18 +149,19 @@ function RuleVersions({ programId }: { programId: string }) {
               />
               False-positive bias (lean toward eligible)
             </label>
+            <Tooltip label="Borderline or unknown answers lean toward 'may be eligible' instead of rejecting — so residents aren't wrongly screened out.">
+              <span tabIndex={0} className="text-muted-foreground outline-none">
+                <HelpIcon className="size-4" />
+              </span>
+            </Tooltip>
             <Button size="sm" onClick={handleCreate} disabled={create.isPending}>
               {create.isPending ? "Creating…" : "Create draft"}
             </Button>
-            {jsonError && (
-              <span className="text-sm text-destructive">{jsonError}</span>
-            )}
-            {create.error && (
-              <span className="text-sm text-destructive">
-                {create.error.message}
-              </span>
-            )}
           </div>
+          {jsonError && <Alert variant="error">{jsonError}</Alert>}
+          {create.error && (
+            <Alert variant="error">{create.error.message}</Alert>
+          )}
         </CardContent>
       </Card>
 
@@ -185,9 +190,14 @@ function RuleVersions({ programId }: { programId: string }) {
                       {v.is_published ? "Published" : "Draft"}
                     </span>
                     {v.false_positive_bias && (
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                        FP bias
-                      </span>
+                      <Tooltip label="False-positive bias: borderline or unknown answers lean toward 'may be eligible' rather than rejecting.">
+                        <span
+                          tabIndex={0}
+                          className="cursor-help rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 outline-none"
+                        >
+                          FP bias
+                        </span>
+                      </Tooltip>
                     )}
                   </div>
                   <div className="flex gap-2">
@@ -199,13 +209,16 @@ function RuleVersions({ programId }: { programId: string }) {
                       Clone to editor
                     </Button>
                     {!v.is_published && (
-                      <Button
+                      <ConfirmButton
                         size="xs"
+                        title="Publish this rule version?"
+                        description="It becomes the live version immediately and closes the current one. New screenings will use it right away."
+                        confirmLabel="Publish"
                         disabled={publish.isPending}
-                        onClick={() => publish.mutate({ id: v.id })}
+                        onConfirm={() => publish.mutateAsync({ id: v.id })}
                       >
                         Publish
-                      </Button>
+                      </ConfirmButton>
                     )}
                   </div>
                 </div>

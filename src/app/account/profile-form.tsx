@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { Alert } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -99,19 +100,15 @@ export function ProfileForm({
               />
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div>
             <Button type="submit" size="sm" disabled={update.isPending}>
               {update.isPending ? "Saving…" : "Save changes"}
             </Button>
-            {saved && (
-              <span className="text-sm text-emerald-600">Saved.</span>
-            )}
-            {update.error && (
-              <span className="text-sm text-destructive">
-                {update.error.message}
-              </span>
-            )}
           </div>
+          {saved && <Alert variant="success">Your changes were saved.</Alert>}
+          {update.error && (
+            <Alert variant="error">{update.error.message}</Alert>
+          )}
         </form>
 
         {email && (

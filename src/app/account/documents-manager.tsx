@@ -2,8 +2,10 @@
 
 import { useRef, useState } from "react";
 
+import { Alert } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
+import { ConfirmButton } from "~/components/ui/confirm";
 import { Label } from "~/components/ui/label";
 import { api } from "~/trpc/react";
 
@@ -142,9 +144,7 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
             Accepted: JPG, PNG, PDF, HEIC.
           </p>
           {createUpload.error && (
-            <span className="text-sm text-destructive">
-              {createUpload.error.message}
-            </span>
+            <Alert variant="error">{createUpload.error.message}</Alert>
           )}
         </div>
 
@@ -157,16 +157,20 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
                 className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm"
               >
                 <span className="truncate">{u.file_name}</span>
-                <Button
+                <ConfirmButton
                   size="xs"
                   variant="destructive"
+                  confirmVariant="destructive"
+                  title="Remove this document?"
+                  description={`"${u.file_name}" will be removed from your documents.`}
+                  confirmLabel="Remove"
                   disabled={deleteUpload.isPending}
-                  onClick={() =>
-                    deleteUpload.mutate({ session_id: sessionId, id: u.id })
+                  onConfirm={() =>
+                    deleteUpload.mutateAsync({ session_id: sessionId, id: u.id })
                   }
                 >
                   Remove
-                </Button>
+                </ConfirmButton>
               </li>
             ))}
           </ul>

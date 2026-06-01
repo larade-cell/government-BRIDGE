@@ -3,11 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { Brand } from "~/components/ui/brand";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { Progress } from "~/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
+import { Spinner } from "~/components/ui/spinner";
 import { api, type RouterOutputs } from "~/trpc/react";
 
 type Question = RouterOutputs["question"]["list"][number];
@@ -39,22 +40,24 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
   const [draft, setDraft] = useState<unknown>(
     current ? storedAnswers.get(current.id) ?? null : null,
   );
+  const [error, setError] = useState<string | null>(null);
 
   // Reset draft when navigating to a new question.
   function goTo(nextIndex: number) {
     const next = questions[nextIndex];
     setDraft(next ? storedAnswers.get(next.id) ?? null : null);
+    setError(null);
     setIndex(nextIndex);
   }
 
   async function handleNext() {
     if (!current) return;
     if (current.is_required && (draft === null || draft === "")) {
-      // Browser-level required validation lives on the inputs below; this is
-      // a safety net for the boolean/radio case where there's no native
-      // requiredness.
+      // Surface a clear, friendly prompt rather than a silently-disabled button.
+      setError("Please answer this question to continue.");
       return;
     }
+    setError(null);
 
     await upsert.mutateAsync({
       session_id: sessionId,
@@ -71,7 +74,7 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
 
   if (!current) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#0f172a] to-[#020617] text-white">
+      <main className="brand-gradient flex min-h-screen items-center justify-center text-white">
         <p>No questions configured.</p>
       </main>
     );
@@ -80,31 +83,58 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
   const progress = ((index + 1) / questions.length) * 100;
 
   return (
-    <main className="flex min-h-screen flex-col items-center bg-gradient-to-b from-[#0f172a] to-[#020617] px-4 py-12 text-white">
+    <main className="brand-gradient flex min-h-screen flex-col items-center px-4 py-8 text-white sm:py-12">
+      <div className="mb-8 w-full max-w-xl">
+        <Brand href="/" />
+      </div>
       <div className="w-full max-w-xl">
         <div className="mb-8">
           <div className="mb-2 flex justify-between text-sm text-white/70">
             <span>
               Question {index + 1} of {questions.length}
             </span>
-            <span>{Math.round(progress)}%</span>
+            <span className="tabular-nums">{Math.round(progress)}%</span>
           </div>
-          <Progress value={progress} className="bg-white/20" />
+          {/* Smoothly-animating progress bar. */}
+          <div className="h-2 overflow-hidden rounded-full bg-white/15">
+            <div
+              className="h-full rounded-full bg-white transition-[width] duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
 
-        <div className="rounded-xl bg-white/10 p-8">
-          <h2 className="mb-2 text-2xl font-semibold">{current.prompt}</h2>
+        {/* Re-keyed by question id so each question animates in on navigation. */}
+        <div
+          key={current.id}
+          className="rounded-2xl bg-white/10 p-6 shadow-xl ring-1 ring-white/10 duration-300 animate-in fade-in slide-in-from-right-4 sm:p-8"
+        >
+          <h2 className="mb-2 font-heading text-2xl font-semibold">
+            {current.prompt}
+          </h2>
           {current.helper_text && (
             <p className="mb-6 text-sm text-white/70">{current.helper_text}</p>
           )}
 
-          <div className="mb-8">
+          <div className="mb-6">
             <QuestionInput
               question={current}
               value={draft}
-              onChange={setDraft}
+              onChange={(v) => {
+                setDraft(v);
+                if (error) setError(null);
+              }}
             />
           </div>
+
+          {error && (
+            <p
+              role="alert"
+              className="mb-4 rounded-lg bg-red-400/15 px-3 py-2 text-sm text-red-200 ring-1 ring-red-400/20 duration-200 animate-in fade-in"
+            >
+              {error}
+            </p>
+          )}
 
           <div className="flex justify-between">
             <Button
@@ -115,20 +145,27 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
             >
               Back
             </Button>
-            <Button
-              onClick={handleNext}
-              disabled={
-                upsert.isPending ||
-                (current.is_required && (draft === null || draft === ""))
-              }
-            >
-              {upsert.isPending ? "Saving..." : isLast ? "See results" : "Next"}
+            <Button onClick={handleNext} disabled={upsert.isPending}>
+              {upsert.isPending ? (
+                <>
+                  <Spinner className="size-4" /> Saving…
+                </>
+              ) : isLast ? (
+                "See results"
+              ) : (
+                "Next"
+              )}
             </Button>
           </div>
         </div>
       </div>
     </main>
   );
+}
+
+/** Coerce a stored answer value to a text-input string (ignores non-scalars). */
+function asText(v: unknown): string {
+  return typeof v === "string" || typeof v === "number" ? String(v) : "";
 }
 
 function QuestionInput({
@@ -147,7 +184,7 @@ function QuestionInput({
           type="number"
           inputMode="numeric"
           step={1}
-          value={value == null ? "" : String(value)}
+          value={asText(value)}
           onChange={(e) => {
             const n = e.target.value === "" ? null : Number(e.target.value);
             onChange(n);
@@ -161,7 +198,7 @@ function QuestionInput({
           type="number"
           inputMode="decimal"
           step="0.01"
-          value={value == null ? "" : String(value)}
+          value={asText(value)}
           onChange={(e) => {
             const n = e.target.value === "" ? null : Number(e.target.value);
             onChange(n);
@@ -203,7 +240,7 @@ function QuestionInput({
       return (
         <Input
           type="text"
-          value={value == null ? "" : String(value)}
+          value={asText(value)}
           onChange={(e) => onChange(e.target.value)}
           required={question.is_required}
         />

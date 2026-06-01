@@ -1,7 +1,9 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { type PrismaClient } from "../../../../generated/prisma";
 import { embedText, isAiEnabled } from "../../../../lib/ai-service";
+import { requireRole } from "~/server/api/helpers/session";
 import {
   createTRPCRouter,
   publicProcedure,
@@ -10,6 +12,61 @@ import {
 import { type createTRPCContext } from "~/server/api/trpc";
 
 type Ctx = Awaited<ReturnType<typeof createTRPCContext>>;
+
+// ---- Admin program authoring ---------------------------------------------
+const programKeySchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z][a-z0-9_]*$/, "lowercase letters, digits, and underscores only");
+
+const programTranslationSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  short_description: z.string().trim().min(1).max(2000),
+  next_steps: z.string().trim().min(1).max(2000),
+});
+const programTranslationsSchema = z.object({
+  en: programTranslationSchema,
+  es: programTranslationSchema.optional(),
+});
+
+async function writeProgramTranslations(
+  db: PrismaClient,
+  programId: string,
+  translations: z.infer<typeof programTranslationsSchema>,
+) {
+  for (const [language_code, t] of Object.entries(translations)) {
+    if (!t) continue;
+    await db.program_translations.upsert({
+      where: { program_id_language_code: { program_id: programId, language_code } },
+      update: {
+        name: t.name,
+        short_description: t.short_description,
+        next_steps: t.next_steps,
+      },
+      create: {
+        program_id: programId,
+        language_code,
+        name: t.name,
+        short_description: t.short_description,
+        next_steps: t.next_steps,
+      },
+    });
+  }
+}
+
+/** Rebuild the full-text index for one program from its translations. */
+async function refreshProgramSearchVector(db: PrismaClient, programId: string) {
+  await db.$executeRaw`
+    UPDATE programs p SET search_vector = (
+      SELECT to_tsvector('english',
+        coalesce(string_agg(pt.name, ' '), '') || ' ' ||
+        coalesce(string_agg(pt.short_description, ' '), '')
+      )
+      FROM program_translations pt WHERE pt.program_id = p.id
+    ) WHERE p.id = ${programId}::uuid`;
+}
 
 /**
  * Programs catalog (Story 6/7/10) and document-type reference (Story 8).
@@ -257,6 +314,146 @@ export const programRouter = createTRPCRouter({
         data,
         meta: { query: input.q, language: input.language_code, count: data.length },
       };
+    }),
+
+  /**
+   * Admin catalog listing — every program (active and inactive) with its
+   * English name and a summary of its latest eligibility rule version. Powers
+   * the admin programs + rules screens.
+   */
+  adminList: publicProcedure.query(async ({ ctx }) => {
+    await requireRole(ctx, ["admin"]);
+    const rows = await ctx.db.programs.findMany({
+      orderBy: { program_key: "asc" },
+      select: {
+        id: true,
+        program_key: true,
+        category: true,
+        authoritative_url: true,
+        is_active: true,
+        created_at: true,
+        program_translations: {
+          where: { language_code: "en" },
+          select: { name: true, short_description: true },
+          take: 1,
+        },
+        eligibility_rule_versions: {
+          orderBy: { version: "desc" },
+          take: 1,
+          select: { id: true, version: true, effective_from: true, false_positive_bias: true },
+        },
+      },
+    });
+    const now = Date.now();
+    return rows.map((p) => {
+      const latest = p.eligibility_rule_versions[0];
+      return {
+        id: p.id,
+        program_key: p.program_key,
+        category: p.category,
+        authoritative_url: p.authoritative_url,
+        is_active: p.is_active,
+        created_at: p.created_at,
+        name: p.program_translations[0]?.name ?? p.program_key,
+        short_description: p.program_translations[0]?.short_description ?? null,
+        latest_rule_version: latest
+          ? {
+              id: latest.id,
+              version: latest.version,
+              is_published: latest.effective_from.getTime() <= now,
+              false_positive_bias: latest.false_positive_bias,
+            }
+          : null,
+      };
+    });
+  }),
+
+  create: publicProcedure
+    .input(
+      z.object({
+        program_key: programKeySchema,
+        category: z.string().trim().min(1).max(64),
+        authoritative_url: z.string().url().max(500),
+        translations: programTranslationsSchema,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await requireRole(ctx, ["admin"]);
+      const dup = await ctx.db.programs.findUnique({
+        where: { program_key: input.program_key },
+        select: { id: true },
+      });
+      if (dup) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `A program with key "${input.program_key}" already exists`,
+        });
+      }
+      const program = await ctx.db.programs.create({
+        data: {
+          program_key: input.program_key,
+          category: input.category,
+          authoritative_url: input.authoritative_url,
+        },
+        select: { id: true },
+      });
+      await writeProgramTranslations(ctx.db, program.id, input.translations);
+      await refreshProgramSearchVector(ctx.db, program.id);
+      return { id: program.id };
+    }),
+
+  update: publicProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        category: z.string().trim().min(1).max(64).optional(),
+        authoritative_url: z.string().url().max(500).optional(),
+        is_active: z.boolean().optional(),
+        translations: programTranslationsSchema.optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await requireRole(ctx, ["admin"]);
+      const existing = await ctx.db.programs.findUnique({
+        where: { id: input.id },
+        select: { id: true },
+      });
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Program not found" });
+      }
+      await ctx.db.programs.update({
+        where: { id: input.id },
+        data: {
+          ...(input.category !== undefined && { category: input.category }),
+          ...(input.authoritative_url !== undefined && {
+            authoritative_url: input.authoritative_url,
+          }),
+          ...(input.is_active !== undefined && { is_active: input.is_active }),
+        },
+      });
+      if (input.translations) {
+        await writeProgramTranslations(ctx.db, input.id, input.translations);
+        await refreshProgramSearchVector(ctx.db, input.id);
+      }
+      return { id: input.id };
+    }),
+
+  setActive: publicProcedure
+    .input(z.object({ id: z.string().uuid(), is_active: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      await requireRole(ctx, ["admin"]);
+      const existing = await ctx.db.programs.findUnique({
+        where: { id: input.id },
+        select: { id: true },
+      });
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Program not found" });
+      }
+      return ctx.db.programs.update({
+        where: { id: input.id },
+        data: { is_active: input.is_active },
+        select: { id: true, is_active: true },
+      });
     }),
 });
 

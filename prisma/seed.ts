@@ -22,6 +22,26 @@ async function main() {
     create: { code: "es", name: "Spanish" },
   });
 
+  // ---- Demo staff accounts ------------------------------------------------
+  // Domain users with elevated roles, keyed by email. Because the magic-link
+  // provider prints the sign-in link to the console in dev, you can log in as
+  // these accounts without real email delivery: enter the address on
+  // /auth/magic-link and follow the printed link. On first sign-in the
+  // createUser event links the NextAuth user to the existing row by email, so
+  // the seeded role is preserved. Use `tsx scripts/set-role.ts <email> <role>`
+  // to promote any other account.
+  const demoStaff = [
+    { email: "admin@bridge.local", role: "admin" as const },
+    { email: "caseworker@bridge.local", role: "caseworker" as const },
+  ];
+  for (const s of demoStaff) {
+    await db.users.upsert({
+      where: { email: s.email },
+      update: { role: s.role },
+      create: { email: s.email, role: s.role, preferred_language: "en" },
+    });
+  }
+
   // ---- Programs -----------------------------------------------------------
   // Major federal benefit programs across food, healthcare, cash, housing,
   // utilities, tax credits, education, and childcare. Each carries bilingual

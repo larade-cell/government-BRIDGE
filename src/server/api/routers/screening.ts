@@ -1,9 +1,13 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { type Prisma } from "../../../../generated/prisma";
-import { assertSessionAccess } from "~/server/api/helpers/session";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { type Prisma, type PrismaClient } from "../../../../generated/prisma";
+import { assertSessionAccess, requireRole } from "~/server/api/helpers/session";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import {
   buildFacts,
   evaluateProgram,
@@ -54,6 +58,31 @@ export const screeningSessionRouter = createTRPCRouter({
       return session;
     }),
 
+  /**
+   * The signed-in user's own screening sessions, newest first, with a small
+   * summary (answer + result counts and a completed flag) for the resident
+   * dashboard's history list.
+   */
+  listMine: protectedProcedure.query(async ({ ctx }) => {
+    const appUserId = ctx.session.user.appUserId;
+    if (!appUserId) return [];
+    return ctx.db.screening_sessions.findMany({
+      where: { user_id: appUserId },
+      orderBy: { created_at: "desc" },
+      select: {
+        id: true,
+        preferred_language: true,
+        current_step: true,
+        completed_at: true,
+        expires_at: true,
+        created_at: true,
+        _count: {
+          select: { screening_answers: true, eligibility_results: true },
+        },
+      },
+    });
+  }),
+
   byId: publicProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
@@ -83,6 +112,91 @@ export const screeningSessionRouter = createTRPCRouter({
       return session;
     }),
 });
+
+// ---- Admin question authoring (Story: admin catalog management) -----------
+// The questionnaire UI can only render these answer types, so authoring is
+// constrained to them.
+const ANSWER_TYPES = [
+  "integer",
+  "decimal",
+  "boolean",
+  "single_select",
+  "text",
+] as const;
+
+const keySchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z][a-z0-9_]*$/, "lowercase letters, digits, and underscores only");
+
+const promptSchema = z.object({
+  prompt: z.string().trim().min(1).max(500),
+  helper_text: z.string().trim().max(500).nullish(),
+});
+const promptsSchema = z.object({
+  en: promptSchema,
+  es: promptSchema.optional(),
+});
+const optionInputSchema = z.object({
+  option_key: keySchema,
+  en: z.string().trim().min(1).max(200),
+  es: z.string().trim().min(1).max(200),
+});
+
+async function writeQuestionTranslations(
+  db: PrismaClient,
+  questionId: string,
+  prompts: z.infer<typeof promptsSchema>,
+) {
+  for (const [language_code, t] of Object.entries(prompts)) {
+    if (!t) continue;
+    await db.question_translations.upsert({
+      where: { question_id_language_code: { question_id: questionId, language_code } },
+      update: { prompt: t.prompt, helper_text: t.helper_text ?? null },
+      create: {
+        question_id: questionId,
+        language_code,
+        prompt: t.prompt,
+        helper_text: t.helper_text ?? null,
+      },
+    });
+  }
+}
+
+async function writeQuestionOptions(
+  db: PrismaClient,
+  questionId: string,
+  options: z.infer<typeof optionInputSchema>[],
+) {
+  for (let i = 0; i < options.length; i++) {
+    const opt = options[i]!;
+    const option = await db.answer_options.upsert({
+      where: {
+        question_id_option_key: { question_id: questionId, option_key: opt.option_key },
+      },
+      update: { display_order: i, value: opt.option_key },
+      create: {
+        question_id: questionId,
+        option_key: opt.option_key,
+        value: opt.option_key,
+        display_order: i,
+      },
+    });
+    for (const language_code of ["en", "es"] as const) {
+      await db.answer_option_translations.upsert({
+        where: { option_id_language_code: { option_id: option.id, language_code } },
+        update: { label: opt[language_code] },
+        create: { option_id: option.id, language_code, label: opt[language_code] },
+      });
+    }
+  }
+  // Drop options no longer present (translations cascade on delete).
+  await db.answer_options.deleteMany({
+    where: { question_id: questionId, option_key: { notIn: options.map((o) => o.option_key) } },
+  });
+}
 
 export const questionRouter = createTRPCRouter({
   list: publicProcedure
@@ -145,6 +259,89 @@ export const questionRouter = createTRPCRouter({
           label: o.answer_option_translations[0]?.label ?? o.option_key,
         })),
       }));
+    }),
+
+  create: publicProcedure
+    .input(
+      z.object({
+        question_key: keySchema,
+        answer_type: z.enum(ANSWER_TYPES),
+        display_order: z.number().int().min(0),
+        is_required: z.boolean().default(true),
+        prompts: promptsSchema,
+        options: z.array(optionInputSchema).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await requireRole(ctx, ["admin"]);
+      if (input.answer_type === "single_select" && (input.options?.length ?? 0) < 2) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "single_select questions need at least two options",
+        });
+      }
+      const dup = await ctx.db.questions.findUnique({
+        where: { question_key: input.question_key },
+        select: { id: true },
+      });
+      if (dup) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `A question with key "${input.question_key}" already exists`,
+        });
+      }
+      const question = await ctx.db.questions.create({
+        data: {
+          question_key: input.question_key,
+          answer_type: input.answer_type,
+          display_order: input.display_order,
+          is_required: input.is_required,
+        },
+        select: { id: true },
+      });
+      await writeQuestionTranslations(ctx.db, question.id, input.prompts);
+      if (input.options) await writeQuestionOptions(ctx.db, question.id, input.options);
+      return { id: question.id };
+    }),
+
+  update: publicProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        answer_type: z.enum(ANSWER_TYPES).optional(),
+        display_order: z.number().int().min(0).optional(),
+        is_required: z.boolean().optional(),
+        prompts: promptsSchema.optional(),
+        options: z.array(optionInputSchema).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await requireRole(ctx, ["admin"]);
+      const existing = await ctx.db.questions.findUnique({
+        where: { id: input.id },
+        select: { id: true, answer_type: true },
+      });
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Question not found" });
+      }
+      const nextType = input.answer_type ?? existing.answer_type;
+      if (input.options && nextType === "single_select" && input.options.length < 2) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "single_select questions need at least two options",
+        });
+      }
+      await ctx.db.questions.update({
+        where: { id: input.id },
+        data: {
+          ...(input.answer_type !== undefined && { answer_type: input.answer_type }),
+          ...(input.display_order !== undefined && { display_order: input.display_order }),
+          ...(input.is_required !== undefined && { is_required: input.is_required }),
+        },
+      });
+      if (input.prompts) await writeQuestionTranslations(ctx.db, input.id, input.prompts);
+      if (input.options) await writeQuestionOptions(ctx.db, input.id, input.options);
+      return { id: input.id };
     }),
 });
 

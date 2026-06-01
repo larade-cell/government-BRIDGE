@@ -29,19 +29,36 @@ export default async function Home() {
                 </span>
               </p>
             )}
-            <div className="flex gap-3">
+            <div className="flex flex-wrap justify-center gap-3">
               <Link
                 href="/screening/start"
                 className="rounded-full bg-white px-6 py-3 font-semibold text-slate-900 transition hover:bg-white/90"
               >
                 Start screening
               </Link>
-              <Link
-                href={session ? "/api/auth/signout" : "/auth/magic-link"}
-                className="rounded-full bg-white/10 px-6 py-3 font-semibold transition hover:bg-white/20"
-              >
-                {session ? "Sign out" : "Sign in"}
-              </Link>
+              {session?.user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="rounded-full bg-white/10 px-6 py-3 font-semibold transition hover:bg-white/20"
+                  >
+                    Go to my dashboard
+                  </Link>
+                  <Link
+                    href="/api/auth/signout"
+                    className="rounded-full bg-white/10 px-6 py-3 font-semibold transition hover:bg-white/20"
+                  >
+                    Sign out
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  href="/auth/magic-link"
+                  className="rounded-full bg-white/10 px-6 py-3 font-semibold transition hover:bg-white/20"
+                >
+                  Sign in
+                </Link>
+              )}
             </div>
           </div>
         </div>

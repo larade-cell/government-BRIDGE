@@ -36,7 +36,9 @@ function caller(appUserId: string | null): Caller {
     appUserId === null
       ? null
       : {
-          user: { id: randomUUID(), appUserId },
+          // `role` is carried in the session for UI gating; tRPC role checks
+          // (requireRole) re-read it from the DB, so null is fine here.
+          user: { id: randomUUID(), appUserId, role: null },
           expires: new Date(Date.now() + 3_600_000).toISOString(),
         };
   return createCaller({ db, session, headers: new Headers() });
@@ -337,6 +339,121 @@ describe("Phase 4 — AI, reports, cases, rule versions", () => {
       }),
       "FORBIDDEN",
     );
+  });
+});
+
+describe("Citizen & admin views — dashboards", () => {
+  it("screeningSession.listMine returns the caller's own sessions", async () => {
+    await expectCode(caller(null).screeningSession.listMine(), "UNAUTHORIZED");
+    const s = await newSession(residentId);
+    const mine = await caller(residentId).screeningSession.listMine();
+    expect(mine.some((x) => x.id === s.id)).toBe(true);
+    expect(mine[0]).toHaveProperty("_count");
+  });
+
+  it("program create/update/setActive/adminList are admin-gated", async () => {
+    const key = `test_prog_${randomUUID().slice(0, 8)}`;
+    const translations = {
+      en: { name: "Test", short_description: "desc", next_steps: "steps" },
+    };
+    await expectCode(caller(residentId).program.adminList(), "FORBIDDEN");
+    await expectCode(
+      caller(residentId).program.create({
+        program_key: key,
+        category: "test",
+        authoritative_url: "https://example.test",
+        translations,
+      }),
+      "FORBIDDEN",
+    );
+
+    const created = await caller(adminId).program.create({
+      program_key: key,
+      category: "test",
+      authoritative_url: "https://example.test",
+      translations,
+    });
+    expect(created.id).toBeTruthy();
+
+    // Duplicate key is rejected.
+    await expectCode(
+      caller(adminId).program.create({
+        program_key: key,
+        category: "test",
+        authoritative_url: "https://example.test",
+        translations,
+      }),
+      "CONFLICT",
+    );
+
+    const toggled = await caller(adminId).program.setActive({
+      id: created.id,
+      is_active: false,
+    });
+    expect(toggled.is_active).toBe(false);
+
+    const all = await caller(adminId).program.adminList();
+    expect(all.some((p) => p.id === created.id)).toBe(true);
+
+    await db.programs.delete({ where: { id: created.id } });
+  });
+
+  it("question create/update is admin-gated and validates single_select", async () => {
+    const key = `test_q_${randomUUID().slice(0, 8)}`;
+    await expectCode(
+      caller(residentId).question.create({
+        question_key: key,
+        answer_type: "integer",
+        display_order: 99,
+        prompts: { en: { prompt: "How many?" } },
+      }),
+      "FORBIDDEN",
+    );
+
+    // single_select with too few options is rejected.
+    await expectCode(
+      caller(adminId).question.create({
+        question_key: key,
+        answer_type: "single_select",
+        display_order: 99,
+        prompts: { en: { prompt: "Pick" } },
+      }),
+      "BAD_REQUEST",
+    );
+
+    const q = await caller(adminId).question.create({
+      question_key: key,
+      answer_type: "single_select",
+      display_order: 99,
+      prompts: { en: { prompt: "Pick one" }, es: { prompt: "Elige uno" } },
+      options: [
+        { option_key: "a", en: "A", es: "A" },
+        { option_key: "b", en: "B", es: "B" },
+      ],
+    });
+    expect(q.id).toBeTruthy();
+
+    const list = await caller(null).question.list({ language_code: "en" });
+    const found = list.find((x) => x.id === q.id);
+    expect(found?.options.length).toBe(2);
+
+    // Dropping below two options on a single_select is rejected.
+    await expectCode(
+      caller(adminId).question.update({
+        id: q.id,
+        options: [{ option_key: "a", en: "A", es: "A" }],
+      }),
+      "BAD_REQUEST",
+    );
+
+    const updated = await caller(adminId).question.update({
+      id: q.id,
+      display_order: 100,
+      prompts: { en: { prompt: "Pick exactly one" } },
+    });
+    expect(updated.id).toBe(q.id);
+
+    await db.questions.delete({ where: { id: q.id } });
   });
 });
 

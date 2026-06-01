@@ -17,6 +17,36 @@ declare module "next-auth" {
   }
 }
 
+/**
+ * Resolve the domain `users` row for a NextAuth user, linking by email or
+ * creating it on first sign-in. Linking by email first means a pre-seeded or
+ * promoted account (e.g. the demo admin) keeps its role rather than colliding
+ * on the unique email or being recreated as a default-role resident.
+ */
+async function linkDomainUser(authUserId: string, email: string | null) {
+  const byAuth = await db.users.findUnique({
+    where: { auth_user_id: authUserId },
+    select: { id: true, role: true },
+  });
+  if (byAuth || !email) return byAuth;
+
+  const byEmail = await db.users.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+  if (byEmail) {
+    return db.users.update({
+      where: { id: byEmail.id },
+      data: { auth_user_id: authUserId },
+      select: { id: true, role: true },
+    });
+  }
+  return db.users.create({
+    data: { auth_user_id: authUserId, email },
+    select: { id: true, role: true },
+  });
+}
+
 export const authConfig = {
   providers: [
     Nodemailer({
@@ -38,10 +68,13 @@ export const authConfig = {
   },
   callbacks: {
     session: async ({ session, user }) => {
-      const appUser = await db.users.findUnique({
-        where: { auth_user_id: user.id },
-        select: { id: true, role: true },
-      });
+      // Reconcile the NextAuth user with its domain `users` row on every
+      // session fetch. We can't rely on the createUser event alone: the
+      // magic-link form pre-creates the NextAuth user (to capture a display
+      // name), so on verification the adapter finds an existing user and
+      // createUser never fires. Linking here is idempotent — it only writes
+      // the first time, then matches by auth_user_id.
+      const appUser = await linkDomainUser(user.id, user.email ?? null);
       return {
         ...session,
         user: {
@@ -51,31 +84,6 @@ export const authConfig = {
           role: appUser?.role ?? null,
         },
       };
-    },
-  },
-  events: {
-    // Link (or create) the domain `users` row on first sign-up. The two tables
-    // have independent IDs, linked via users.auth_user_id (unique FK to
-    // User.id). We link by email first so a pre-seeded or promoted account
-    // (e.g. a demo admin created before they ever signed in) keeps its role
-    // instead of colliding on the unique email or being recreated as a
-    // default-role resident.
-    createUser: async ({ user }) => {
-      if (!user.id || !user.email) return;
-      const existing = await db.users.findUnique({
-        where: { email: user.email },
-        select: { id: true },
-      });
-      if (existing) {
-        await db.users.update({
-          where: { id: existing.id },
-          data: { auth_user_id: user.id },
-        });
-        return;
-      }
-      await db.users.create({
-        data: { auth_user_id: user.id, email: user.email },
-      });
     },
   },
 } satisfies NextAuthConfig;

@@ -274,6 +274,10 @@ function QuestionsPanel() {
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  const remove = api.question.delete.useMutation({
+    onSuccess: () => void utils.question.list.invalidate(),
+  });
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex justify-end">
@@ -312,15 +316,29 @@ function QuestionsPanel() {
                     {q.is_required ? " · required" : ""}
                   </p>
                 </div>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  onClick={() =>
-                    setEditingId((cur) => (cur === q.id ? null : q.id))
-                  }
-                >
-                  {editingId === q.id ? "Close" : "Edit"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    onClick={() =>
+                      setEditingId((cur) => (cur === q.id ? null : q.id))
+                    }
+                  >
+                    {editingId === q.id ? "Close" : "Edit"}
+                  </Button>
+                  <ConfirmButton
+                    size="xs"
+                    variant="destructive"
+                    confirmVariant="destructive"
+                    title="Remove this question?"
+                    description={`"${q.prompt}" will be removed from the screener. Residents' existing answers to it are also deleted. Eligibility rules that read this answer will fall back to "needs more info".`}
+                    confirmLabel="Remove"
+                    disabled={remove.isPending}
+                    onConfirm={() => remove.mutateAsync({ id: q.id })}
+                  >
+                    Remove
+                  </ConfirmButton>
+                </div>
               </div>
               {editingId === q.id && (
                 <QuestionForm

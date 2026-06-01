@@ -343,6 +343,27 @@ export const questionRouter = createTRPCRouter({
       if (input.options) await writeQuestionOptions(ctx.db, input.id, input.options);
       return { id: input.id };
     }),
+
+  delete: publicProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      await requireRole(ctx, ["admin"]);
+      const existing = await ctx.db.questions.findUnique({
+        where: { id: input.id },
+        select: { id: true },
+      });
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Question not found" });
+      }
+      // Translations, answer options, and dependencies cascade on delete; only
+      // residents' stored answers (FK is NoAction) must be cleared first. Done
+      // in one transaction so a failure leaves nothing half-removed.
+      const [, deleted] = await ctx.db.$transaction([
+        ctx.db.screening_answers.deleteMany({ where: { question_id: input.id } }),
+        ctx.db.questions.delete({ where: { id: input.id } }),
+      ]);
+      return { id: deleted.id, deleted: true };
+    }),
 });
 
 export const answerRouter = createTRPCRouter({

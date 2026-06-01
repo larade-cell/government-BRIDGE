@@ -486,6 +486,35 @@ describe("Citizen & admin views — dashboards", () => {
 
     await db.questions.delete({ where: { id: q.id } });
   });
+
+  it("question delete is admin-gated and clears answers (no FK error)", async () => {
+    const key = `test_qdel_${randomUUID().slice(0, 8)}`;
+    const q = await caller(adminId).question.create({
+      question_key: key,
+      answer_type: "integer",
+      display_order: 98,
+      prompts: { en: { prompt: "How many?" } },
+    });
+
+    // A resident answers it, so a screening_answers row references the question
+    // (its FK is NoAction — delete must clear it rather than erroring).
+    const session = await newSession(residentId);
+    await caller(residentId).answer.upsert({
+      session_id: session.id,
+      question_id: q.id,
+      answer_value: 3,
+    });
+
+    await expectCode(caller(residentId).question.delete({ id: q.id }), "FORBIDDEN");
+
+    const res = await caller(adminId).question.delete({ id: q.id });
+    expect(res.deleted).toBe(true);
+
+    const list = await caller(null).question.list({ language_code: "en" });
+    expect(list.some((x) => x.id === q.id)).toBe(false);
+
+    await expectCode(caller(adminId).question.delete({ id: q.id }), "NOT_FOUND");
+  });
 });
 
 describe("Phase 3 — profile, notifications, referrals", () => {

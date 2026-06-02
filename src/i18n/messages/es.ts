@@ -15,6 +15,21 @@ export const es: Messages = {
     documents: "Documentos",
     profile: "Perfil",
   },
+  chat: {
+    launch: "Pregunte sobre elegibilidad",
+    title: "Asistente de elegibilidad",
+    intro:
+      "¡Hola! Pregúnteme lo que quiera sobre los programas de beneficios y la elegibilidad — le indicaré fuentes oficiales.",
+    placeholder: "Escriba su pregunta…",
+    send: "Enviar",
+    sources: "Fuentes",
+    disclaimer:
+      "Asistente de IA — información general, no una decisión oficial de elegibilidad.",
+    handoff: "Hablar con una persona",
+    handoffDone: "Gracias — un trabajador de casos se comunicará con usted.",
+    error: "Lo sentimos, algo salió mal. Inténtelo de nuevo.",
+    close: "Cerrar",
+  },
   home: {
     badge: "Motor de Inteligencia de Recursos y Orientación Digital de Beneficios",
     title: "Encuentre los beneficios para los que califica",

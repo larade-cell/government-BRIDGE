@@ -865,6 +865,206 @@ async function main() {
     });
   }
 
+  // ---- Knowledge base -----------------------------------------------------
+  // Starter RAG sources for the eligibility chatbot. Each is grounded in an
+  // official page; the chatbot retrieves these (after embedding via
+  // `npm run backfill:embeddings`) and cites them. Bilingual (en/es).
+  // Idempotent: keyed by (source_url, language_code).
+  const programIdByKey: Record<string, string> = Object.fromEntries(
+    createdPrograms.map((p) => [p.program_key, p.id]),
+  );
+
+  const knowledgeSeeds: {
+    program_key?: string;
+    source_url: string;
+    en: { title: string; content: string };
+    es: { title: string; content: string };
+  }[] = [
+    {
+      program_key: "snap",
+      source_url: "https://www.fns.usda.gov/snap/recipient/eligibility",
+      en: {
+        title: "SNAP eligibility basics",
+        content:
+          "SNAP (food stamps) helps low-income households buy food. Eligibility is based mainly on household size and gross monthly income — generally at or below 130% of the federal poverty level, though many states raise that limit to about 200% under broad-based categorical eligibility. Most adults aged 18–59 must meet work requirements. U.S. citizens and many lawfully present immigrants can qualify. Apply through your state's SNAP agency.",
+      },
+      es: {
+        title: "Conceptos básicos de elegibilidad de SNAP",
+        content:
+          "SNAP (cupones de alimentos) ayuda a los hogares de bajos ingresos a comprar comida. La elegibilidad depende principalmente del tamaño del hogar y del ingreso mensual bruto — generalmente igual o menor al 130% del nivel federal de pobreza, aunque muchos estados elevan ese límite a cerca del 200%. La mayoría de los adultos de 18 a 59 años deben cumplir requisitos de trabajo. Pueden calificar los ciudadanos estadounidenses y muchos inmigrantes con estatus legal. Solicite a través de la agencia de SNAP de su estado.",
+      },
+    },
+    {
+      program_key: "medicaid",
+      source_url: "https://www.medicaid.gov/medicaid/eligibility/index.html",
+      en: {
+        title: "Medicaid eligibility basics",
+        content:
+          "Medicaid provides free or low-cost health coverage. In states that expanded Medicaid, adults with income up to 138% of the federal poverty level qualify. In states that did not expand, childless adults generally do not qualify regardless of income. Pregnant people, children, parents, seniors, and people with disabilities may qualify at higher limits. Rules vary by state. Apply through your state Medicaid agency or HealthCare.gov.",
+      },
+      es: {
+        title: "Conceptos básicos de elegibilidad de Medicaid",
+        content:
+          "Medicaid ofrece cobertura médica gratuita o de bajo costo. En los estados que ampliaron Medicaid, califican los adultos con ingresos hasta el 138% del nivel federal de pobreza. En los estados que no lo ampliaron, los adultos sin hijos generalmente no califican sin importar sus ingresos. Las personas embarazadas, los niños, los padres, las personas mayores y las personas con discapacidades pueden calificar con límites más altos. Las reglas varían por estado.",
+      },
+    },
+    {
+      program_key: "wic",
+      source_url: "https://www.fns.usda.gov/wic/wic-eligibility-requirements",
+      en: {
+        title: "WIC eligibility",
+        content:
+          "WIC provides nutrition support to pregnant and postpartum people, infants, and children under age 5. Households generally qualify with income at or below 185% of the federal poverty level, and anyone who receives SNAP, Medicaid, or TANF is automatically income-eligible. A WIC clinic also assesses a nutritional need.",
+      },
+      es: {
+        title: "Elegibilidad de WIC",
+        content:
+          "WIC ofrece apoyo nutricional a personas embarazadas y posparto, bebés y niños menores de 5 años. Los hogares generalmente califican con ingresos iguales o menores al 185% del nivel federal de pobreza, y quienes reciben SNAP, Medicaid o TANF son elegibles automáticamente por ingresos. Una clínica de WIC también evalúa la necesidad nutricional.",
+      },
+    },
+    {
+      program_key: "tanf",
+      source_url: "https://www.acf.hhs.gov/ofa/programs/tanf",
+      en: {
+        title: "TANF cash assistance",
+        content:
+          "TANF gives temporary monthly cash assistance to low-income families with children. Income limits, payment amounts, and time limits are set by each state and are usually well below the federal poverty level. Recipients typically must take part in work or job-training activities. Apply through your state's human services or TANF office.",
+      },
+      es: {
+        title: "Asistencia en efectivo de TANF",
+        content:
+          "TANF brinda asistencia temporal en efectivo cada mes a familias de bajos ingresos con hijos. Los límites de ingresos, los montos y los plazos los establece cada estado y suelen estar muy por debajo del nivel federal de pobreza. Los beneficiarios normalmente deben participar en actividades de trabajo o capacitación. Solicite a través de la oficina de servicios humanos o de TANF de su estado.",
+      },
+    },
+    {
+      program_key: "ssi",
+      source_url: "https://www.ssa.gov/ssi/",
+      en: {
+        title: "Supplemental Security Income (SSI)",
+        content:
+          "SSI pays monthly benefits to people who are 65 or older, blind, or have a disability, and who have limited income and resources — generally under $2,000 for an individual or $3,000 for a couple. Your home and usually one vehicle don't count toward the resource limit. Apply with the Social Security Administration online, by phone, or at a local office.",
+      },
+      es: {
+        title: "Seguridad de Ingreso Suplementario (SSI)",
+        content:
+          "SSI paga beneficios mensuales a personas de 65 años o más, ciegas o con una discapacidad, que tienen ingresos y recursos limitados — generalmente menos de $2,000 para una persona o $3,000 para una pareja. Su vivienda y por lo general un vehículo no cuentan para el límite de recursos. Solicite con la Administración del Seguro Social.",
+      },
+    },
+    {
+      program_key: "chip",
+      source_url:
+        "https://www.healthcare.gov/medicaid-chip/childrens-health-insurance-program/",
+      en: {
+        title: "CHIP (children's health coverage)",
+        content:
+          "CHIP covers children in families that earn too much for Medicaid but can't afford private insurance. Income limits vary by state, often reaching 200–400% of the federal poverty level. There must be a child in the household. Apply any time of year through your state's Medicaid/CHIP agency or HealthCare.gov.",
+      },
+      es: {
+        title: "CHIP (cobertura médica para niños)",
+        content:
+          "CHIP cubre a los niños de familias que ganan demasiado para Medicaid pero no pueden pagar un seguro privado. Los límites de ingresos varían por estado y a menudo llegan al 200–400% del nivel federal de pobreza. Debe haber un niño en el hogar. Solicite en cualquier momento del año.",
+      },
+    },
+    {
+      program_key: "liheap",
+      source_url: "https://www.acf.hhs.gov/ocs/programs/liheap",
+      en: {
+        title: "LIHEAP energy assistance",
+        content:
+          "LIHEAP helps low-income households pay heating and cooling bills and handle energy emergencies like a shut-off notice. Income limits are set by each state (often up to 150% of the federal poverty level or 60% of state median income). Households that get SNAP, TANF, or SSI often qualify automatically. Apply through your state or local LIHEAP office.",
+      },
+      es: {
+        title: "Asistencia de energía de LIHEAP",
+        content:
+          "LIHEAP ayuda a los hogares de bajos ingresos a pagar facturas de calefacción y enfriamiento y a enfrentar emergencias de energía, como un aviso de corte. Los límites de ingresos los fija cada estado (a menudo hasta el 150% del nivel federal de pobreza). Los hogares que reciben SNAP, TANF o SSI suelen calificar automáticamente.",
+      },
+    },
+    {
+      program_key: "eitc",
+      source_url:
+        "https://www.irs.gov/credits-deductions/individuals/earned-income-tax-credit-eitc",
+      en: {
+        title: "Earned Income Tax Credit (EITC)",
+        content:
+          "The EITC is a refundable tax credit for low-to-moderate-income workers — it can increase your refund or reduce tax you owe. You must have income from working and meet limits that depend on your filing status and number of qualifying children. You claim it by filing a federal tax return, even if you aren't otherwise required to file. Free help is available at VITA sites.",
+      },
+      es: {
+        title: "Crédito Tributario por Ingreso del Trabajo (EITC)",
+        content:
+          "El EITC es un crédito tributario reembolsable para trabajadores de ingresos bajos a moderados — puede aumentar su reembolso o reducir los impuestos que debe. Debe tener ingresos del trabajo y cumplir límites que dependen de su estado civil tributario y del número de hijos calificados. Se reclama al presentar una declaración de impuestos federal. Hay ayuda gratuita en los sitios de VITA.",
+      },
+    },
+    {
+      program_key: "housing_choice_voucher",
+      source_url:
+        "https://www.hud.gov/topics/housing_choice_voucher_program_section_8",
+      en: {
+        title: "Housing Choice Vouchers (Section 8)",
+        content:
+          "Housing Choice Vouchers help low-income families, seniors, and people with disabilities afford rental housing in the private market. Eligibility is based on area median income (usually below 50%), family size, and citizenship or eligible immigration status. You apply through your local public housing agency (PHA), and waiting lists are common.",
+      },
+      es: {
+        title: "Vales de Elección de Vivienda (Sección 8)",
+        content:
+          "Los Vales de Elección de Vivienda ayudan a familias de bajos ingresos, personas mayores y personas con discapacidades a pagar vivienda de alquiler en el mercado privado. La elegibilidad se basa en el ingreso medio del área (normalmente menos del 50%), el tamaño de la familia y el estatus de ciudadanía o inmigración elegible. Se solicita a través de la agencia local de vivienda pública (PHA); las listas de espera son comunes.",
+      },
+    },
+    {
+      source_url: "https://www.benefits.gov/",
+      en: {
+        title: "How benefit eligibility works",
+        content:
+          "Eligibility for most benefits depends on household size, income (often compared to the federal poverty level), age, disability, immigration status, and the state you live in. Many programs let you qualify automatically if you already receive another, like SNAP or Medicaid. This screener gives estimates only — the agency that runs each program makes the final decision when you apply. Benefits.gov is the official place to find programs you may be eligible for.",
+      },
+      es: {
+        title: "Cómo funciona la elegibilidad para los beneficios",
+        content:
+          "La elegibilidad para la mayoría de los beneficios depende del tamaño del hogar, los ingresos (a menudo comparados con el nivel federal de pobreza), la edad, la discapacidad, el estatus migratorio y el estado donde vive. Muchos programas permiten calificar automáticamente si ya recibe otro, como SNAP o Medicaid. Esta evaluación solo da estimaciones — la agencia que administra cada programa toma la decisión final cuando usted solicita.",
+      },
+    },
+    {
+      source_url: "https://www.usa.gov/immigrants-benefits",
+      en: {
+        title: "Immigration status and benefits",
+        content:
+          "Many benefits require U.S. citizenship or a qualified immigration status, such as lawful permanent residents (green-card holders), refugees, and asylees. Some programs cover all children or pregnant people regardless of status, and emergency Medicaid and WIC are broadly available. Applying for benefits on behalf of an eligible child generally does not affect a parent's immigration case. Rules vary by program and state.",
+      },
+      es: {
+        title: "Estatus migratorio y beneficios",
+        content:
+          "Muchos beneficios requieren ciudadanía estadounidense o un estatus migratorio calificado, como residentes permanentes legales (con tarjeta verde), refugiados y asilados. Algunos programas cubren a todos los niños o personas embarazadas sin importar su estatus, y el Medicaid de emergencia y WIC están ampliamente disponibles. Solicitar beneficios para un hijo elegible generalmente no afecta el caso migratorio de un padre. Las reglas varían por programa y estado.",
+      },
+    },
+  ];
+
+  for (const k of knowledgeSeeds) {
+    const program_id = k.program_key
+      ? (programIdByKey[k.program_key] ?? null)
+      : null;
+    for (const lang of ["en", "es"] as const) {
+      const existing = await db.knowledge_sources.findFirst({
+        where: { source_url: k.source_url, language_code: lang },
+        select: { id: true },
+      });
+      if (existing) {
+        await db.knowledge_sources.update({
+          where: { id: existing.id },
+          data: { title: k[lang].title, content_text: k[lang].content, program_id },
+        });
+      } else {
+        await db.knowledge_sources.create({
+          data: {
+            program_id,
+            source_url: k.source_url,
+            language_code: lang,
+            title: k[lang].title,
+            content_text: k[lang].content,
+          },
+        });
+      }
+    }
+  }
+
   console.log("Seed complete.");
 }
 

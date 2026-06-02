@@ -3,6 +3,7 @@ import "~/styles/globals.css";
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 
+import { ChatWidget } from "~/components/chat/chat-widget";
 import { I18nProvider } from "~/i18n/client";
 import { getI18n } from "~/i18n/server";
 import { TRPCReactProvider } from "~/trpc/react";
@@ -29,6 +30,7 @@ export default async function RootLayout({
         <TRPCReactProvider>
           <I18nProvider locale={locale} messages={t}>
             {children}
+            <ChatWidget />
           </I18nProvider>
         </TRPCReactProvider>
       </body>

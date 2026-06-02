@@ -20,6 +20,21 @@ export const en = {
     documents: "Documents",
     profile: "Profile",
   },
+  chat: {
+    launch: "Ask about eligibility",
+    title: "Eligibility assistant",
+    intro:
+      "Hi! Ask me anything about benefit programs and eligibility — I'll point you to official sources.",
+    placeholder: "Ask a question…",
+    send: "Send",
+    sources: "Sources",
+    disclaimer:
+      "AI assistant — general information, not an official eligibility decision.",
+    handoff: "Talk to a person",
+    handoffDone: "Thanks — a caseworker will follow up.",
+    error: "Sorry, something went wrong. Please try again.",
+    close: "Close",
+  },
   home: {
     badge: "Benefits Resource Intelligence & Digital Guidance Engine",
     title: "Find the benefits you qualify for",

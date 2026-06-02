@@ -158,9 +158,10 @@ export const caseRouter = createTRPCRouter({
           status: statusSchema.optional(),
           priority: prioritySchema.optional(),
           assigned_to: z.string().optional(), // uuid | "me" | "unassigned"
-          // Where the request came from: a completed screening ("Request help")
-          // or the chat assistant handoff. Derived from conversation_id.
-          source: z.enum(["screening", "chatbot"]).optional(),
+          // Where the request came from: a completed screening ("Request help"),
+          // the chat assistant handoff, or an uploaded document that needs
+          // manual review.
+          source: z.enum(["screening", "chatbot", "document_review"]).optional(),
           page: z.number().int().min(1).default(1),
           limit: z.number().int().min(1).max(100).default(20),
         })

@@ -32,12 +32,36 @@ const SOURCES = [
   { value: "", label: "All requests" },
   { value: "screening", label: "From screening" },
   { value: "chatbot", label: "From chat" },
+  { value: "document_review", label: "Document review" },
 ] as const;
+
+// How each case source presents in the queue — a compact badge and a longer
+// label for the detail pane. Unknown sources fall back to the screening default.
+const DEFAULT_SOURCE_BADGE = {
+  label: "Screening",
+  className: "bg-sky-100 text-sky-700",
+};
+const SOURCE_BADGE: Record<string, { label: string; className: string }> = {
+  chatbot: { label: "Chat", className: "bg-violet-100 text-violet-700" },
+  document_review: {
+    label: "Document",
+    className: "bg-amber-100 text-amber-700",
+  },
+  screening: DEFAULT_SOURCE_BADGE,
+};
+const DEFAULT_SOURCE_DETAIL = "Direct request";
+const SOURCE_DETAIL: Record<string, string> = {
+  chatbot: "Chat assistant",
+  document_review: "Document review",
+  screening: DEFAULT_SOURCE_DETAIL,
+};
 
 export function CaseQueue({ currentUserId }: { currentUserId: string | null }) {
   const utils = api.useUtils();
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [source, setSource] = useState<"" | "screening" | "chatbot">("");
+  const [source, setSource] = useState<
+    "" | "screening" | "chatbot" | "document_review"
+  >("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const list = api.case.list.useQuery({
@@ -134,12 +158,11 @@ export function CaseQueue({ currentUserId }: { currentUserId: string | null }) {
                   <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <span
                       className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-                        c.source === "chatbot"
-                          ? "bg-violet-100 text-violet-700"
-                          : "bg-sky-100 text-sky-700"
+                        (SOURCE_BADGE[c.source] ?? DEFAULT_SOURCE_BADGE)
+                          .className
                       }`}
                     >
-                      {c.source === "chatbot" ? "Chat" : "Screening"}
+                      {(SOURCE_BADGE[c.source] ?? DEFAULT_SOURCE_BADGE).label}
                     </span>
                     {c.status.replace(/_/g, " ")} ·{" "}
                     {mine
@@ -389,7 +412,7 @@ function CaseDetail({
             <p className="text-muted-foreground">
               Source:{" "}
               <span className="text-foreground">
-                {c.source === "chatbot" ? "Chat assistant" : "Direct request"}
+                {SOURCE_DETAIL[c.source] ?? DEFAULT_SOURCE_DETAIL}
               </span>
             </p>
           )}

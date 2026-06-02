@@ -416,6 +416,48 @@ describe("Phase 2 — programs, checklist, uploads", () => {
     expect(row?.upload_status).not.toBe("verified");
     expect(row?.validation_reason).toEqual(expect.any(String));
   });
+
+  it("routes needs_review documents into one caseworker case", async () => {
+    const session = await newSession();
+
+    const mkUpload = () =>
+      caller(null).documentUpload.create({
+        session_id: session.id,
+        file_name: "id.png",
+        file_mime_type: "image/png",
+        document_type_id: docTypeId,
+      });
+
+    // Two documents that both land in needs_review (AI is off in tests).
+    const up1 = await mkUpload();
+    await caller(null).documentUpload.validate({
+      session_id: session.id,
+      id: up1.id,
+    });
+    const up2 = await mkUpload();
+    await caller(null).documentUpload.validate({
+      session_id: session.id,
+      id: up2.id,
+    });
+
+    // They share one open document_review case (idempotent — no queue flood),
+    // each adding an internal note for the caseworker.
+    const cases = await db.cases.findMany({
+      where: { session_id: session.id },
+      include: { case_notes: true },
+    });
+    expect(cases.length).toBe(1);
+    expect(cases[0]?.source).toBe("document_review");
+    expect(cases[0]?.status).toBe("new");
+    expect(cases[0]!.case_notes.length).toBeGreaterThanOrEqual(2);
+    expect(
+      cases[0]!.case_notes.every((n) => n.is_internal),
+    ).toBe(true);
+
+    // And it surfaces in the staff queue filtered by the new source.
+    const queued = await caller(adminId).case.list({ source: "document_review" });
+    expect(queued.data.some((c) => c.id === cases[0]!.id)).toBe(true);
+  });
 });
 
 describe("Phase 4 — AI, reports, cases, rule versions", () => {

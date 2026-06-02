@@ -169,4 +169,34 @@ export const referralRouter = createTRPCRouter({
         include: { organizations: true },
       });
     }),
+
+  /** Soft-delete the referral by marking it closed (staff only). */
+  delete: publicProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      if (!(await callerIsStaff(ctx))) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only staff can delete referrals" });
+      }
+      const existing = await ctx.db.referrals.findUnique({ where: { id: input.id }, select: { id: true } });
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Referral not found" });
+      }
+      return ctx.db.referrals.update({ where: { id: input.id }, data: { status: "closed" } });
+    }),
+
+  /** Send a referral (stamp `sent_at` and mark `sent` status). */
+  send: publicProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const referral = await ctx.db.referrals.findUnique({ where: { id: input.id }, select: { id: true, session_id: true, sent_at: true } });
+      if (!referral) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Referral not found" });
+      }
+      if (!(await callerIsStaff(ctx))) {
+        await assertSessionAccess(ctx, referral.session_id);
+      }
+      const stampSent = !referral.sent_at;
+      const updated = await ctx.db.referrals.update({ where: { id: input.id }, data: { status: "sent", ...(stampSent && { sent_at: new Date() }) }, include: { organizations: true } });
+      return updated;
+    }),
 });

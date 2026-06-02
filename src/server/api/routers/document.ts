@@ -398,6 +398,23 @@ export const documentUploadRouter = createTRPCRouter({
       };
     }),
 
+  /** Finalize an upload after the object store PUT completes (webhook). */
+  finalize: publicProcedure
+    .input(z.object({ session_id: z.string().uuid(), id: z.string().uuid(), storage_url: z.string().url() }))
+    .mutation(async ({ ctx, input }) => {
+      // The storage service calls this; allow either staff or the session owner.
+      const existing = await ctx.db.document_uploads.findUnique({ where: { id: input.id }, select: { id: true, session_id: true } });
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Upload not found" });
+      }
+      if (existing.session_id !== input.session_id) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "session_id mismatch" });
+      }
+      // Transition to uploaded and persist canonical storage URL.
+      const updated = await ctx.db.document_uploads.update({ where: { id: input.id }, data: { storage_url: input.storage_url, status: "uploaded" } });
+      return { id: updated.id, status: updated.status, storage_url: updated.storage_url };
+    }),
+
   /** Soft-delete: retains the row, flips status to `deleted` (Story 9). */
   delete: publicProcedure
     .input(z.object({ session_id: z.string().uuid(), id: z.string().uuid() }))

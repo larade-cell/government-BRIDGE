@@ -216,4 +216,32 @@ export const knowledgeRouter = createTRPCRouter({
       });
       return { id: input.id, deleted: true };
     }),
+
+  /** Rebuild embeddings for a single knowledge source (admin-only). */
+  reindex: publicProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      await requireRole(ctx, ["admin"]);
+      const existing = await ctx.db.knowledge_sources.findUnique({
+        where: { id: input.id },
+        select: { id: true, title: true, content_text: true, language_code: true },
+      });
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Knowledge source not found" });
+      }
+      // Drop old embeddings and attempt to (re)embed from the stored text.
+      await deleteSourceEmbeddings(ctx.db, input.id);
+      const reindexed = await embedSource(ctx.db, {
+        id: existing.id,
+        title: existing.title ?? "",
+        content: existing.content_text ?? "",
+        language_code: existing.language_code ?? "en",
+      });
+      await recordAudit(ctx, {
+        action: "knowledge.reindex",
+        entity_type: "knowledge_source",
+        entity_id: input.id,
+      });
+      return { id: input.id, reindexed };
+    }),
 });

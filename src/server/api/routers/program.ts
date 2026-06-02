@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { type PrismaClient } from "../../../../generated/prisma";
 import { embedText, isAiEnabled } from "../../../../lib/ai-service";
+import { recordAudit } from "~/server/api/helpers/audit";
 import { requireRole } from "~/server/api/helpers/session";
 import { parseProgramRules } from "~/server/lib/eligibility";
 import {
@@ -408,6 +409,12 @@ export const programRouter = createTRPCRouter({
       });
       await writeProgramTranslations(ctx.db, program.id, input.translations);
       await refreshProgramSearchVector(ctx.db, program.id);
+      await recordAudit(ctx, {
+        action: "program.create",
+        entity_type: "program",
+        entity_id: program.id,
+        after: { program_key: input.program_key, category: input.category },
+      });
       return { id: program.id };
     }),
 
@@ -444,6 +451,15 @@ export const programRouter = createTRPCRouter({
         await writeProgramTranslations(ctx.db, input.id, input.translations);
         await refreshProgramSearchVector(ctx.db, input.id);
       }
+      await recordAudit(ctx, {
+        action: "program.update",
+        entity_type: "program",
+        entity_id: input.id,
+        after: {
+          ...(input.category !== undefined && { category: input.category }),
+          ...(input.is_active !== undefined && { is_active: input.is_active }),
+        },
+      });
       return { id: input.id };
     }),
 
@@ -458,11 +474,18 @@ export const programRouter = createTRPCRouter({
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Program not found" });
       }
-      return ctx.db.programs.update({
+      const updated = await ctx.db.programs.update({
         where: { id: input.id },
         data: { is_active: input.is_active },
         select: { id: true, is_active: true },
       });
+      await recordAudit(ctx, {
+        action: "program.set_active",
+        entity_type: "program",
+        entity_id: input.id,
+        after: { is_active: input.is_active },
+      });
+      return updated;
     }),
 });
 

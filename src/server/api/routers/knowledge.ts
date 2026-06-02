@@ -7,6 +7,7 @@ import {
   embedText,
   isAiEnabled,
 } from "../../../../lib/ai-service";
+import { recordAudit } from "~/server/api/helpers/audit";
 import { requireRole } from "~/server/api/helpers/session";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -129,6 +130,12 @@ export const knowledgeRouter = createTRPCRouter({
         content: input.content_text,
         language_code: input.language_code,
       });
+      await recordAudit(ctx, {
+        action: "knowledge.create",
+        entity_type: "knowledge_source",
+        entity_id: created.id,
+        after: { title: input.title, language_code: input.language_code },
+      });
       return { id: created.id, embedded };
     }),
 
@@ -178,6 +185,11 @@ export const knowledgeRouter = createTRPCRouter({
         content: updated.content_text ?? "",
         language_code: updated.language_code ?? "en",
       });
+      await recordAudit(ctx, {
+        action: "knowledge.update",
+        entity_type: "knowledge_source",
+        entity_id: updated.id,
+      });
       return { id: updated.id, embedded };
     }),
 
@@ -197,6 +209,11 @@ export const knowledgeRouter = createTRPCRouter({
         deleteSourceEmbeddings(ctx.db, input.id),
         ctx.db.knowledge_sources.delete({ where: { id: input.id } }),
       ]);
+      await recordAudit(ctx, {
+        action: "knowledge.delete",
+        entity_type: "knowledge_source",
+        entity_id: input.id,
+      });
       return { id: input.id, deleted: true };
     }),
 });

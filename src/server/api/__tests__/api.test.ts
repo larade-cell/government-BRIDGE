@@ -131,6 +131,11 @@ afterAll(async () => {
     where: { program_id: programId, document_type_id: docTypeId },
   });
   await db.programs.deleteMany({ where: { id: tempProgramId } });
+  // Audit rows reference the actor user (FK NoAction), so clear them before
+  // deleting the fixture users.
+  await db.audit_logs.deleteMany({
+    where: { actor_user_id: { in: createdUserIds } },
+  });
   await db.users.deleteMany({ where: { id: { in: createdUserIds } } });
   await db.$disconnect();
 });
@@ -668,6 +673,34 @@ describe("Citizen & admin views — dashboards", () => {
       caller(adminId).knowledge.delete({ id: created.id }),
       "NOT_FOUND",
     );
+  });
+
+  it("records audit entries for sensitive actions; log is admin-only", async () => {
+    await expectCode(caller(residentId).audit.list(), "FORBIDDEN");
+
+    // An audited admin action.
+    const key = `test_audit_prog_${randomUUID().slice(0, 8)}`;
+    const created = await caller(adminId).program.create({
+      program_key: key,
+      category: "test",
+      authoritative_url: "https://example.test",
+      translations: { en: { name: "Audit Test", short_description: "d", next_steps: "n" } },
+    });
+
+    const log = await caller(adminId).audit.list({
+      entity_type: "program",
+      limit: 100,
+    });
+    const entry = log.data.find(
+      (e) => e.action === "program.create" && e.entity_id === created.id,
+    );
+    expect(entry).toBeTruthy();
+    expect(entry!.actor).toBeTruthy(); // recorded the acting admin
+
+    const facets = await caller(adminId).audit.facets();
+    expect(facets.entity_types).toContain("program");
+
+    await db.programs.delete({ where: { id: created.id } });
   });
 });
 

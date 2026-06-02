@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { type Prisma, type PrismaClient } from "../../../../generated/prisma";
+import { recordAudit } from "~/server/api/helpers/audit";
 import { assertSessionAccess, requireRole } from "~/server/api/helpers/session";
 import {
   createTRPCRouter,
@@ -321,6 +322,12 @@ export const questionRouter = createTRPCRouter({
       });
       await writeQuestionTranslations(ctx.db, question.id, input.prompts);
       if (input.options) await writeQuestionOptions(ctx.db, question.id, input.options);
+      await recordAudit(ctx, {
+        action: "question.create",
+        entity_type: "question",
+        entity_id: question.id,
+        after: { question_key: input.question_key, answer_type: input.answer_type },
+      });
       return { id: question.id };
     }),
 
@@ -361,6 +368,11 @@ export const questionRouter = createTRPCRouter({
       });
       if (input.prompts) await writeQuestionTranslations(ctx.db, input.id, input.prompts);
       if (input.options) await writeQuestionOptions(ctx.db, input.id, input.options);
+      await recordAudit(ctx, {
+        action: "question.update",
+        entity_type: "question",
+        entity_id: input.id,
+      });
       return { id: input.id };
     }),
 
@@ -382,6 +394,11 @@ export const questionRouter = createTRPCRouter({
         ctx.db.screening_answers.deleteMany({ where: { question_id: input.id } }),
         ctx.db.questions.delete({ where: { id: input.id } }),
       ]);
+      await recordAudit(ctx, {
+        action: "question.delete",
+        entity_type: "question",
+        entity_id: deleted.id,
+      });
       return { id: deleted.id, deleted: true };
     }),
 });

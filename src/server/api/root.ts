@@ -1,4 +1,5 @@
 import { aiRouter } from "~/server/api/routers/ai";
+import { auditRouter } from "~/server/api/routers/audit";
 import { caseNoteRouter, caseRouter } from "~/server/api/routers/case";
 import {
   documentChecklistRouter,
@@ -50,6 +51,7 @@ export const appRouter = createTRPCRouter({
   caseNote: caseNoteRouter,
   eligibilityRule: eligibilityRuleRouter,
   knowledge: knowledgeRouter,
+  audit: auditRouter,
 });
 
 export type AppRouter = typeof appRouter;

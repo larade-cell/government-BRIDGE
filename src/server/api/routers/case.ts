@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { recordAudit } from "~/server/api/helpers/audit";
 import { assertSessionAccess, requireRole } from "~/server/api/helpers/session";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { priorityFromAnswers } from "~/server/lib/case-priority";
@@ -253,7 +254,7 @@ export const caseRouter = createTRPCRouter({
       if (!exists) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Case not found" });
       }
-      return ctx.db.cases.update({
+      const updated = await ctx.db.cases.update({
         where: { id: input.id },
         data: {
           ...(input.status && { status: input.status }),
@@ -268,6 +269,17 @@ export const caseRouter = createTRPCRouter({
           updated_at: new Date(),
         },
       });
+      await recordAudit(ctx, {
+        action: "case.update",
+        entity_type: "case",
+        entity_id: input.id,
+        after: {
+          ...(input.status && { status: input.status }),
+          ...(input.priority && { priority: input.priority }),
+          ...(input.assigned_to !== undefined && { assigned_to: input.assigned_to }),
+        },
+      });
+      return updated;
     }),
 
   assign: publicProcedure
@@ -286,10 +298,17 @@ export const caseRouter = createTRPCRouter({
       if (!exists) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Case not found" });
       }
-      return ctx.db.cases.update({
+      const assigned = await ctx.db.cases.update({
         where: { id: input.id },
         data: { assigned_to: input.assigned_to, updated_at: new Date() },
       });
+      await recordAudit(ctx, {
+        action: "case.assign",
+        entity_type: "case",
+        entity_id: input.id,
+        after: { assigned_to: input.assigned_to },
+      });
+      return assigned;
     }),
 });
 

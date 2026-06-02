@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { type Prisma } from "../../../../generated/prisma";
+import { recordAudit } from "~/server/api/helpers/audit";
 import { requireRole } from "~/server/api/helpers/session";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -69,7 +70,7 @@ export const eligibilityRuleRouter = createTRPCRouter({
         select: { version: true },
       });
 
-      return ctx.db.eligibility_rule_versions.create({
+      const version = await ctx.db.eligibility_rule_versions.create({
         data: {
           program_id: input.program_id,
           version: (latest?.version ?? 0) + 1,
@@ -79,6 +80,13 @@ export const eligibilityRuleRouter = createTRPCRouter({
           created_by: staff.id,
         },
       });
+      await recordAudit(ctx, {
+        action: "rule.create_version",
+        entity_type: "eligibility_rule_version",
+        entity_id: version.id,
+        after: { program_id: version.program_id, version: version.version },
+      });
+      return version;
     }),
 
   publish: publicProcedure
@@ -123,6 +131,12 @@ export const eligibilityRuleRouter = createTRPCRouter({
         }),
       ]);
 
+      await recordAudit(ctx, {
+        action: "rule.publish",
+        entity_type: "eligibility_rule_version",
+        entity_id: published.id,
+        after: { program_id: published.program_id, version: published.version },
+      });
       return { ...published, is_published: true };
     }),
 });

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { type Prisma, type PrismaClient } from "../../../../generated/prisma";
 import { recordAudit } from "~/server/api/helpers/audit";
+import { generateSessionChecklist } from "~/server/api/helpers/document-checklist";
 import { assertSessionAccess, requireRole } from "~/server/api/helpers/session";
 import {
   createTRPCRouter,
@@ -536,6 +537,11 @@ export const eligibilityRouter = createTRPCRouter({
           });
         }),
       );
+
+      // Now that this session's eligibility results are persisted, (re)build
+      // the document checklist so required documents appear in the user's
+      // documents tab automatically — without waiting for a manual "Refresh".
+      await generateSessionChecklist(ctx.db, input.session_id);
 
       return { count: results.length };
     }),

@@ -270,6 +270,20 @@ describe("Phase 2 — programs, checklist, uploads", () => {
     expect(list.data[0]?.upload_status).toBe("missing");
   });
 
+  it("eligibility.run auto-populates the checklist (no manual refresh)", async () => {
+    const session = await newSession();
+    // Running eligibility alone must build the checklist — without a separate
+    // documentChecklist.generate call — so required docs show up immediately.
+    await caller(null).eligibility.run({ session_id: session.id });
+
+    const list = await caller(null).documentChecklist.bySession({
+      session_id: session.id,
+      language_code: "en",
+    });
+    expect(list.data.length).toBeGreaterThanOrEqual(1);
+    expect(list.data.some((d) => d.document_type.id === docTypeId)).toBe(true);
+  });
+
   it("accepts a valid upload and rejects a bad mime type", async () => {
     const session = await newSession();
     const upload = await caller(null).documentUpload.create({

@@ -7,6 +7,7 @@ import {
   CHAT_MODEL,
   isAiEnabled,
 } from "../../../../lib/ai-service";
+import { generateSessionChecklist } from "~/server/api/helpers/document-checklist";
 import { assertSessionAccess } from "~/server/api/helpers/session";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -136,43 +137,8 @@ export const documentChecklistRouter = createTRPCRouter({
     .input(z.object({ session_id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       await assertSessionAccess(ctx, input.session_id);
-
-      const results = await ctx.db.eligibility_results.findMany({
-        where: { session_id: input.session_id },
-        select: {
-          program_id: true,
-          programs: {
-            select: {
-              program_document_requirements: {
-                where: { is_required: true },
-                select: { document_type_id: true, condition_json: true },
-              },
-            },
-          },
-        },
-      });
-
-      const rows = results.flatMap((r) =>
-        r.programs.program_document_requirements.map((req) => ({
-          session_id: input.session_id,
-          program_id: r.program_id,
-          document_type_id: req.document_type_id,
-        })),
-      );
-
-      const written = await Promise.all(
-        rows.map((row) =>
-          ctx.db.session_document_checklist.upsert({
-            where: {
-              session_id_program_id_document_type_id: row,
-            },
-            update: {},
-            create: row,
-          }),
-        ),
-      );
-
-      return { count: written.length };
+      const count = await generateSessionChecklist(ctx.db, input.session_id);
+      return { count };
     }),
 });
 

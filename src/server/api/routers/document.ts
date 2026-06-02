@@ -182,12 +182,9 @@ export const documentUploadRouter = createTRPCRouter({
           message: "Session has expired",
         });
       }
-      if (session.completed_at) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Session is already completed",
-        });
-      }
+      // Completed sessions deliberately remain uploadable: gathering documents
+      // is a post-screening activity, and the /account/documents tab operates
+      // on the user's latest *completed* session. (Expiry above still applies.)
       if (!ALLOWED_MIME.includes(input.file_mime_type as (typeof ALLOWED_MIME)[number])) {
         throw new TRPCError({
           code: "BAD_REQUEST",

@@ -360,6 +360,19 @@ describe("Phase 2 — programs, checklist, uploads", () => {
     const list = await caller(null).documentUpload.list({ session_id: session.id });
     expect(list.data.find((u) => u.id === upload.id)).toBeUndefined();
   });
+
+  it("allows uploads on a completed session (the documents tab)", async () => {
+    const session = await newSession();
+    // The /account/documents tab runs on the user's latest *completed* session,
+    // so document collection must keep working after completion.
+    await caller(null).screeningSession.complete({ session_id: session.id });
+    const upload = await caller(null).documentUpload.create({
+      session_id: session.id,
+      file_name: "id.png",
+      file_mime_type: "image/png",
+    });
+    expect(upload.id).toBeTruthy();
+  });
 });
 
 describe("Phase 4 — AI, reports, cases, rule versions", () => {

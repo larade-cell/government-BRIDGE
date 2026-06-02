@@ -27,15 +27,23 @@ function selectClass() {
   return "h-8 rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 }
 
+const SOURCES = [
+  { value: "", label: "All requests" },
+  { value: "screening", label: "From screening" },
+  { value: "chatbot", label: "From chat" },
+] as const;
+
 export function CaseQueue({ currentUserId }: { currentUserId: string | null }) {
   const utils = api.useUtils();
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [source, setSource] = useState<"" | "screening" | "chatbot">("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const list = api.case.list.useQuery({
     ...(statusFilter
       ? { status: statusFilter as (typeof STATUSES)[number] }
       : {}),
+    ...(source ? { source } : {}),
   });
 
   const claim = api.case.update.useMutation({
@@ -48,6 +56,24 @@ export function CaseQueue({ currentUserId }: { currentUserId: string | null }) {
     <div className="grid gap-4 lg:grid-cols-[1fr_1.3fr]">
       {/* Queue */}
       <div className="flex flex-col gap-3">
+        {/* Separate screening requests from chatbot handoffs. */}
+        <div className="inline-flex rounded-lg bg-muted p-0.5 text-sm">
+          {SOURCES.map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              onClick={() => setSource(s.value)}
+              aria-pressed={source === s.value}
+              className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
+                source === s.value
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
         <div className="flex items-center gap-2">
           <Label htmlFor="status-filter" className="text-sm">
             Status
@@ -104,7 +130,16 @@ export function CaseQueue({ currentUserId }: { currentUserId: string | null }) {
                   )}
                 </div>
                 <div className="mt-1 flex items-center justify-between gap-2">
-                  <span className="text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span
+                      className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                        c.source === "chatbot"
+                          ? "bg-violet-100 text-violet-700"
+                          : "bg-sky-100 text-sky-700"
+                      }`}
+                    >
+                      {c.source === "chatbot" ? "Chat" : "Screening"}
+                    </span>
                     {c.status.replace(/_/g, " ")} ·{" "}
                     {mine
                       ? "assigned to you"
@@ -301,6 +336,7 @@ function CaseDetail({
             <Button
               size="sm"
               className="mt-2"
+              nativeButton={false}
               render={
                 <a
                   href={`mailto:${c.contact_email}?subject=${encodeURIComponent(
@@ -337,7 +373,7 @@ function CaseDetail({
             <p className="text-muted-foreground">
               Source:{" "}
               <span className="text-foreground">
-                {c.conversation_id ? "Chat assistant" : "Direct request"}
+                {c.source === "chatbot" ? "Chat assistant" : "Direct request"}
               </span>
             </p>
           )}

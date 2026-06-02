@@ -129,6 +129,7 @@ export const caseRouter = createTRPCRouter({
         data: {
           session_id: input.session_id,
           status: "new",
+          source: "screening",
           ...priorityData,
           ...contact,
         },
@@ -156,6 +157,9 @@ export const caseRouter = createTRPCRouter({
           status: statusSchema.optional(),
           priority: prioritySchema.optional(),
           assigned_to: z.string().optional(), // uuid | "me" | "unassigned"
+          // Where the request came from: a completed screening ("Request help")
+          // or the chat assistant handoff. Derived from conversation_id.
+          source: z.enum(["screening", "chatbot"]).optional(),
           page: z.number().int().min(1).default(1),
           limit: z.number().int().min(1).max(100).default(20),
         })
@@ -176,6 +180,7 @@ export const caseRouter = createTRPCRouter({
       const where = {
         ...(input.status && { status: input.status }),
         ...(input.priority && { priority: input.priority }),
+        ...(input.source && { source: input.source }),
         ...assignedFilter,
       };
 

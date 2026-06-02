@@ -34,7 +34,11 @@ export default async function AccountOverviewPage() {
         }
         description={t.account.subtitle}
         actions={
-          <Button size="sm" render={<Link href="/screening/start" />}>
+          <Button
+            size="sm"
+            nativeButton={false}
+            render={<Link href="/screening/start" />}
+          >
             {t.account.newScreening}
           </Button>
         }
@@ -65,7 +69,11 @@ export default async function AccountOverviewPage() {
                   })}{" "}
                   · {fmt(t.account.answersSoFar, { n: s._count.screening_answers })}
                 </span>
-                <Button render={<Link href={`/screening/${s.id}`} />} size="sm">
+                <Button
+                  render={<Link href={`/screening/${s.id}`} />}
+                  size="sm"
+                  nativeButton={false}
+                >
                   {t.account.resume}
                 </Button>
               </div>
@@ -122,6 +130,7 @@ export default async function AccountOverviewPage() {
                     <Button
                       size="sm"
                       variant={done ? "default" : "outline"}
+                      nativeButton={false}
                       render={
                         <Link
                           href={

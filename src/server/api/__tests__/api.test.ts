@@ -116,6 +116,11 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // Remove cases opened from test conversations (chatbot handoffs) before the
+  // conversations go, so none are left orphaned in the shared dev DB.
+  await db.cases.deleteMany({
+    where: { conversation_id: { in: createdConversationIds } },
+  });
   await db.ai_conversations.deleteMany({
     where: { id: { in: createdConversationIds } },
   });
@@ -491,6 +496,21 @@ describe("Citizen & admin views — dashboards", () => {
     expect(c!.contact_name).toBe("Sam Diaz");
     expect(c!.contact_email).toBe("sam@example.test");
     expect(c!.session_id).toBeNull();
+
+    // Source filter separates chatbot requests from screening requests.
+    const chatList = await caller(adminId).case.list({
+      source: "chatbot",
+      limit: 100,
+    });
+    expect(chatList.data.some((x) => x.id === c!.id)).toBe(true);
+    expect(chatList.data.every((x) => x.source === "chatbot")).toBe(true);
+
+    const screeningList = await caller(adminId).case.list({
+      source: "screening",
+      limit: 100,
+    });
+    expect(screeningList.data.some((x) => x.id === c!.id)).toBe(false);
+    expect(screeningList.data.every((x) => x.source === "screening")).toBe(true);
 
     // Second handoff is still rejected (idempotent — no duplicate case).
     await expectCode(

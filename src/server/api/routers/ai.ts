@@ -394,6 +394,7 @@ export const aiRouter = createTRPCRouter({
             session_id: convo.session_id,
             conversation_id: convo.id,
             status: "new",
+            source: "chatbot",
             priority,
             priority_reason,
             ...(input.contact_name && { contact_name: input.contact_name }),

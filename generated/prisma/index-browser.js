@@ -206,6 +206,7 @@ exports.Prisma.CasesScalarFieldEnum = {
   assigned_to: 'assigned_to',
   status: 'status',
   priority: 'priority',
+  source: 'source',
   priority_reason: 'priority_reason',
   contact_name: 'contact_name',
   contact_email: 'contact_email',

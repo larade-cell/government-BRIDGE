@@ -119,6 +119,7 @@ model cases {
   assigned_to        String?             @db.Uuid
   status             case_status         @default(new)
   priority           case_priority?      @default(normal)
+  source             String              @default("screening")
   priority_reason    String?
   contact_name       String?
   contact_email      String?

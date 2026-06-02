@@ -874,6 +874,385 @@ async function main() {
     createdPrograms.map((p) => [p.program_key, p.id]),
   );
 
+  // ---- Document types & per-program requirements --------------------------
+  // The screener turns each session's eligible programs into a personalized
+  // document checklist (see generateSessionChecklist in
+  // src/server/api/helpers/document-checklist.ts). That mapping draws on two
+  // reference tables seeded here: the bilingual catalog of document types, and
+  // — per program — which of those documents an applicant must provide.
+  // Realistic but not exhaustive; tune against each agency's current guidance.
+  const documentTypeSeeds: {
+    key: string;
+    category: string;
+    en: { name: string; description: string; examples: string };
+    es: { name: string; description: string; examples: string };
+  }[] = [
+    {
+      key: "photo_id",
+      category: "identity",
+      en: {
+        name: "Government-issued photo ID",
+        description: "A current photo ID that proves who you are.",
+        examples: "Driver's license, state ID card, or U.S. passport",
+      },
+      es: {
+        name: "Identificación con foto del gobierno",
+        description:
+          "Una identificación con foto vigente que comprueba quién es usted.",
+        examples:
+          "Licencia de conducir, tarjeta de identificación estatal o pasaporte de EE. UU.",
+      },
+    },
+    {
+      key: "ssn_card",
+      category: "identity",
+      en: {
+        name: "Social Security number",
+        description: "Proof of your Social Security number.",
+        examples:
+          "Social Security card or an official SSA letter showing your number",
+      },
+      es: {
+        name: "Número de Seguro Social",
+        description: "Comprobante de su número de Seguro Social.",
+        examples:
+          "Tarjeta de Seguro Social o una carta oficial de la SSA con su número",
+      },
+    },
+    {
+      key: "proof_of_income",
+      category: "income",
+      en: {
+        name: "Proof of income",
+        description: "Recent documentation of money you earn or receive.",
+        examples:
+          "Pay stubs from the last 30 days, an employer letter, or a benefit award letter",
+      },
+      es: {
+        name: "Comprobante de ingresos",
+        description: "Documentación reciente del dinero que gana o recibe.",
+        examples:
+          "Talones de pago de los últimos 30 días, carta del empleador o carta de adjudicación de beneficios",
+      },
+    },
+    {
+      key: "paystub",
+      category: "income",
+      en: {
+        name: "Recent pay stub",
+        description: "A pay stub showing your current wages.",
+        examples: "Your two most recent pay stubs from each employer",
+      },
+      es: {
+        name: "Talón de pago reciente",
+        description: "Un talón de pago que muestre su salario actual.",
+        examples: "Sus dos talones de pago más recientes de cada empleador",
+      },
+    },
+    {
+      key: "proof_of_residency",
+      category: "residency",
+      en: {
+        name: "Proof of residency",
+        description: "A document showing where you currently live.",
+        examples:
+          "Utility bill, signed lease, or mortgage statement with your address",
+      },
+      es: {
+        name: "Comprobante de residencia",
+        description: "Un documento que muestre dónde vive actualmente.",
+        examples:
+          "Factura de servicios, contrato de arrendamiento firmado o estado de cuenta hipotecario con su dirección",
+      },
+    },
+    {
+      key: "proof_of_citizenship",
+      category: "status",
+      en: {
+        name: "Proof of citizenship or immigration status",
+        description:
+          "Documentation of your U.S. citizenship or lawful immigration status.",
+        examples:
+          "Birth certificate, U.S. passport, naturalization certificate, or USCIS document",
+      },
+      es: {
+        name: "Comprobante de ciudadanía o estatus migratorio",
+        description:
+          "Documentación de su ciudadanía estadounidense o estatus migratorio legal.",
+        examples:
+          "Acta de nacimiento, pasaporte de EE. UU., certificado de naturalización o documento de USCIS",
+      },
+    },
+    {
+      key: "proof_of_household",
+      category: "household",
+      en: {
+        name: "Proof of household members",
+        description: "Documents that confirm who lives in your home.",
+        examples:
+          "Birth certificates of dependents, school records, or a household statement",
+      },
+      es: {
+        name: "Comprobante de integrantes del hogar",
+        description: "Documentos que confirman quién vive en su hogar.",
+        examples:
+          "Actas de nacimiento de dependientes, registros escolares o una declaración del hogar",
+      },
+    },
+    {
+      key: "bank_statements",
+      category: "resources",
+      en: {
+        name: "Bank statements",
+        description: "Recent statements for your accounts.",
+        examples: "The last two months of checking and savings statements",
+      },
+      es: {
+        name: "Estados de cuenta bancarios",
+        description: "Estados de cuenta recientes de sus cuentas.",
+        examples:
+          "Los últimos dos meses de estados de cuenta corriente y de ahorros",
+      },
+    },
+    {
+      key: "proof_of_expenses",
+      category: "expenses",
+      en: {
+        name: "Proof of expenses",
+        description:
+          "Bills that may affect your eligibility or benefit amount.",
+        examples: "Rent or mortgage, utility, childcare, or medical bills",
+      },
+      es: {
+        name: "Comprobante de gastos",
+        description:
+          "Facturas que pueden afectar su elegibilidad o el monto del beneficio.",
+        examples:
+          "Renta o hipoteca, servicios públicos, cuidado infantil o facturas médicas",
+      },
+    },
+    {
+      key: "tax_return",
+      category: "income",
+      en: {
+        name: "Federal tax return",
+        description: "Your most recent filed federal tax return.",
+        examples: "Form 1040 from the most recent tax year",
+      },
+      es: {
+        name: "Declaración de impuestos federales",
+        description: "Su declaración de impuestos federales más reciente.",
+        examples: "Formulario 1040 del año fiscal más reciente",
+      },
+    },
+    {
+      key: "proof_of_disability",
+      category: "status",
+      en: {
+        name: "Proof of disability",
+        description: "Documentation of a qualifying disability.",
+        examples: "A doctor's statement or an SSA disability award letter",
+      },
+      es: {
+        name: "Comprobante de discapacidad",
+        description: "Documentación de una discapacidad que califica.",
+        examples:
+          "Una declaración del médico o una carta de adjudicación de discapacidad de la SSA",
+      },
+    },
+    {
+      key: "birth_certificate",
+      category: "identity",
+      en: {
+        name: "Birth certificate",
+        description:
+          "A certified birth certificate for the applicant or children.",
+        examples: "Certified copy issued by a state or county",
+      },
+      es: {
+        name: "Acta de nacimiento",
+        description:
+          "Un acta de nacimiento certificada del solicitante o de los niños.",
+        examples: "Copia certificada emitida por un estado o condado",
+      },
+    },
+    {
+      key: "proof_of_pregnancy",
+      category: "status",
+      en: {
+        name: "Proof of pregnancy",
+        description: "A medical document confirming pregnancy.",
+        examples: "A clinic or doctor's statement with your due date",
+      },
+      es: {
+        name: "Comprobante de embarazo",
+        description: "Un documento médico que confirme el embarazo.",
+        examples:
+          "Una declaración de la clínica o del médico con su fecha probable de parto",
+      },
+    },
+    {
+      key: "military_discharge",
+      category: "status",
+      en: {
+        name: "Military discharge papers",
+        description: "Proof of military service and discharge status.",
+        examples: "DD-214 form or equivalent service record",
+      },
+      es: {
+        name: "Documentos de baja militar",
+        description: "Comprobante del servicio militar y el estatus de baja.",
+        examples: "Formulario DD-214 o registro de servicio equivalente",
+      },
+    },
+  ];
+
+  for (const d of documentTypeSeeds) {
+    const docType = await db.document_types.upsert({
+      where: { doc_key: d.key },
+      update: { category: d.category },
+      create: { doc_key: d.key, category: d.category },
+    });
+    for (const lang of ["en", "es"] as const) {
+      const t = d[lang];
+      await db.document_type_translations.upsert({
+        where: {
+          document_type_id_language_code: {
+            document_type_id: docType.id,
+            language_code: lang,
+          },
+        },
+        update: {
+          name: t.name,
+          description: t.description,
+          examples: t.examples,
+        },
+        create: {
+          document_type_id: docType.id,
+          language_code: lang,
+          name: t.name,
+          description: t.description,
+          examples: t.examples,
+        },
+      });
+    }
+  }
+
+  // doc_key -> id, for wiring the per-program requirements below.
+  const docTypeIdByKey: Record<string, string> = Object.fromEntries(
+    (
+      await db.document_types.findMany({
+        select: { id: true, doc_key: true },
+      })
+    ).map((d) => [d.doc_key, d.id]),
+  );
+
+  // Per-program required documents, keyed by program_key. Every listed doc_key
+  // becomes a required `program_document_requirements` row, which the checklist
+  // generator turns into a checklist item for any session eligible for that
+  // program.
+  const programRequirements: Record<string, string[]> = {
+    snap: [
+      "photo_id",
+      "ssn_card",
+      "proof_of_income",
+      "proof_of_residency",
+      "proof_of_expenses",
+    ],
+    medicaid: [
+      "photo_id",
+      "ssn_card",
+      "proof_of_income",
+      "proof_of_citizenship",
+      "proof_of_residency",
+    ],
+    va_health: ["photo_id", "military_discharge", "proof_of_income"],
+    ssi: [
+      "photo_id",
+      "ssn_card",
+      "proof_of_income",
+      "proof_of_disability",
+      "bank_statements",
+      "proof_of_citizenship",
+    ],
+    liheap: [
+      "photo_id",
+      "proof_of_income",
+      "proof_of_residency",
+      "proof_of_expenses",
+    ],
+    housing_choice_voucher: [
+      "photo_id",
+      "ssn_card",
+      "proof_of_income",
+      "proof_of_citizenship",
+      "birth_certificate",
+    ],
+    ccdf: [
+      "photo_id",
+      "proof_of_income",
+      "proof_of_household",
+      "proof_of_residency",
+    ],
+    eitc: ["tax_return", "ssn_card", "proof_of_income"],
+    ctc: ["tax_return", "ssn_card", "proof_of_household"],
+    lifeline: ["photo_id", "proof_of_income"],
+    chip: [
+      "photo_id",
+      "ssn_card",
+      "proof_of_income",
+      "proof_of_citizenship",
+      "proof_of_household",
+    ],
+    school_meals: ["proof_of_income", "proof_of_household"],
+    unemployment_insurance: ["photo_id", "ssn_card", "proof_of_income"],
+    aca_marketplace: [
+      "photo_id",
+      "ssn_card",
+      "proof_of_income",
+      "proof_of_citizenship",
+    ],
+    head_start: ["birth_certificate", "proof_of_income", "proof_of_residency"],
+    pell_grant: ["tax_return", "ssn_card", "photo_id"],
+    tanf: [
+      "photo_id",
+      "ssn_card",
+      "proof_of_income",
+      "proof_of_residency",
+      "proof_of_household",
+      "birth_certificate",
+    ],
+    wic: [
+      "photo_id",
+      "proof_of_income",
+      "proof_of_residency",
+      "birth_certificate",
+    ],
+  };
+
+  for (const [programKey, docKeys] of Object.entries(programRequirements)) {
+    const programId = programIdByKey[programKey];
+    if (!programId) continue;
+    for (const docKey of docKeys) {
+      const documentTypeId = docTypeIdByKey[docKey];
+      if (!documentTypeId) continue;
+      await db.program_document_requirements.upsert({
+        where: {
+          program_id_document_type_id: {
+            program_id: programId,
+            document_type_id: documentTypeId,
+          },
+        },
+        update: { is_required: true },
+        create: {
+          program_id: programId,
+          document_type_id: documentTypeId,
+          is_required: true,
+        },
+      });
+    }
+  }
+
   const knowledgeSeeds: {
     program_key?: string;
     source_url: string;

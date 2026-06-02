@@ -630,6 +630,45 @@ describe("Citizen & admin views — dashboards", () => {
     const overview = await caller(adminId).report.overview({});
     expect(overview.completed_sessions).toBeGreaterThanOrEqual(1);
   });
+
+  it("knowledge sources are admin-managed (CRUD)", async () => {
+    await expectCode(caller(residentId).knowledge.list(), "FORBIDDEN");
+    await expectCode(
+      caller(residentId).knowledge.create({
+        title: "x",
+        source_url: "https://example.test/kb",
+        content_text: "info",
+      }),
+      "FORBIDDEN",
+    );
+
+    const created = await caller(adminId).knowledge.create({
+      title: "Test KB source",
+      source_url: "https://example.test/kb",
+      content_text: "Eligibility info for testing.",
+      language_code: "en",
+    });
+    expect(created.id).toBeTruthy();
+    expect(created.embedded).toBe(false); // AI disabled in tests
+
+    const list = await caller(adminId).knowledge.list();
+    const row = list.find((x) => x.id === created.id);
+    expect(row?.title).toBe("Test KB source");
+    expect(row?.embedded).toBe(false);
+
+    const updated = await caller(adminId).knowledge.update({
+      id: created.id,
+      title: "Updated KB source",
+    });
+    expect(updated.id).toBe(created.id);
+
+    const del = await caller(adminId).knowledge.delete({ id: created.id });
+    expect(del.deleted).toBe(true);
+    await expectCode(
+      caller(adminId).knowledge.delete({ id: created.id }),
+      "NOT_FOUND",
+    );
+  });
 });
 
 describe("Phase 3 — profile, notifications, referrals", () => {

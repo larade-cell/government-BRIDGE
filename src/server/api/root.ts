@@ -5,6 +5,7 @@ import {
   documentUploadRouter,
 } from "~/server/api/routers/document";
 import { eligibilityRuleRouter } from "~/server/api/routers/eligibilityRule";
+import { knowledgeRouter } from "~/server/api/routers/knowledge";
 import { notificationPreferenceRouter } from "~/server/api/routers/notification";
 import {
   documentTypeRouter,
@@ -48,6 +49,7 @@ export const appRouter = createTRPCRouter({
   case: caseRouter,
   caseNote: caseNoteRouter,
   eligibilityRule: eligibilityRuleRouter,
+  knowledge: knowledgeRouter,
 });
 
 export type AppRouter = typeof appRouter;

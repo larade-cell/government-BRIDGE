@@ -179,6 +179,11 @@ export const es: Messages = {
       statusVerified: "verificado",
       statusUploaded: "subido",
       statusMissing: "faltante",
+      otherProgram: "Otros documentos",
+      programReady: "{done}/{total} listos",
+      uploadDoc: "Subir",
+      alsoCounts: "También cuenta para: {programs}",
+      sharedAcross: "Compartido entre {count} programas",
     },
     dangerZone: "Eliminar cuenta",
     deleteWarning:

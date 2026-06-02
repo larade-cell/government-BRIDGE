@@ -182,6 +182,11 @@ export const en = {
       statusVerified: "verified",
       statusUploaded: "uploaded",
       statusMissing: "missing",
+      otherProgram: "Other documents",
+      programReady: "{done}/{total} ready",
+      uploadDoc: "Upload",
+      alsoCounts: "Also counts for: {programs}",
+      sharedAcross: "Shared across {count} programs",
     },
     dangerZone: "Delete account",
     deleteWarning:

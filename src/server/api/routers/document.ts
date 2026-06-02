@@ -63,6 +63,16 @@ export const documentChecklistRouter = createTRPCRouter({
             reason: true,
             created_at: true,
             document_type_id: true,
+            programs: {
+              select: {
+                id: true,
+                program_translations: {
+                  where: { language_code: input.language_code },
+                  select: { name: true },
+                  take: 1,
+                },
+              },
+            },
             document_types: {
               select: {
                 id: true,
@@ -107,6 +117,13 @@ export const documentChecklistRouter = createTRPCRouter({
           id: item.id,
           session_id: item.session_id,
           program_id: item.program_id,
+          program: item.programs
+            ? {
+                id: item.programs.id,
+                name:
+                  item.programs.program_translations[0]?.name ?? "Program",
+              }
+            : null,
           reason: item.reason,
           created_at: item.created_at,
           upload_status,

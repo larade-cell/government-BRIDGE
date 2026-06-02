@@ -282,6 +282,58 @@ describe("Phase 2 — programs, checklist, uploads", () => {
     });
     expect(list.data.length).toBeGreaterThanOrEqual(1);
     expect(list.data.some((d) => d.document_type.id === docTypeId)).toBe(true);
+    // Each program-scoped row carries its program for the grouped UI.
+    const scoped = list.data.find((d) => d.program_id);
+    expect(scoped?.program?.name).toEqual(expect.any(String));
+  });
+
+  it("a shared document upload updates every program that needs it", async () => {
+    const session = await newSession();
+    await caller(null).eligibility.run({ session_id: session.id });
+
+    const before = await caller(null).documentChecklist.bySession({
+      session_id: session.id,
+      language_code: "en",
+    });
+
+    // Find a document type required by two or more programs in this checklist.
+    const programsByType = new Map<string, Set<string>>();
+    for (const item of before.data) {
+      if (!item.program) continue;
+      const set = programsByType.get(item.document_type.id) ?? new Set();
+      set.add(item.program.id);
+      programsByType.set(item.document_type.id, set);
+    }
+    const sharedTypeId = [...programsByType.entries()].find(
+      ([, progs]) => progs.size >= 2,
+    )?.[0];
+    expect(sharedTypeId).toBeTruthy();
+
+    const rowsBefore = before.data.filter(
+      (d) => d.document_type.id === sharedTypeId,
+    );
+    expect(rowsBefore.length).toBeGreaterThanOrEqual(2);
+    expect(rowsBefore.every((d) => d.upload_status === "missing")).toBe(true);
+
+    // Upload a single document of that shared type.
+    await caller(null).documentUpload.create({
+      session_id: session.id,
+      file_name: "id.png",
+      file_mime_type: "image/png",
+      document_type_id: sharedTypeId!,
+    });
+
+    // One upload clears the requirement under every program that needed it.
+    const after = await caller(null).documentChecklist.bySession({
+      session_id: session.id,
+      language_code: "en",
+    });
+    const rowsAfter = after.data.filter(
+      (d) => d.document_type.id === sharedTypeId,
+    );
+    expect(rowsAfter.length).toBe(rowsBefore.length);
+    expect(rowsAfter.every((d) => d.upload_status !== "missing")).toBe(true);
+    expect(new Set(rowsAfter.map((d) => d.program_id)).size).toBeGreaterThanOrEqual(2);
   });
 
   it("accepts a valid upload and rejects a bad mime type", async () => {

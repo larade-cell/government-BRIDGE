@@ -277,6 +277,12 @@ function CaseDetail({
             ))}
         </div>
 
+        {c.priority_reason && (
+          <p className="-mt-1 text-xs text-muted-foreground">
+            Auto-prioritized: {c.priority_reason}
+          </p>
+        )}
+
         {/* Who needs help + how to reach them */}
         <div className="rounded-lg border bg-background p-3 text-sm">
           <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">

@@ -15791,6 +15791,7 @@ export namespace Prisma {
     assigned_to: string | null
     status: $Enums.case_status | null
     priority: $Enums.case_priority | null
+    priority_reason: string | null
     contact_name: string | null
     contact_email: string | null
     contact_phone: string | null
@@ -15804,6 +15805,7 @@ export namespace Prisma {
     assigned_to: string | null
     status: $Enums.case_status | null
     priority: $Enums.case_priority | null
+    priority_reason: string | null
     contact_name: string | null
     contact_email: string | null
     contact_phone: string | null
@@ -15817,6 +15819,7 @@ export namespace Prisma {
     assigned_to: number
     status: number
     priority: number
+    priority_reason: number
     contact_name: number
     contact_email: number
     contact_phone: number
@@ -15832,6 +15835,7 @@ export namespace Prisma {
     assigned_to?: true
     status?: true
     priority?: true
+    priority_reason?: true
     contact_name?: true
     contact_email?: true
     contact_phone?: true
@@ -15845,6 +15849,7 @@ export namespace Prisma {
     assigned_to?: true
     status?: true
     priority?: true
+    priority_reason?: true
     contact_name?: true
     contact_email?: true
     contact_phone?: true
@@ -15858,6 +15863,7 @@ export namespace Prisma {
     assigned_to?: true
     status?: true
     priority?: true
+    priority_reason?: true
     contact_name?: true
     contact_email?: true
     contact_phone?: true
@@ -15944,6 +15950,7 @@ export namespace Prisma {
     assigned_to: string | null
     status: $Enums.case_status
     priority: $Enums.case_priority | null
+    priority_reason: string | null
     contact_name: string | null
     contact_email: string | null
     contact_phone: string | null
@@ -15974,6 +15981,7 @@ export namespace Prisma {
     assigned_to?: boolean
     status?: boolean
     priority?: boolean
+    priority_reason?: boolean
     contact_name?: boolean
     contact_email?: boolean
     contact_phone?: boolean
@@ -15991,6 +15999,7 @@ export namespace Prisma {
     assigned_to?: boolean
     status?: boolean
     priority?: boolean
+    priority_reason?: boolean
     contact_name?: boolean
     contact_email?: boolean
     contact_phone?: boolean
@@ -16006,6 +16015,7 @@ export namespace Prisma {
     assigned_to?: boolean
     status?: boolean
     priority?: boolean
+    priority_reason?: boolean
     contact_name?: boolean
     contact_email?: boolean
     contact_phone?: boolean
@@ -16021,6 +16031,7 @@ export namespace Prisma {
     assigned_to?: boolean
     status?: boolean
     priority?: boolean
+    priority_reason?: boolean
     contact_name?: boolean
     contact_email?: boolean
     contact_phone?: boolean
@@ -16028,7 +16039,7 @@ export namespace Prisma {
     updated_at?: boolean
   }
 
-  export type casesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "session_id" | "assigned_to" | "status" | "priority" | "contact_name" | "contact_email" | "contact_phone" | "created_at" | "updated_at", ExtArgs["result"]["cases"]>
+  export type casesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "session_id" | "assigned_to" | "status" | "priority" | "priority_reason" | "contact_name" | "contact_email" | "contact_phone" | "created_at" | "updated_at", ExtArgs["result"]["cases"]>
   export type casesInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     case_notes?: boolean | cases$case_notesArgs<ExtArgs>
     users?: boolean | cases$usersArgs<ExtArgs>
@@ -16057,6 +16068,7 @@ export namespace Prisma {
       assigned_to: string | null
       status: $Enums.case_status
       priority: $Enums.case_priority | null
+      priority_reason: string | null
       contact_name: string | null
       contact_email: string | null
       contact_phone: string | null
@@ -16493,6 +16505,7 @@ export namespace Prisma {
     readonly assigned_to: FieldRef<"cases", 'String'>
     readonly status: FieldRef<"cases", 'case_status'>
     readonly priority: FieldRef<"cases", 'case_priority'>
+    readonly priority_reason: FieldRef<"cases", 'String'>
     readonly contact_name: FieldRef<"cases", 'String'>
     readonly contact_email: FieldRef<"cases", 'String'>
     readonly contact_phone: FieldRef<"cases", 'String'>
@@ -65994,6 +66007,7 @@ export namespace Prisma {
     assigned_to: 'assigned_to',
     status: 'status',
     priority: 'priority',
+    priority_reason: 'priority_reason',
     contact_name: 'contact_name',
     contact_email: 'contact_email',
     contact_phone: 'contact_phone',
@@ -67465,6 +67479,7 @@ export namespace Prisma {
     assigned_to?: UuidNullableFilter<"cases"> | string | null
     status?: Enumcase_statusFilter<"cases"> | $Enums.case_status
     priority?: Enumcase_priorityNullableFilter<"cases"> | $Enums.case_priority | null
+    priority_reason?: StringNullableFilter<"cases"> | string | null
     contact_name?: StringNullableFilter<"cases"> | string | null
     contact_email?: StringNullableFilter<"cases"> | string | null
     contact_phone?: StringNullableFilter<"cases"> | string | null
@@ -67481,6 +67496,7 @@ export namespace Prisma {
     assigned_to?: SortOrderInput | SortOrder
     status?: SortOrder
     priority?: SortOrderInput | SortOrder
+    priority_reason?: SortOrderInput | SortOrder
     contact_name?: SortOrderInput | SortOrder
     contact_email?: SortOrderInput | SortOrder
     contact_phone?: SortOrderInput | SortOrder
@@ -67500,6 +67516,7 @@ export namespace Prisma {
     assigned_to?: UuidNullableFilter<"cases"> | string | null
     status?: Enumcase_statusFilter<"cases"> | $Enums.case_status
     priority?: Enumcase_priorityNullableFilter<"cases"> | $Enums.case_priority | null
+    priority_reason?: StringNullableFilter<"cases"> | string | null
     contact_name?: StringNullableFilter<"cases"> | string | null
     contact_email?: StringNullableFilter<"cases"> | string | null
     contact_phone?: StringNullableFilter<"cases"> | string | null
@@ -67516,6 +67533,7 @@ export namespace Prisma {
     assigned_to?: SortOrderInput | SortOrder
     status?: SortOrder
     priority?: SortOrderInput | SortOrder
+    priority_reason?: SortOrderInput | SortOrder
     contact_name?: SortOrderInput | SortOrder
     contact_email?: SortOrderInput | SortOrder
     contact_phone?: SortOrderInput | SortOrder
@@ -67535,6 +67553,7 @@ export namespace Prisma {
     assigned_to?: UuidNullableWithAggregatesFilter<"cases"> | string | null
     status?: Enumcase_statusWithAggregatesFilter<"cases"> | $Enums.case_status
     priority?: Enumcase_priorityNullableWithAggregatesFilter<"cases"> | $Enums.case_priority | null
+    priority_reason?: StringNullableWithAggregatesFilter<"cases"> | string | null
     contact_name?: StringNullableWithAggregatesFilter<"cases"> | string | null
     contact_email?: StringNullableWithAggregatesFilter<"cases"> | string | null
     contact_phone?: StringNullableWithAggregatesFilter<"cases"> | string | null
@@ -71036,6 +71055,7 @@ export namespace Prisma {
     id?: string
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
+    priority_reason?: string | null
     contact_name?: string | null
     contact_email?: string | null
     contact_phone?: string | null
@@ -71052,6 +71072,7 @@ export namespace Prisma {
     assigned_to?: string | null
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
+    priority_reason?: string | null
     contact_name?: string | null
     contact_email?: string | null
     contact_phone?: string | null
@@ -71064,6 +71085,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
     contact_name?: NullableStringFieldUpdateOperationsInput | string | null
     contact_email?: NullableStringFieldUpdateOperationsInput | string | null
     contact_phone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -71080,6 +71102,7 @@ export namespace Prisma {
     assigned_to?: NullableStringFieldUpdateOperationsInput | string | null
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
     contact_name?: NullableStringFieldUpdateOperationsInput | string | null
     contact_email?: NullableStringFieldUpdateOperationsInput | string | null
     contact_phone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -71094,6 +71117,7 @@ export namespace Prisma {
     assigned_to?: string | null
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
+    priority_reason?: string | null
     contact_name?: string | null
     contact_email?: string | null
     contact_phone?: string | null
@@ -71105,6 +71129,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
     contact_name?: NullableStringFieldUpdateOperationsInput | string | null
     contact_email?: NullableStringFieldUpdateOperationsInput | string | null
     contact_phone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -71118,6 +71143,7 @@ export namespace Prisma {
     assigned_to?: NullableStringFieldUpdateOperationsInput | string | null
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
     contact_name?: NullableStringFieldUpdateOperationsInput | string | null
     contact_email?: NullableStringFieldUpdateOperationsInput | string | null
     contact_phone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -74773,6 +74799,7 @@ export namespace Prisma {
     assigned_to?: SortOrder
     status?: SortOrder
     priority?: SortOrder
+    priority_reason?: SortOrder
     contact_name?: SortOrder
     contact_email?: SortOrder
     contact_phone?: SortOrder
@@ -74786,6 +74813,7 @@ export namespace Prisma {
     assigned_to?: SortOrder
     status?: SortOrder
     priority?: SortOrder
+    priority_reason?: SortOrder
     contact_name?: SortOrder
     contact_email?: SortOrder
     contact_phone?: SortOrder
@@ -74799,6 +74827,7 @@ export namespace Prisma {
     assigned_to?: SortOrder
     status?: SortOrder
     priority?: SortOrder
+    priority_reason?: SortOrder
     contact_name?: SortOrder
     contact_email?: SortOrder
     contact_phone?: SortOrder
@@ -83728,6 +83757,7 @@ export namespace Prisma {
     id?: string
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
+    priority_reason?: string | null
     contact_name?: string | null
     contact_email?: string | null
     contact_phone?: string | null
@@ -83743,6 +83773,7 @@ export namespace Prisma {
     assigned_to?: string | null
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
+    priority_reason?: string | null
     contact_name?: string | null
     contact_email?: string | null
     contact_phone?: string | null
@@ -83835,6 +83866,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
     contact_name?: NullableStringFieldUpdateOperationsInput | string | null
     contact_email?: NullableStringFieldUpdateOperationsInput | string | null
     contact_phone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -83850,6 +83882,7 @@ export namespace Prisma {
     assigned_to?: NullableStringFieldUpdateOperationsInput | string | null
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
     contact_name?: NullableStringFieldUpdateOperationsInput | string | null
     contact_email?: NullableStringFieldUpdateOperationsInput | string | null
     contact_phone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -89715,6 +89748,7 @@ export namespace Prisma {
     id?: string
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
+    priority_reason?: string | null
     contact_name?: string | null
     contact_email?: string | null
     contact_phone?: string | null
@@ -89729,6 +89763,7 @@ export namespace Prisma {
     assigned_to?: string | null
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
+    priority_reason?: string | null
     contact_name?: string | null
     contact_email?: string | null
     contact_phone?: string | null
@@ -90282,6 +90317,7 @@ export namespace Prisma {
     assigned_to?: UuidNullableFilter<"cases"> | string | null
     status?: Enumcase_statusFilter<"cases"> | $Enums.case_status
     priority?: Enumcase_priorityNullableFilter<"cases"> | $Enums.case_priority | null
+    priority_reason?: StringNullableFilter<"cases"> | string | null
     contact_name?: StringNullableFilter<"cases"> | string | null
     contact_email?: StringNullableFilter<"cases"> | string | null
     contact_phone?: StringNullableFilter<"cases"> | string | null
@@ -91341,6 +91377,7 @@ export namespace Prisma {
     id?: string
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
+    priority_reason?: string | null
     contact_name?: string | null
     contact_email?: string | null
     contact_phone?: string | null
@@ -91355,6 +91392,7 @@ export namespace Prisma {
     session_id: string
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
+    priority_reason?: string | null
     contact_name?: string | null
     contact_email?: string | null
     contact_phone?: string | null
@@ -95450,6 +95488,7 @@ export namespace Prisma {
     assigned_to?: string | null
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
+    priority_reason?: string | null
     contact_name?: string | null
     contact_email?: string | null
     contact_phone?: string | null
@@ -95759,6 +95798,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
     contact_name?: NullableStringFieldUpdateOperationsInput | string | null
     contact_email?: NullableStringFieldUpdateOperationsInput | string | null
     contact_phone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -95773,6 +95813,7 @@ export namespace Prisma {
     assigned_to?: NullableStringFieldUpdateOperationsInput | string | null
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
     contact_name?: NullableStringFieldUpdateOperationsInput | string | null
     contact_email?: NullableStringFieldUpdateOperationsInput | string | null
     contact_phone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -95786,6 +95827,7 @@ export namespace Prisma {
     assigned_to?: NullableStringFieldUpdateOperationsInput | string | null
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
     contact_name?: NullableStringFieldUpdateOperationsInput | string | null
     contact_email?: NullableStringFieldUpdateOperationsInput | string | null
     contact_phone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -96131,6 +96173,7 @@ export namespace Prisma {
     session_id: string
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
+    priority_reason?: string | null
     contact_name?: string | null
     contact_email?: string | null
     contact_phone?: string | null
@@ -96483,6 +96526,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
     contact_name?: NullableStringFieldUpdateOperationsInput | string | null
     contact_email?: NullableStringFieldUpdateOperationsInput | string | null
     contact_phone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -96497,6 +96541,7 @@ export namespace Prisma {
     session_id?: StringFieldUpdateOperationsInput | string
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
     contact_name?: NullableStringFieldUpdateOperationsInput | string | null
     contact_email?: NullableStringFieldUpdateOperationsInput | string | null
     contact_phone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -96510,6 +96555,7 @@ export namespace Prisma {
     session_id?: StringFieldUpdateOperationsInput | string
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
     contact_name?: NullableStringFieldUpdateOperationsInput | string | null
     contact_email?: NullableStringFieldUpdateOperationsInput | string | null
     contact_phone?: NullableStringFieldUpdateOperationsInput | string | null

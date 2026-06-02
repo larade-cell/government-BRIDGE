@@ -448,6 +448,32 @@ describe("Citizen & admin views — dashboards", () => {
     expect(anon.created).toBe(true);
   });
 
+  it("auto-prioritizes a new case from the screening, overridable by staff", async () => {
+    const session = await newSession(residentId);
+    const housingQ = await db.questions.findUnique({
+      where: { question_key: "housing_status" },
+      select: { id: true },
+    });
+    await caller(residentId).answer.upsert({
+      session_id: session.id,
+      question_id: housingQ!.id,
+      answer_value: "homeless",
+    });
+
+    const c = await caller(residentId).case.create({ session_id: session.id });
+    expect(c.priority).toBe("urgent");
+    expect(c.priority_reason).toMatch(/homeless/i);
+
+    // A manual priority change supersedes the auto-triage reason.
+    const updated = await caller(adminId).case.update({
+      id: c.id,
+      priority: "low",
+    });
+    expect(updated.priority).toBe("low");
+    const detail = await caller(adminId).case.byId({ id: c.id });
+    expect(detail.priority_reason).toBeNull();
+  });
+
   it("question create/update is admin-gated and validates single_select", async () => {
     const key = `test_q_${randomUUID().slice(0, 8)}`;
     await expectCode(

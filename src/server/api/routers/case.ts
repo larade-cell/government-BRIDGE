@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { assertSessionAccess, requireRole } from "~/server/api/helpers/session";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { priorityFromAnswers } from "~/server/lib/case-priority";
 
 /**
  * Caseworker dashboard (Story 18). Reads/writes are role-gated to
@@ -102,11 +103,33 @@ export const caseRouter = createTRPCRouter({
         return { ...existing, created: false };
       }
 
+      // Auto-triage from the screening answers unless a priority was passed
+      // in explicitly (a staff member opening the case can override).
+      let priorityData: {
+        priority?: "low" | "normal" | "high" | "urgent";
+        priority_reason?: string | null;
+      } = {};
+      if (input.priority) {
+        priorityData = { priority: input.priority };
+      } else {
+        const answers = await ctx.db.screening_answers.findMany({
+          where: { session_id: input.session_id },
+          select: {
+            answer_value: true,
+            questions: { select: { question_key: true } },
+          },
+        });
+        const byKey: Record<string, unknown> = {};
+        for (const a of answers) byKey[a.questions.question_key] = a.answer_value;
+        const auto = priorityFromAnswers(byKey);
+        priorityData = { priority: auto.priority, priority_reason: auto.reason };
+      }
+
       const created = await ctx.db.cases.create({
         data: {
           session_id: input.session_id,
           status: "new",
-          ...(input.priority && { priority: input.priority }),
+          ...priorityData,
           ...contact,
         },
       });
@@ -229,7 +252,11 @@ export const caseRouter = createTRPCRouter({
         where: { id: input.id },
         data: {
           ...(input.status && { status: input.status }),
-          ...(input.priority && { priority: input.priority }),
+          // A manual priority change supersedes the auto-triage reason.
+          ...(input.priority && {
+            priority: input.priority,
+            priority_reason: null,
+          }),
           ...(input.assigned_to !== undefined && {
             assigned_to: input.assigned_to,
           }),

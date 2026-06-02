@@ -180,5 +180,13 @@ export const es: Messages = {
       statusUploaded: "subido",
       statusMissing: "faltante",
     },
+    dangerZone: "Eliminar cuenta",
+    deleteWarning:
+      "Elimine permanentemente su cuenta, evaluaciones, resultados, documentos y solicitudes de ayuda. Esto no se puede deshacer.",
+    deleteButton: "Eliminar mi cuenta",
+    deleteConfirmTitle: "¿Eliminar su cuenta?",
+    deleteConfirmDesc:
+      "Esto elimina permanentemente su perfil y todos sus datos de evaluación, y cierra su sesión. No se puede deshacer.",
+    deleting: "Eliminando…",
   },
 };

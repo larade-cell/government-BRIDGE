@@ -220,6 +220,10 @@ export const caseRouter = createTRPCRouter({
               preferred_language: true,
               completed_at: true,
               current_step: true,
+              referrals: {
+                orderBy: { created_at: "desc" },
+                include: { organizations: true },
+              },
             },
           },
         },

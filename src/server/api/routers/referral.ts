@@ -39,7 +39,19 @@ export const referralRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertSessionAccess(ctx, input.session_id);
+      // Staff can open a referral for any session (e.g. from the case view);
+      // otherwise the caller must own/hold the session.
+      if (await callerIsStaff(ctx)) {
+        const session = await ctx.db.screening_sessions.findUnique({
+          where: { id: input.session_id },
+          select: { id: true },
+        });
+        if (!session) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
+        }
+      } else {
+        await assertSessionAccess(ctx, input.session_id);
+      }
 
       if (input.organization_id) {
         const org = await ctx.db.organizations.findUnique({

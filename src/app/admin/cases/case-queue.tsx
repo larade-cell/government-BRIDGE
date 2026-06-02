@@ -15,6 +15,7 @@ const STATUSES = [
   "closed",
 ] as const;
 const PRIORITIES = ["low", "normal", "high", "urgent"] as const;
+const REFERRAL_STATUSES = ["draft", "sent", "accepted", "closed"] as const;
 
 const PRIORITY_STYLES: Record<string, string> = {
   urgent: "bg-red-100 text-red-700",
@@ -205,8 +206,12 @@ function CaseDetail({
   const utils = api.useUtils();
   const [note, setNote] = useState("");
 
+  const [refNeed, setRefNeed] = useState("");
+  const [refOrg, setRefOrg] = useState("");
+
   const detail = api.case.byId.useQuery({ id: caseId });
   const notes = api.caseNote.list.useQuery({ case_id: caseId });
+  const orgs = api.organization.list.useQuery();
 
   const update = api.case.update.useMutation({
     onSuccess: () => {
@@ -219,6 +224,17 @@ function CaseDetail({
       setNote("");
       void utils.caseNote.list.invalidate({ case_id: caseId });
     },
+  });
+  const refetchCase = () => void utils.case.byId.invalidate({ id: caseId });
+  const createReferral = api.referral.create.useMutation({
+    onSuccess: () => {
+      setRefNeed("");
+      setRefOrg("");
+      refetchCase();
+    },
+  });
+  const updateReferral = api.referral.update.useMutation({
+    onSuccess: refetchCase,
   });
 
   if (detail.isLoading) {
@@ -378,6 +394,106 @@ function CaseDetail({
             </p>
           )}
         </div>
+
+        {/* Referrals — only sessions can be referred (chat-only cases can't). */}
+        {c.session_id && c.screening_sessions && (
+          <div className="flex flex-col gap-2">
+            <Label className="text-sm font-semibold">Referrals</Label>
+            {c.screening_sessions.referrals.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No referrals yet.</p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {c.screening_sessions.referrals.map((r) => (
+                  <li
+                    key={r.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm"
+                  >
+                    <div>
+                      <span className="font-medium">{r.need_category}</span>
+                      <span className="ml-2 text-muted-foreground">
+                        {r.organizations?.name ?? "Unassigned"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <select
+                        aria-label="Organization"
+                        value={r.organization_id ?? ""}
+                        onChange={(e) =>
+                          updateReferral.mutate({
+                            id: r.id,
+                            organization_id: e.target.value || null,
+                          })
+                        }
+                        className={selectClass()}
+                      >
+                        <option value="">Unassigned</option>
+                        {(orgs.data ?? []).map((o) => (
+                          <option key={o.id} value={o.id}>
+                            {o.name}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        aria-label="Referral status"
+                        value={r.status}
+                        onChange={(e) =>
+                          updateReferral.mutate({
+                            id: r.id,
+                            status: e.target
+                              .value as (typeof REFERRAL_STATUSES)[number],
+                          })
+                        }
+                        className={selectClass()}
+                      >
+                        {REFERRAL_STATUSES.map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* Add a referral */}
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                value={refNeed}
+                onChange={(e) => setRefNeed(e.target.value)}
+                placeholder="Need (e.g. food, housing)"
+                className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              />
+              <select
+                aria-label="Organization for new referral"
+                value={refOrg}
+                onChange={(e) => setRefOrg(e.target.value)}
+                className={selectClass()}
+              >
+                <option value="">Unassigned</option>
+                {(orgs.data ?? []).map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name}
+                  </option>
+                ))}
+              </select>
+              <Button
+                size="sm"
+                disabled={createReferral.isPending || refNeed.trim() === ""}
+                onClick={() =>
+                  createReferral.mutate({
+                    session_id: c.session_id!,
+                    need_category: refNeed.trim(),
+                    organization_id: refOrg || undefined,
+                  })
+                }
+              >
+                Add referral
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col gap-2">
           <Label className="text-sm font-semibold">Notes</Label>

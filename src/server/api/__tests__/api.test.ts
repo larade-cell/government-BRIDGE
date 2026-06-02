@@ -768,6 +768,51 @@ describe("Citizen & admin views — dashboards", () => {
 
     await db.referrals.delete({ where: { id: ref.id } });
   });
+
+  it("deleteAccount erases personal data, severs login, keeps an anonymized row", async () => {
+    const tag = randomUUID().slice(0, 8);
+    const authUser = await db.user.create({
+      data: { email: `del-${tag}@example.test` },
+    });
+    const domain = await db.users.create({
+      data: {
+        email: `del-${tag}@example.test`,
+        auth_user_id: authUser.id,
+        role: "resident",
+      },
+    });
+    const session = await db.screening_sessions.create({
+      data: { user_id: domain.id },
+    });
+
+    // A caller whose NextAuth id is the real one (so the login row is removed).
+    const self = createCaller({
+      db,
+      session: {
+        user: { id: authUser.id, appUserId: domain.id, role: null },
+        expires: new Date(Date.now() + 3_600_000).toISOString(),
+      },
+      headers: new Headers(),
+    });
+    const res = await self.user.deleteAccount();
+    expect(res.deleted).toBe(true);
+
+    // Personal data gone; login severed; row kept but anonymized + unlinked.
+    expect(
+      await db.screening_sessions.findUnique({ where: { id: session.id } }),
+    ).toBeNull();
+    expect(await db.user.findUnique({ where: { id: authUser.id } })).toBeNull();
+    const after = await db.users.findUnique({
+      where: { id: domain.id },
+      select: { email: true, auth_user_id: true },
+    });
+    expect(after?.email).toBeNull();
+    expect(after?.auth_user_id).toBeNull();
+
+    // cleanup (audit actor FK is NoAction → clear before removing the row)
+    await db.audit_logs.deleteMany({ where: { actor_user_id: domain.id } });
+    await db.users.delete({ where: { id: domain.id } });
+  });
 });
 
 describe("Phase 3 — profile, notifications, referrals", () => {

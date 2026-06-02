@@ -183,6 +183,14 @@ export const en = {
       statusUploaded: "uploaded",
       statusMissing: "missing",
     },
+    dangerZone: "Delete account",
+    deleteWarning:
+      "Permanently delete your account, screenings, results, documents, and help requests. This can't be undone.",
+    deleteButton: "Delete my account",
+    deleteConfirmTitle: "Delete your account?",
+    deleteConfirmDesc:
+      "This permanently removes your profile and all your screening data, and signs you out. This cannot be undone.",
+    deleting: "Deleting…",
   },
 };
 

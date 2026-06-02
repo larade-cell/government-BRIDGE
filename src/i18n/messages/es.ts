@@ -177,7 +177,7 @@ export const es: Messages = {
       removeConfirmTitle: "¿Eliminar este documento?",
       removeConfirmDesc: 'Se eliminará "{file}" de sus documentos.',
       statusVerified: "verificado",
-      statusUploaded: "subido",
+      statusUploaded: "en revisión",
       statusMissing: "faltante",
       otherProgram: "Otros documentos",
       programReady: "{done}/{total} listos",

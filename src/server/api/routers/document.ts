@@ -94,19 +94,21 @@ export const documentChecklistRouter = createTRPCRouter({
           },
           select: {
             document_type_id: true,
-            classified_by: true,
           },
         }),
       ]);
 
-      // Derive per-document-type upload status. A user-confirmed type counts
-      // as "verified"; any other non-deleted upload counts as "uploaded".
+      // Derive per-document-type upload status. An upload marks its type as
+      // received ("uploaded" = pending review). "verified" is reserved for a
+      // real validation step (AI/human) that confirms the file genuinely is
+      // that document — picking a type at upload time is an unchecked user
+      // *claim*, so it must NOT promote to verified. (Otherwise a photo of a
+      // dog tagged "Photo ID" would read as verified.)
       const statusByType = new Map<string, "uploaded" | "verified">();
       for (const u of uploads) {
         if (!u.document_type_id) continue;
-        const current = statusByType.get(u.document_type_id);
-        const next = u.classified_by === "user" ? "verified" : "uploaded";
-        if (current !== "verified") statusByType.set(u.document_type_id, next);
+        if (statusByType.get(u.document_type_id) === "verified") continue;
+        statusByType.set(u.document_type_id, "uploaded");
       }
 
       const data = items.map((item) => {

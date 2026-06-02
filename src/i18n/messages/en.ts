@@ -180,7 +180,7 @@ export const en = {
       removeConfirmTitle: "Remove this document?",
       removeConfirmDesc: '"{file}" will be removed from your documents.',
       statusVerified: "verified",
-      statusUploaded: "uploaded",
+      statusUploaded: "pending review",
       statusMissing: "missing",
       otherProgram: "Other documents",
       programReady: "{done}/{total} ready",

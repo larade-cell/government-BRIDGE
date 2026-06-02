@@ -332,7 +332,8 @@ describe("Phase 2 — programs, checklist, uploads", () => {
       (d) => d.document_type.id === sharedTypeId,
     );
     expect(rowsAfter.length).toBe(rowsBefore.length);
-    expect(rowsAfter.every((d) => d.upload_status !== "missing")).toBe(true);
+    // Received, but NOT auto-"verified" — picking a type is an unchecked claim.
+    expect(rowsAfter.every((d) => d.upload_status === "uploaded")).toBe(true);
     expect(new Set(rowsAfter.map((d) => d.program_id)).size).toBeGreaterThanOrEqual(2);
   });
 

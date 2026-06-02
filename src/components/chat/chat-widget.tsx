@@ -26,7 +26,11 @@ export function ChatWidget() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [handoffOpen, setHandoffOpen] = useState(false);
   const [handoffDone, setHandoffDone] = useState(false);
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 
   const ask = api.ai.ask.useMutation();
@@ -152,29 +156,74 @@ export function ChatWidget() {
             <div ref={endRef} />
           </div>
 
-          {/* Handoff + disclaimer */}
-          <div className="border-t px-4 py-2">
-            {handoffDone ? (
-              <p className="text-xs text-emerald-600">{t.chat.handoffDone}</p>
-            ) : (
-              conversationId && (
-                <button
-                  type="button"
-                  disabled={handoff.isPending}
-                  onClick={async () => {
+          {/* Handoff to a caseworker */}
+          {conversationId && (
+            <div className="border-t px-4 py-2">
+              {handoffDone ? (
+                <p className="text-xs text-emerald-600">{t.chat.handoffDone}</p>
+              ) : handoffOpen ? (
+                <form
+                  className="flex flex-col gap-2"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
                     try {
-                      await handoff.mutateAsync({ conversation_id: conversationId });
+                      await handoff.mutateAsync({
+                        conversation_id: conversationId,
+                        contact_name: contactName.trim() || undefined,
+                        contact_email: contactEmail.trim() || undefined,
+                        contact_phone: contactPhone.trim() || undefined,
+                      });
                     } finally {
                       setHandoffDone(true);
+                      setHandoffOpen(false);
                     }
                   }}
-                  className="text-xs font-medium text-primary hover:underline disabled:opacity-60"
+                >
+                  <p className="text-xs text-muted-foreground">
+                    {t.chat.handoffIntro}
+                  </p>
+                  <input
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                    placeholder={t.results.help.name}
+                    autoComplete="name"
+                    className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  />
+                  <input
+                    type="email"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder={t.results.help.email}
+                    autoComplete="email"
+                    className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  />
+                  <input
+                    type="tel"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    placeholder={t.results.help.phone}
+                    autoComplete="tel"
+                    className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  />
+                  <button
+                    type="submit"
+                    disabled={handoff.isPending}
+                    className="self-start rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+                  >
+                    {t.chat.handoffSubmit}
+                  </button>
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setHandoffOpen(true)}
+                  className="text-xs font-medium text-primary hover:underline"
                 >
                   {t.chat.handoff}
                 </button>
-              )
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Composer */}
           <form

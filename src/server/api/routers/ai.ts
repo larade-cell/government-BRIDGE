@@ -12,6 +12,7 @@ import {
   type RetrievedPassage,
 } from "../../../../lib/ai-service";
 import { assertSessionAccess } from "~/server/api/helpers/session";
+import { priorityFromAnswers } from "~/server/lib/case-priority";
 import {
   aiProcedure,
   createTRPCRouter,
@@ -337,10 +338,18 @@ export const aiRouter = createTRPCRouter({
     }),
 
   handoff: publicProcedure
-    .input(z.object({ conversation_id: z.string().uuid() }))
+    .input(
+      z.object({
+        conversation_id: z.string().uuid(),
+        contact_name: z.string().trim().min(1).max(200).optional(),
+        contact_email: z.string().trim().email().max(254).optional(),
+        contact_phone: z.string().trim().min(1).max(64).optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const convo = await assertConversationAccess(ctx, input.conversation_id);
-      // Spec §1.9.2 HANDOFF_ALREADY_REQUESTED — idempotency guard.
+      // Spec §1.9.2 HANDOFF_ALREADY_REQUESTED — idempotency guard (runs before
+      // we create a case, so a double-tap can't enqueue two cases).
       const current = await ctx.db.ai_conversations.findUnique({
         where: { id: convo.id },
         select: { human_handoff_requested: true },
@@ -351,10 +360,61 @@ export const aiRouter = createTRPCRouter({
           message: "Human handoff already requested",
         });
       }
-      return ctx.db.ai_conversations.update({
-        where: { id: convo.id },
-        data: { human_handoff_requested: true },
+
+      // Auto-triage from the linked screening session, if the chat had one.
+      let priority: "low" | "normal" | "high" | "urgent" = "normal";
+      let priority_reason: string | null = null;
+      if (convo.session_id) {
+        const answers = await ctx.db.screening_answers.findMany({
+          where: { session_id: convo.session_id },
+          select: {
+            answer_value: true,
+            questions: { select: { question_key: true } },
+          },
+        });
+        const byKey: Record<string, unknown> = {};
+        for (const a of answers) byKey[a.questions.question_key] = a.answer_value;
+        const auto = priorityFromAnswers(byKey);
+        priority = auto.priority;
+        priority_reason = auto.reason;
+      }
+
+      // The resident's most recent question, for caseworker context.
+      const lastUserMsg = await ctx.db.ai_messages.findFirst({
+        where: { conversation_id: convo.id, role: "user" },
+        orderBy: { created_at: "desc" },
+        select: { content: true },
       });
+
+      // Land the request in the caseworker Cases queue + flag the conversation,
+      // atomically.
+      const [, updated] = await ctx.db.$transaction([
+        ctx.db.cases.create({
+          data: {
+            session_id: convo.session_id,
+            conversation_id: convo.id,
+            status: "new",
+            priority,
+            priority_reason,
+            ...(input.contact_name && { contact_name: input.contact_name }),
+            ...(input.contact_email && { contact_email: input.contact_email }),
+            ...(input.contact_phone && { contact_phone: input.contact_phone }),
+            case_notes: {
+              create: {
+                note: lastUserMsg?.content
+                  ? `Requested a caseworker from the chat assistant. Most recent question: "${lastUserMsg.content}"`
+                  : "Requested a caseworker from the chat assistant.",
+                is_internal: false,
+              },
+            },
+          },
+        }),
+        ctx.db.ai_conversations.update({
+          where: { id: convo.id },
+          data: { human_handoff_requested: true },
+        }),
+      ]);
+      return updated;
     }),
 
   /**

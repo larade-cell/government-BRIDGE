@@ -474,6 +474,33 @@ describe("Citizen & admin views — dashboards", () => {
     expect(detail.priority_reason).toBeNull();
   });
 
+  it("chatbot handoff creates a case in the caseworker queue with contact", async () => {
+    // createConversation has no model call, so this stays deterministic.
+    const convo = await caller(null).ai.createConversation({ language_code: "en" });
+    createdConversationIds.push(convo.id);
+
+    await caller(null).ai.handoff({
+      conversation_id: convo.id,
+      contact_name: "Sam Diaz",
+      contact_email: "sam@example.test",
+    });
+
+    const queue = await caller(adminId).case.list({ limit: 100 });
+    const c = queue.data.find((x) => x.conversation_id === convo.id);
+    expect(c).toBeTruthy();
+    expect(c!.contact_name).toBe("Sam Diaz");
+    expect(c!.contact_email).toBe("sam@example.test");
+    expect(c!.session_id).toBeNull();
+
+    // Second handoff is still rejected (idempotent — no duplicate case).
+    await expectCode(
+      caller(null).ai.handoff({ conversation_id: convo.id }),
+      "BAD_REQUEST",
+    );
+
+    await db.cases.delete({ where: { id: c!.id } });
+  });
+
   it("question create/update is admin-gated and validates single_select", async () => {
     const key = `test_q_${randomUUID().slice(0, 8)}`;
     await expectCode(

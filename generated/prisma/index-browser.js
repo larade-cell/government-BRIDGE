@@ -202,6 +202,7 @@ exports.Prisma.Case_notesScalarFieldEnum = {
 exports.Prisma.CasesScalarFieldEnum = {
   id: 'id',
   session_id: 'session_id',
+  conversation_id: 'conversation_id',
   assigned_to: 'assigned_to',
   status: 'status',
   priority: 'priority',

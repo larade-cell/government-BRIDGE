@@ -26,6 +26,8 @@ export const es: Messages = {
     disclaimer:
       "Asistente de IA — información general, no una decisión oficial de elegibilidad.",
     handoff: "Hablar con una persona",
+    handoffIntro: "Comparta su información de contacto y un trabajador de casos se comunicará:",
+    handoffSubmit: "Solicitar un trabajador de casos",
     handoffDone: "Gracias — un trabajador de casos se comunicará con usted.",
     error: "Lo sentimos, algo salió mal. Inténtelo de nuevo.",
     close: "Cerrar",

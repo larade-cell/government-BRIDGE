@@ -32,6 +32,7 @@ model ai_conversations {
   screening_sessions      screening_sessions? @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   users                   users?              @relation(fields: [user_id], references: [id], onUpdate: NoAction)
   ai_messages             ai_messages[]
+  cases                   cases[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -112,20 +113,22 @@ model case_notes {
 }
 
 model cases {
-  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  session_id         String             @db.Uuid
-  assigned_to        String?            @db.Uuid
-  status             case_status        @default(new)
-  priority           case_priority?     @default(normal)
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id         String?             @db.Uuid
+  conversation_id    String?             @db.Uuid
+  assigned_to        String?             @db.Uuid
+  status             case_status         @default(new)
+  priority           case_priority?      @default(normal)
   priority_reason    String?
   contact_name       String?
   contact_email      String?
   contact_phone      String?
-  created_at         DateTime           @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime           @default(now()) @db.Timestamptz(6)
+  created_at         DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime            @default(now()) @db.Timestamptz(6)
   case_notes         case_notes[]
-  users              users?             @relation(fields: [assigned_to], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  screening_sessions screening_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users              users?              @relation(fields: [assigned_to], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  screening_sessions screening_sessions? @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  ai_conversations   ai_conversations?   @relation(fields: [conversation_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
 }
 
 model document_type_translations {

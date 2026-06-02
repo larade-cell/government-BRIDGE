@@ -319,15 +319,26 @@ function CaseDetail({
         </div>
 
         <div className="rounded-lg border bg-muted/40 p-3 text-sm">
-          <p className="text-muted-foreground">
-            Screening session:{" "}
-            <span className="font-mono text-foreground">{c.session_id}</span>
-          </p>
-          {c.screening_sessions && (
-            <p className="mt-1 text-muted-foreground">
-              {c.screening_sessions.completed_at
-                ? "Completed"
-                : `In progress (step ${c.screening_sessions.current_step ?? 0})`}
+          {c.session_id ? (
+            <>
+              <p className="text-muted-foreground">
+                Screening session:{" "}
+                <span className="font-mono text-foreground">{c.session_id}</span>
+              </p>
+              {c.screening_sessions && (
+                <p className="mt-1 text-muted-foreground">
+                  {c.screening_sessions.completed_at
+                    ? "Completed"
+                    : `In progress (step ${c.screening_sessions.current_step ?? 0})`}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-muted-foreground">
+              Source:{" "}
+              <span className="text-foreground">
+                {c.conversation_id ? "Chat assistant" : "Direct request"}
+              </span>
             </p>
           )}
         </div>

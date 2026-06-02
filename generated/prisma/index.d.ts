@@ -5730,10 +5730,12 @@ export namespace Prisma {
 
   export type Ai_conversationsCountOutputType = {
     ai_messages: number
+    cases: number
   }
 
   export type Ai_conversationsCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     ai_messages?: boolean | Ai_conversationsCountOutputTypeCountAi_messagesArgs
+    cases?: boolean | Ai_conversationsCountOutputTypeCountCasesArgs
   }
 
   // Custom InputTypes
@@ -5752,6 +5754,13 @@ export namespace Prisma {
    */
   export type Ai_conversationsCountOutputTypeCountAi_messagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ai_messagesWhereInput
+  }
+
+  /**
+   * Ai_conversationsCountOutputType without action
+   */
+  export type Ai_conversationsCountOutputTypeCountCasesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: casesWhereInput
   }
 
 
@@ -8128,6 +8137,7 @@ export namespace Prisma {
     screening_sessions?: boolean | ai_conversations$screening_sessionsArgs<ExtArgs>
     users?: boolean | ai_conversations$usersArgs<ExtArgs>
     ai_messages?: boolean | ai_conversations$ai_messagesArgs<ExtArgs>
+    cases?: boolean | ai_conversations$casesArgs<ExtArgs>
     _count?: boolean | Ai_conversationsCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["ai_conversations"]>
 
@@ -8170,6 +8180,7 @@ export namespace Prisma {
     screening_sessions?: boolean | ai_conversations$screening_sessionsArgs<ExtArgs>
     users?: boolean | ai_conversations$usersArgs<ExtArgs>
     ai_messages?: boolean | ai_conversations$ai_messagesArgs<ExtArgs>
+    cases?: boolean | ai_conversations$casesArgs<ExtArgs>
     _count?: boolean | Ai_conversationsCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ai_conversationsIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -8190,6 +8201,7 @@ export namespace Prisma {
       screening_sessions: Prisma.$screening_sessionsPayload<ExtArgs> | null
       users: Prisma.$usersPayload<ExtArgs> | null
       ai_messages: Prisma.$ai_messagesPayload<ExtArgs>[]
+      cases: Prisma.$casesPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -8596,6 +8608,7 @@ export namespace Prisma {
     screening_sessions<T extends ai_conversations$screening_sessionsArgs<ExtArgs> = {}>(args?: Subset<T, ai_conversations$screening_sessionsArgs<ExtArgs>>): Prisma__screening_sessionsClient<$Result.GetResult<Prisma.$screening_sessionsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     users<T extends ai_conversations$usersArgs<ExtArgs> = {}>(args?: Subset<T, ai_conversations$usersArgs<ExtArgs>>): Prisma__usersClient<$Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     ai_messages<T extends ai_conversations$ai_messagesArgs<ExtArgs> = {}>(args?: Subset<T, ai_conversations$ai_messagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ai_messagesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    cases<T extends ai_conversations$casesArgs<ExtArgs> = {}>(args?: Subset<T, ai_conversations$casesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$casesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -9105,6 +9118,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: Ai_messagesScalarFieldEnum | Ai_messagesScalarFieldEnum[]
+  }
+
+  /**
+   * ai_conversations.cases
+   */
+  export type ai_conversations$casesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the cases
+     */
+    select?: casesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the cases
+     */
+    omit?: casesOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: casesInclude<ExtArgs> | null
+    where?: casesWhereInput
+    orderBy?: casesOrderByWithRelationInput | casesOrderByWithRelationInput[]
+    cursor?: casesWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CasesScalarFieldEnum | CasesScalarFieldEnum[]
   }
 
   /**
@@ -15788,6 +15825,7 @@ export namespace Prisma {
   export type CasesMinAggregateOutputType = {
     id: string | null
     session_id: string | null
+    conversation_id: string | null
     assigned_to: string | null
     status: $Enums.case_status | null
     priority: $Enums.case_priority | null
@@ -15802,6 +15840,7 @@ export namespace Prisma {
   export type CasesMaxAggregateOutputType = {
     id: string | null
     session_id: string | null
+    conversation_id: string | null
     assigned_to: string | null
     status: $Enums.case_status | null
     priority: $Enums.case_priority | null
@@ -15816,6 +15855,7 @@ export namespace Prisma {
   export type CasesCountAggregateOutputType = {
     id: number
     session_id: number
+    conversation_id: number
     assigned_to: number
     status: number
     priority: number
@@ -15832,6 +15872,7 @@ export namespace Prisma {
   export type CasesMinAggregateInputType = {
     id?: true
     session_id?: true
+    conversation_id?: true
     assigned_to?: true
     status?: true
     priority?: true
@@ -15846,6 +15887,7 @@ export namespace Prisma {
   export type CasesMaxAggregateInputType = {
     id?: true
     session_id?: true
+    conversation_id?: true
     assigned_to?: true
     status?: true
     priority?: true
@@ -15860,6 +15902,7 @@ export namespace Prisma {
   export type CasesCountAggregateInputType = {
     id?: true
     session_id?: true
+    conversation_id?: true
     assigned_to?: true
     status?: true
     priority?: true
@@ -15946,7 +15989,8 @@ export namespace Prisma {
 
   export type CasesGroupByOutputType = {
     id: string
-    session_id: string
+    session_id: string | null
+    conversation_id: string | null
     assigned_to: string | null
     status: $Enums.case_status
     priority: $Enums.case_priority | null
@@ -15978,6 +16022,7 @@ export namespace Prisma {
   export type casesSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     session_id?: boolean
+    conversation_id?: boolean
     assigned_to?: boolean
     status?: boolean
     priority?: boolean
@@ -15989,13 +16034,15 @@ export namespace Prisma {
     updated_at?: boolean
     case_notes?: boolean | cases$case_notesArgs<ExtArgs>
     users?: boolean | cases$usersArgs<ExtArgs>
-    screening_sessions?: boolean | screening_sessionsDefaultArgs<ExtArgs>
+    screening_sessions?: boolean | cases$screening_sessionsArgs<ExtArgs>
+    ai_conversations?: boolean | cases$ai_conversationsArgs<ExtArgs>
     _count?: boolean | CasesCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["cases"]>
 
   export type casesSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     session_id?: boolean
+    conversation_id?: boolean
     assigned_to?: boolean
     status?: boolean
     priority?: boolean
@@ -16006,12 +16053,14 @@ export namespace Prisma {
     created_at?: boolean
     updated_at?: boolean
     users?: boolean | cases$usersArgs<ExtArgs>
-    screening_sessions?: boolean | screening_sessionsDefaultArgs<ExtArgs>
+    screening_sessions?: boolean | cases$screening_sessionsArgs<ExtArgs>
+    ai_conversations?: boolean | cases$ai_conversationsArgs<ExtArgs>
   }, ExtArgs["result"]["cases"]>
 
   export type casesSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     session_id?: boolean
+    conversation_id?: boolean
     assigned_to?: boolean
     status?: boolean
     priority?: boolean
@@ -16022,12 +16071,14 @@ export namespace Prisma {
     created_at?: boolean
     updated_at?: boolean
     users?: boolean | cases$usersArgs<ExtArgs>
-    screening_sessions?: boolean | screening_sessionsDefaultArgs<ExtArgs>
+    screening_sessions?: boolean | cases$screening_sessionsArgs<ExtArgs>
+    ai_conversations?: boolean | cases$ai_conversationsArgs<ExtArgs>
   }, ExtArgs["result"]["cases"]>
 
   export type casesSelectScalar = {
     id?: boolean
     session_id?: boolean
+    conversation_id?: boolean
     assigned_to?: boolean
     status?: boolean
     priority?: boolean
@@ -16039,20 +16090,23 @@ export namespace Prisma {
     updated_at?: boolean
   }
 
-  export type casesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "session_id" | "assigned_to" | "status" | "priority" | "priority_reason" | "contact_name" | "contact_email" | "contact_phone" | "created_at" | "updated_at", ExtArgs["result"]["cases"]>
+  export type casesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "session_id" | "conversation_id" | "assigned_to" | "status" | "priority" | "priority_reason" | "contact_name" | "contact_email" | "contact_phone" | "created_at" | "updated_at", ExtArgs["result"]["cases"]>
   export type casesInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     case_notes?: boolean | cases$case_notesArgs<ExtArgs>
     users?: boolean | cases$usersArgs<ExtArgs>
-    screening_sessions?: boolean | screening_sessionsDefaultArgs<ExtArgs>
+    screening_sessions?: boolean | cases$screening_sessionsArgs<ExtArgs>
+    ai_conversations?: boolean | cases$ai_conversationsArgs<ExtArgs>
     _count?: boolean | CasesCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type casesIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     users?: boolean | cases$usersArgs<ExtArgs>
-    screening_sessions?: boolean | screening_sessionsDefaultArgs<ExtArgs>
+    screening_sessions?: boolean | cases$screening_sessionsArgs<ExtArgs>
+    ai_conversations?: boolean | cases$ai_conversationsArgs<ExtArgs>
   }
   export type casesIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     users?: boolean | cases$usersArgs<ExtArgs>
-    screening_sessions?: boolean | screening_sessionsDefaultArgs<ExtArgs>
+    screening_sessions?: boolean | cases$screening_sessionsArgs<ExtArgs>
+    ai_conversations?: boolean | cases$ai_conversationsArgs<ExtArgs>
   }
 
   export type $casesPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -16060,11 +16114,13 @@ export namespace Prisma {
     objects: {
       case_notes: Prisma.$case_notesPayload<ExtArgs>[]
       users: Prisma.$usersPayload<ExtArgs> | null
-      screening_sessions: Prisma.$screening_sessionsPayload<ExtArgs>
+      screening_sessions: Prisma.$screening_sessionsPayload<ExtArgs> | null
+      ai_conversations: Prisma.$ai_conversationsPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      session_id: string
+      session_id: string | null
+      conversation_id: string | null
       assigned_to: string | null
       status: $Enums.case_status
       priority: $Enums.case_priority | null
@@ -16470,7 +16526,8 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     case_notes<T extends cases$case_notesArgs<ExtArgs> = {}>(args?: Subset<T, cases$case_notesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$case_notesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     users<T extends cases$usersArgs<ExtArgs> = {}>(args?: Subset<T, cases$usersArgs<ExtArgs>>): Prisma__usersClient<$Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-    screening_sessions<T extends screening_sessionsDefaultArgs<ExtArgs> = {}>(args?: Subset<T, screening_sessionsDefaultArgs<ExtArgs>>): Prisma__screening_sessionsClient<$Result.GetResult<Prisma.$screening_sessionsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    screening_sessions<T extends cases$screening_sessionsArgs<ExtArgs> = {}>(args?: Subset<T, cases$screening_sessionsArgs<ExtArgs>>): Prisma__screening_sessionsClient<$Result.GetResult<Prisma.$screening_sessionsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    ai_conversations<T extends cases$ai_conversationsArgs<ExtArgs> = {}>(args?: Subset<T, cases$ai_conversationsArgs<ExtArgs>>): Prisma__ai_conversationsClient<$Result.GetResult<Prisma.$ai_conversationsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -16502,6 +16559,7 @@ export namespace Prisma {
   interface casesFieldRefs {
     readonly id: FieldRef<"cases", 'String'>
     readonly session_id: FieldRef<"cases", 'String'>
+    readonly conversation_id: FieldRef<"cases", 'String'>
     readonly assigned_to: FieldRef<"cases", 'String'>
     readonly status: FieldRef<"cases", 'case_status'>
     readonly priority: FieldRef<"cases", 'case_priority'>
@@ -16729,7 +16787,7 @@ export namespace Prisma {
     /**
      * The data needed to create a cases.
      */
-    data: XOR<casesCreateInput, casesUncheckedCreateInput>
+    data?: XOR<casesCreateInput, casesUncheckedCreateInput>
   }
 
   /**
@@ -16947,6 +17005,44 @@ export namespace Prisma {
      */
     include?: usersInclude<ExtArgs> | null
     where?: usersWhereInput
+  }
+
+  /**
+   * cases.screening_sessions
+   */
+  export type cases$screening_sessionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the screening_sessions
+     */
+    select?: screening_sessionsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the screening_sessions
+     */
+    omit?: screening_sessionsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: screening_sessionsInclude<ExtArgs> | null
+    where?: screening_sessionsWhereInput
+  }
+
+  /**
+   * cases.ai_conversations
+   */
+  export type cases$ai_conversationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ai_conversations
+     */
+    select?: ai_conversationsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ai_conversations
+     */
+    omit?: ai_conversationsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ai_conversationsInclude<ExtArgs> | null
+    where?: ai_conversationsWhereInput
   }
 
   /**
@@ -66004,6 +66100,7 @@ export namespace Prisma {
   export const CasesScalarFieldEnum: {
     id: 'id',
     session_id: 'session_id',
+    conversation_id: 'conversation_id',
     assigned_to: 'assigned_to',
     status: 'status',
     priority: 'priority',
@@ -67014,6 +67111,7 @@ export namespace Prisma {
     screening_sessions?: XOR<Screening_sessionsNullableScalarRelationFilter, screening_sessionsWhereInput> | null
     users?: XOR<UsersNullableScalarRelationFilter, usersWhereInput> | null
     ai_messages?: Ai_messagesListRelationFilter
+    cases?: CasesListRelationFilter
   }
 
   export type ai_conversationsOrderByWithRelationInput = {
@@ -67027,6 +67125,7 @@ export namespace Prisma {
     screening_sessions?: screening_sessionsOrderByWithRelationInput
     users?: usersOrderByWithRelationInput
     ai_messages?: ai_messagesOrderByRelationAggregateInput
+    cases?: casesOrderByRelationAggregateInput
   }
 
   export type ai_conversationsWhereUniqueInput = Prisma.AtLeast<{
@@ -67043,6 +67142,7 @@ export namespace Prisma {
     screening_sessions?: XOR<Screening_sessionsNullableScalarRelationFilter, screening_sessionsWhereInput> | null
     users?: XOR<UsersNullableScalarRelationFilter, usersWhereInput> | null
     ai_messages?: Ai_messagesListRelationFilter
+    cases?: CasesListRelationFilter
   }, "id">
 
   export type ai_conversationsOrderByWithAggregationInput = {
@@ -67475,7 +67575,8 @@ export namespace Prisma {
     OR?: casesWhereInput[]
     NOT?: casesWhereInput | casesWhereInput[]
     id?: UuidFilter<"cases"> | string
-    session_id?: UuidFilter<"cases"> | string
+    session_id?: UuidNullableFilter<"cases"> | string | null
+    conversation_id?: UuidNullableFilter<"cases"> | string | null
     assigned_to?: UuidNullableFilter<"cases"> | string | null
     status?: Enumcase_statusFilter<"cases"> | $Enums.case_status
     priority?: Enumcase_priorityNullableFilter<"cases"> | $Enums.case_priority | null
@@ -67487,12 +67588,14 @@ export namespace Prisma {
     updated_at?: DateTimeFilter<"cases"> | Date | string
     case_notes?: Case_notesListRelationFilter
     users?: XOR<UsersNullableScalarRelationFilter, usersWhereInput> | null
-    screening_sessions?: XOR<Screening_sessionsScalarRelationFilter, screening_sessionsWhereInput>
+    screening_sessions?: XOR<Screening_sessionsNullableScalarRelationFilter, screening_sessionsWhereInput> | null
+    ai_conversations?: XOR<Ai_conversationsNullableScalarRelationFilter, ai_conversationsWhereInput> | null
   }
 
   export type casesOrderByWithRelationInput = {
     id?: SortOrder
-    session_id?: SortOrder
+    session_id?: SortOrderInput | SortOrder
+    conversation_id?: SortOrderInput | SortOrder
     assigned_to?: SortOrderInput | SortOrder
     status?: SortOrder
     priority?: SortOrderInput | SortOrder
@@ -67505,6 +67608,7 @@ export namespace Prisma {
     case_notes?: case_notesOrderByRelationAggregateInput
     users?: usersOrderByWithRelationInput
     screening_sessions?: screening_sessionsOrderByWithRelationInput
+    ai_conversations?: ai_conversationsOrderByWithRelationInput
   }
 
   export type casesWhereUniqueInput = Prisma.AtLeast<{
@@ -67512,7 +67616,8 @@ export namespace Prisma {
     AND?: casesWhereInput | casesWhereInput[]
     OR?: casesWhereInput[]
     NOT?: casesWhereInput | casesWhereInput[]
-    session_id?: UuidFilter<"cases"> | string
+    session_id?: UuidNullableFilter<"cases"> | string | null
+    conversation_id?: UuidNullableFilter<"cases"> | string | null
     assigned_to?: UuidNullableFilter<"cases"> | string | null
     status?: Enumcase_statusFilter<"cases"> | $Enums.case_status
     priority?: Enumcase_priorityNullableFilter<"cases"> | $Enums.case_priority | null
@@ -67524,12 +67629,14 @@ export namespace Prisma {
     updated_at?: DateTimeFilter<"cases"> | Date | string
     case_notes?: Case_notesListRelationFilter
     users?: XOR<UsersNullableScalarRelationFilter, usersWhereInput> | null
-    screening_sessions?: XOR<Screening_sessionsScalarRelationFilter, screening_sessionsWhereInput>
+    screening_sessions?: XOR<Screening_sessionsNullableScalarRelationFilter, screening_sessionsWhereInput> | null
+    ai_conversations?: XOR<Ai_conversationsNullableScalarRelationFilter, ai_conversationsWhereInput> | null
   }, "id">
 
   export type casesOrderByWithAggregationInput = {
     id?: SortOrder
-    session_id?: SortOrder
+    session_id?: SortOrderInput | SortOrder
+    conversation_id?: SortOrderInput | SortOrder
     assigned_to?: SortOrderInput | SortOrder
     status?: SortOrder
     priority?: SortOrderInput | SortOrder
@@ -67549,7 +67656,8 @@ export namespace Prisma {
     OR?: casesScalarWhereWithAggregatesInput[]
     NOT?: casesScalarWhereWithAggregatesInput | casesScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"cases"> | string
-    session_id?: UuidWithAggregatesFilter<"cases"> | string
+    session_id?: UuidNullableWithAggregatesFilter<"cases"> | string | null
+    conversation_id?: UuidNullableWithAggregatesFilter<"cases"> | string | null
     assigned_to?: UuidNullableWithAggregatesFilter<"cases"> | string | null
     status?: Enumcase_statusWithAggregatesFilter<"cases"> | $Enums.case_status
     priority?: Enumcase_priorityNullableWithAggregatesFilter<"cases"> | $Enums.case_priority | null
@@ -70595,6 +70703,7 @@ export namespace Prisma {
     screening_sessions?: screening_sessionsCreateNestedOneWithoutAi_conversationsInput
     users?: usersCreateNestedOneWithoutAi_conversationsInput
     ai_messages?: ai_messagesCreateNestedManyWithoutAi_conversationsInput
+    cases?: casesCreateNestedManyWithoutAi_conversationsInput
   }
 
   export type ai_conversationsUncheckedCreateInput = {
@@ -70605,6 +70714,7 @@ export namespace Prisma {
     human_handoff_requested?: boolean
     created_at?: Date | string
     ai_messages?: ai_messagesUncheckedCreateNestedManyWithoutAi_conversationsInput
+    cases?: casesUncheckedCreateNestedManyWithoutAi_conversationsInput
   }
 
   export type ai_conversationsUpdateInput = {
@@ -70615,6 +70725,7 @@ export namespace Prisma {
     screening_sessions?: screening_sessionsUpdateOneWithoutAi_conversationsNestedInput
     users?: usersUpdateOneWithoutAi_conversationsNestedInput
     ai_messages?: ai_messagesUpdateManyWithoutAi_conversationsNestedInput
+    cases?: casesUpdateManyWithoutAi_conversationsNestedInput
   }
 
   export type ai_conversationsUncheckedUpdateInput = {
@@ -70625,6 +70736,7 @@ export namespace Prisma {
     human_handoff_requested?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     ai_messages?: ai_messagesUncheckedUpdateManyWithoutAi_conversationsNestedInput
+    cases?: casesUncheckedUpdateManyWithoutAi_conversationsNestedInput
   }
 
   export type ai_conversationsCreateManyInput = {
@@ -71063,12 +71175,14 @@ export namespace Prisma {
     updated_at?: Date | string
     case_notes?: case_notesCreateNestedManyWithoutCasesInput
     users?: usersCreateNestedOneWithoutCasesInput
-    screening_sessions: screening_sessionsCreateNestedOneWithoutCasesInput
+    screening_sessions?: screening_sessionsCreateNestedOneWithoutCasesInput
+    ai_conversations?: ai_conversationsCreateNestedOneWithoutCasesInput
   }
 
   export type casesUncheckedCreateInput = {
     id?: string
-    session_id: string
+    session_id?: string | null
+    conversation_id?: string | null
     assigned_to?: string | null
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
@@ -71093,12 +71207,14 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     case_notes?: case_notesUpdateManyWithoutCasesNestedInput
     users?: usersUpdateOneWithoutCasesNestedInput
-    screening_sessions?: screening_sessionsUpdateOneRequiredWithoutCasesNestedInput
+    screening_sessions?: screening_sessionsUpdateOneWithoutCasesNestedInput
+    ai_conversations?: ai_conversationsUpdateOneWithoutCasesNestedInput
   }
 
   export type casesUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    session_id?: StringFieldUpdateOperationsInput | string
+    session_id?: NullableStringFieldUpdateOperationsInput | string | null
+    conversation_id?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_to?: NullableStringFieldUpdateOperationsInput | string | null
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
@@ -71113,7 +71229,8 @@ export namespace Prisma {
 
   export type casesCreateManyInput = {
     id?: string
-    session_id: string
+    session_id?: string | null
+    conversation_id?: string | null
     assigned_to?: string | null
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
@@ -71139,7 +71256,8 @@ export namespace Prisma {
 
   export type casesUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    session_id?: StringFieldUpdateOperationsInput | string
+    session_id?: NullableStringFieldUpdateOperationsInput | string | null
+    conversation_id?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_to?: NullableStringFieldUpdateOperationsInput | string | null
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
@@ -74390,7 +74508,17 @@ export namespace Prisma {
     none?: ai_messagesWhereInput
   }
 
+  export type CasesListRelationFilter = {
+    every?: casesWhereInput
+    some?: casesWhereInput
+    none?: casesWhereInput
+  }
+
   export type ai_messagesOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type casesOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -74789,6 +74917,11 @@ export namespace Prisma {
     none?: case_notesWhereInput
   }
 
+  export type Ai_conversationsNullableScalarRelationFilter = {
+    is?: ai_conversationsWhereInput | null
+    isNot?: ai_conversationsWhereInput | null
+  }
+
   export type case_notesOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -74796,6 +74929,7 @@ export namespace Prisma {
   export type casesCountOrderByAggregateInput = {
     id?: SortOrder
     session_id?: SortOrder
+    conversation_id?: SortOrder
     assigned_to?: SortOrder
     status?: SortOrder
     priority?: SortOrder
@@ -74810,6 +74944,7 @@ export namespace Prisma {
   export type casesMaxOrderByAggregateInput = {
     id?: SortOrder
     session_id?: SortOrder
+    conversation_id?: SortOrder
     assigned_to?: SortOrder
     status?: SortOrder
     priority?: SortOrder
@@ -74824,6 +74959,7 @@ export namespace Prisma {
   export type casesMinOrderByAggregateInput = {
     id?: SortOrder
     session_id?: SortOrder
+    conversation_id?: SortOrder
     assigned_to?: SortOrder
     status?: SortOrder
     priority?: SortOrder
@@ -76150,12 +76286,6 @@ export namespace Prisma {
     none?: audit_logsWhereInput
   }
 
-  export type CasesListRelationFilter = {
-    every?: casesWhereInput
-    some?: casesWhereInput
-    none?: casesWhereInput
-  }
-
   export type Resume_tokensListRelationFilter = {
     every?: resume_tokensWhereInput
     some?: resume_tokensWhereInput
@@ -76175,10 +76305,6 @@ export namespace Prisma {
   }
 
   export type audit_logsOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type casesOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -77053,11 +77179,25 @@ export namespace Prisma {
     connect?: ai_messagesWhereUniqueInput | ai_messagesWhereUniqueInput[]
   }
 
+  export type casesCreateNestedManyWithoutAi_conversationsInput = {
+    create?: XOR<casesCreateWithoutAi_conversationsInput, casesUncheckedCreateWithoutAi_conversationsInput> | casesCreateWithoutAi_conversationsInput[] | casesUncheckedCreateWithoutAi_conversationsInput[]
+    connectOrCreate?: casesCreateOrConnectWithoutAi_conversationsInput | casesCreateOrConnectWithoutAi_conversationsInput[]
+    createMany?: casesCreateManyAi_conversationsInputEnvelope
+    connect?: casesWhereUniqueInput | casesWhereUniqueInput[]
+  }
+
   export type ai_messagesUncheckedCreateNestedManyWithoutAi_conversationsInput = {
     create?: XOR<ai_messagesCreateWithoutAi_conversationsInput, ai_messagesUncheckedCreateWithoutAi_conversationsInput> | ai_messagesCreateWithoutAi_conversationsInput[] | ai_messagesUncheckedCreateWithoutAi_conversationsInput[]
     connectOrCreate?: ai_messagesCreateOrConnectWithoutAi_conversationsInput | ai_messagesCreateOrConnectWithoutAi_conversationsInput[]
     createMany?: ai_messagesCreateManyAi_conversationsInputEnvelope
     connect?: ai_messagesWhereUniqueInput | ai_messagesWhereUniqueInput[]
+  }
+
+  export type casesUncheckedCreateNestedManyWithoutAi_conversationsInput = {
+    create?: XOR<casesCreateWithoutAi_conversationsInput, casesUncheckedCreateWithoutAi_conversationsInput> | casesCreateWithoutAi_conversationsInput[] | casesUncheckedCreateWithoutAi_conversationsInput[]
+    connectOrCreate?: casesCreateOrConnectWithoutAi_conversationsInput | casesCreateOrConnectWithoutAi_conversationsInput[]
+    createMany?: casesCreateManyAi_conversationsInputEnvelope
+    connect?: casesWhereUniqueInput | casesWhereUniqueInput[]
   }
 
   export type BoolFieldUpdateOperationsInput = {
@@ -77108,6 +77248,20 @@ export namespace Prisma {
     deleteMany?: ai_messagesScalarWhereInput | ai_messagesScalarWhereInput[]
   }
 
+  export type casesUpdateManyWithoutAi_conversationsNestedInput = {
+    create?: XOR<casesCreateWithoutAi_conversationsInput, casesUncheckedCreateWithoutAi_conversationsInput> | casesCreateWithoutAi_conversationsInput[] | casesUncheckedCreateWithoutAi_conversationsInput[]
+    connectOrCreate?: casesCreateOrConnectWithoutAi_conversationsInput | casesCreateOrConnectWithoutAi_conversationsInput[]
+    upsert?: casesUpsertWithWhereUniqueWithoutAi_conversationsInput | casesUpsertWithWhereUniqueWithoutAi_conversationsInput[]
+    createMany?: casesCreateManyAi_conversationsInputEnvelope
+    set?: casesWhereUniqueInput | casesWhereUniqueInput[]
+    disconnect?: casesWhereUniqueInput | casesWhereUniqueInput[]
+    delete?: casesWhereUniqueInput | casesWhereUniqueInput[]
+    connect?: casesWhereUniqueInput | casesWhereUniqueInput[]
+    update?: casesUpdateWithWhereUniqueWithoutAi_conversationsInput | casesUpdateWithWhereUniqueWithoutAi_conversationsInput[]
+    updateMany?: casesUpdateManyWithWhereWithoutAi_conversationsInput | casesUpdateManyWithWhereWithoutAi_conversationsInput[]
+    deleteMany?: casesScalarWhereInput | casesScalarWhereInput[]
+  }
+
   export type ai_messagesUncheckedUpdateManyWithoutAi_conversationsNestedInput = {
     create?: XOR<ai_messagesCreateWithoutAi_conversationsInput, ai_messagesUncheckedCreateWithoutAi_conversationsInput> | ai_messagesCreateWithoutAi_conversationsInput[] | ai_messagesUncheckedCreateWithoutAi_conversationsInput[]
     connectOrCreate?: ai_messagesCreateOrConnectWithoutAi_conversationsInput | ai_messagesCreateOrConnectWithoutAi_conversationsInput[]
@@ -77120,6 +77274,20 @@ export namespace Prisma {
     update?: ai_messagesUpdateWithWhereUniqueWithoutAi_conversationsInput | ai_messagesUpdateWithWhereUniqueWithoutAi_conversationsInput[]
     updateMany?: ai_messagesUpdateManyWithWhereWithoutAi_conversationsInput | ai_messagesUpdateManyWithWhereWithoutAi_conversationsInput[]
     deleteMany?: ai_messagesScalarWhereInput | ai_messagesScalarWhereInput[]
+  }
+
+  export type casesUncheckedUpdateManyWithoutAi_conversationsNestedInput = {
+    create?: XOR<casesCreateWithoutAi_conversationsInput, casesUncheckedCreateWithoutAi_conversationsInput> | casesCreateWithoutAi_conversationsInput[] | casesUncheckedCreateWithoutAi_conversationsInput[]
+    connectOrCreate?: casesCreateOrConnectWithoutAi_conversationsInput | casesCreateOrConnectWithoutAi_conversationsInput[]
+    upsert?: casesUpsertWithWhereUniqueWithoutAi_conversationsInput | casesUpsertWithWhereUniqueWithoutAi_conversationsInput[]
+    createMany?: casesCreateManyAi_conversationsInputEnvelope
+    set?: casesWhereUniqueInput | casesWhereUniqueInput[]
+    disconnect?: casesWhereUniqueInput | casesWhereUniqueInput[]
+    delete?: casesWhereUniqueInput | casesWhereUniqueInput[]
+    connect?: casesWhereUniqueInput | casesWhereUniqueInput[]
+    update?: casesUpdateWithWhereUniqueWithoutAi_conversationsInput | casesUpdateWithWhereUniqueWithoutAi_conversationsInput[]
+    updateMany?: casesUpdateManyWithWhereWithoutAi_conversationsInput | casesUpdateManyWithWhereWithoutAi_conversationsInput[]
+    deleteMany?: casesScalarWhereInput | casesScalarWhereInput[]
   }
 
   export type ai_conversationsCreateNestedOneWithoutAi_messagesInput = {
@@ -77345,6 +77513,12 @@ export namespace Prisma {
     connect?: screening_sessionsWhereUniqueInput
   }
 
+  export type ai_conversationsCreateNestedOneWithoutCasesInput = {
+    create?: XOR<ai_conversationsCreateWithoutCasesInput, ai_conversationsUncheckedCreateWithoutCasesInput>
+    connectOrCreate?: ai_conversationsCreateOrConnectWithoutCasesInput
+    connect?: ai_conversationsWhereUniqueInput
+  }
+
   export type case_notesUncheckedCreateNestedManyWithoutCasesInput = {
     create?: XOR<case_notesCreateWithoutCasesInput, case_notesUncheckedCreateWithoutCasesInput> | case_notesCreateWithoutCasesInput[] | case_notesUncheckedCreateWithoutCasesInput[]
     connectOrCreate?: case_notesCreateOrConnectWithoutCasesInput | case_notesCreateOrConnectWithoutCasesInput[]
@@ -77384,12 +77558,24 @@ export namespace Prisma {
     update?: XOR<XOR<usersUpdateToOneWithWhereWithoutCasesInput, usersUpdateWithoutCasesInput>, usersUncheckedUpdateWithoutCasesInput>
   }
 
-  export type screening_sessionsUpdateOneRequiredWithoutCasesNestedInput = {
+  export type screening_sessionsUpdateOneWithoutCasesNestedInput = {
     create?: XOR<screening_sessionsCreateWithoutCasesInput, screening_sessionsUncheckedCreateWithoutCasesInput>
     connectOrCreate?: screening_sessionsCreateOrConnectWithoutCasesInput
     upsert?: screening_sessionsUpsertWithoutCasesInput
+    disconnect?: screening_sessionsWhereInput | boolean
+    delete?: screening_sessionsWhereInput | boolean
     connect?: screening_sessionsWhereUniqueInput
     update?: XOR<XOR<screening_sessionsUpdateToOneWithWhereWithoutCasesInput, screening_sessionsUpdateWithoutCasesInput>, screening_sessionsUncheckedUpdateWithoutCasesInput>
+  }
+
+  export type ai_conversationsUpdateOneWithoutCasesNestedInput = {
+    create?: XOR<ai_conversationsCreateWithoutCasesInput, ai_conversationsUncheckedCreateWithoutCasesInput>
+    connectOrCreate?: ai_conversationsCreateOrConnectWithoutCasesInput
+    upsert?: ai_conversationsUpsertWithoutCasesInput
+    disconnect?: ai_conversationsWhereInput | boolean
+    delete?: ai_conversationsWhereInput | boolean
+    connect?: ai_conversationsWhereUniqueInput
+    update?: XOR<XOR<ai_conversationsUpdateToOneWithWhereWithoutCasesInput, ai_conversationsUpdateWithoutCasesInput>, ai_conversationsUncheckedUpdateWithoutCasesInput>
   }
 
   export type case_notesUncheckedUpdateManyWithoutCasesNestedInput = {
@@ -82728,6 +82914,46 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type casesCreateWithoutAi_conversationsInput = {
+    id?: string
+    status?: $Enums.case_status
+    priority?: $Enums.case_priority | null
+    priority_reason?: string | null
+    contact_name?: string | null
+    contact_email?: string | null
+    contact_phone?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    case_notes?: case_notesCreateNestedManyWithoutCasesInput
+    users?: usersCreateNestedOneWithoutCasesInput
+    screening_sessions?: screening_sessionsCreateNestedOneWithoutCasesInput
+  }
+
+  export type casesUncheckedCreateWithoutAi_conversationsInput = {
+    id?: string
+    session_id?: string | null
+    assigned_to?: string | null
+    status?: $Enums.case_status
+    priority?: $Enums.case_priority | null
+    priority_reason?: string | null
+    contact_name?: string | null
+    contact_email?: string | null
+    contact_phone?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    case_notes?: case_notesUncheckedCreateNestedManyWithoutCasesInput
+  }
+
+  export type casesCreateOrConnectWithoutAi_conversationsInput = {
+    where: casesWhereUniqueInput
+    create: XOR<casesCreateWithoutAi_conversationsInput, casesUncheckedCreateWithoutAi_conversationsInput>
+  }
+
+  export type casesCreateManyAi_conversationsInputEnvelope = {
+    data: casesCreateManyAi_conversationsInput | casesCreateManyAi_conversationsInput[]
+    skipDuplicates?: boolean
+  }
+
   export type languagesUpsertWithoutAi_conversationsInput = {
     update: XOR<languagesUpdateWithoutAi_conversationsInput, languagesUncheckedUpdateWithoutAi_conversationsInput>
     create: XOR<languagesCreateWithoutAi_conversationsInput, languagesUncheckedCreateWithoutAi_conversationsInput>
@@ -82933,6 +83159,40 @@ export namespace Prisma {
     created_at?: DateTimeFilter<"ai_messages"> | Date | string
   }
 
+  export type casesUpsertWithWhereUniqueWithoutAi_conversationsInput = {
+    where: casesWhereUniqueInput
+    update: XOR<casesUpdateWithoutAi_conversationsInput, casesUncheckedUpdateWithoutAi_conversationsInput>
+    create: XOR<casesCreateWithoutAi_conversationsInput, casesUncheckedCreateWithoutAi_conversationsInput>
+  }
+
+  export type casesUpdateWithWhereUniqueWithoutAi_conversationsInput = {
+    where: casesWhereUniqueInput
+    data: XOR<casesUpdateWithoutAi_conversationsInput, casesUncheckedUpdateWithoutAi_conversationsInput>
+  }
+
+  export type casesUpdateManyWithWhereWithoutAi_conversationsInput = {
+    where: casesScalarWhereInput
+    data: XOR<casesUpdateManyMutationInput, casesUncheckedUpdateManyWithoutAi_conversationsInput>
+  }
+
+  export type casesScalarWhereInput = {
+    AND?: casesScalarWhereInput | casesScalarWhereInput[]
+    OR?: casesScalarWhereInput[]
+    NOT?: casesScalarWhereInput | casesScalarWhereInput[]
+    id?: UuidFilter<"cases"> | string
+    session_id?: UuidNullableFilter<"cases"> | string | null
+    conversation_id?: UuidNullableFilter<"cases"> | string | null
+    assigned_to?: UuidNullableFilter<"cases"> | string | null
+    status?: Enumcase_statusFilter<"cases"> | $Enums.case_status
+    priority?: Enumcase_priorityNullableFilter<"cases"> | $Enums.case_priority | null
+    priority_reason?: StringNullableFilter<"cases"> | string | null
+    contact_name?: StringNullableFilter<"cases"> | string | null
+    contact_email?: StringNullableFilter<"cases"> | string | null
+    contact_phone?: StringNullableFilter<"cases"> | string | null
+    created_at?: DateTimeFilter<"cases"> | Date | string
+    updated_at?: DateTimeFilter<"cases"> | Date | string
+  }
+
   export type ai_conversationsCreateWithoutAi_messagesInput = {
     id?: string
     human_handoff_requested?: boolean
@@ -82940,6 +83200,7 @@ export namespace Prisma {
     languages?: languagesCreateNestedOneWithoutAi_conversationsInput
     screening_sessions?: screening_sessionsCreateNestedOneWithoutAi_conversationsInput
     users?: usersCreateNestedOneWithoutAi_conversationsInput
+    cases?: casesCreateNestedManyWithoutAi_conversationsInput
   }
 
   export type ai_conversationsUncheckedCreateWithoutAi_messagesInput = {
@@ -82949,6 +83210,7 @@ export namespace Prisma {
     language_code?: string | null
     human_handoff_requested?: boolean
     created_at?: Date | string
+    cases?: casesUncheckedCreateNestedManyWithoutAi_conversationsInput
   }
 
   export type ai_conversationsCreateOrConnectWithoutAi_messagesInput = {
@@ -82974,6 +83236,7 @@ export namespace Prisma {
     languages?: languagesUpdateOneWithoutAi_conversationsNestedInput
     screening_sessions?: screening_sessionsUpdateOneWithoutAi_conversationsNestedInput
     users?: usersUpdateOneWithoutAi_conversationsNestedInput
+    cases?: casesUpdateManyWithoutAi_conversationsNestedInput
   }
 
   export type ai_conversationsUncheckedUpdateWithoutAi_messagesInput = {
@@ -82983,6 +83246,7 @@ export namespace Prisma {
     language_code?: NullableStringFieldUpdateOperationsInput | string | null
     human_handoff_requested?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    cases?: casesUncheckedUpdateManyWithoutAi_conversationsNestedInput
   }
 
   export type languagesCreateWithoutAnswer_option_translationsInput = {
@@ -83764,12 +84028,14 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     users?: usersCreateNestedOneWithoutCasesInput
-    screening_sessions: screening_sessionsCreateNestedOneWithoutCasesInput
+    screening_sessions?: screening_sessionsCreateNestedOneWithoutCasesInput
+    ai_conversations?: ai_conversationsCreateNestedOneWithoutCasesInput
   }
 
   export type casesUncheckedCreateWithoutCase_notesInput = {
     id?: string
-    session_id: string
+    session_id?: string | null
+    conversation_id?: string | null
     assigned_to?: string | null
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
@@ -83873,12 +84139,14 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     users?: usersUpdateOneWithoutCasesNestedInput
-    screening_sessions?: screening_sessionsUpdateOneRequiredWithoutCasesNestedInput
+    screening_sessions?: screening_sessionsUpdateOneWithoutCasesNestedInput
+    ai_conversations?: ai_conversationsUpdateOneWithoutCasesNestedInput
   }
 
   export type casesUncheckedUpdateWithoutCase_notesInput = {
     id?: StringFieldUpdateOperationsInput | string
-    session_id?: StringFieldUpdateOperationsInput | string
+    session_id?: NullableStringFieldUpdateOperationsInput | string | null
+    conversation_id?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_to?: NullableStringFieldUpdateOperationsInput | string | null
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
@@ -84034,6 +84302,31 @@ export namespace Prisma {
   export type screening_sessionsCreateOrConnectWithoutCasesInput = {
     where: screening_sessionsWhereUniqueInput
     create: XOR<screening_sessionsCreateWithoutCasesInput, screening_sessionsUncheckedCreateWithoutCasesInput>
+  }
+
+  export type ai_conversationsCreateWithoutCasesInput = {
+    id?: string
+    human_handoff_requested?: boolean
+    created_at?: Date | string
+    languages?: languagesCreateNestedOneWithoutAi_conversationsInput
+    screening_sessions?: screening_sessionsCreateNestedOneWithoutAi_conversationsInput
+    users?: usersCreateNestedOneWithoutAi_conversationsInput
+    ai_messages?: ai_messagesCreateNestedManyWithoutAi_conversationsInput
+  }
+
+  export type ai_conversationsUncheckedCreateWithoutCasesInput = {
+    id?: string
+    session_id?: string | null
+    user_id?: string | null
+    language_code?: string | null
+    human_handoff_requested?: boolean
+    created_at?: Date | string
+    ai_messages?: ai_messagesUncheckedCreateNestedManyWithoutAi_conversationsInput
+  }
+
+  export type ai_conversationsCreateOrConnectWithoutCasesInput = {
+    where: ai_conversationsWhereUniqueInput
+    create: XOR<ai_conversationsCreateWithoutCasesInput, ai_conversationsUncheckedCreateWithoutCasesInput>
   }
 
   export type case_notesUpsertWithWhereUniqueWithoutCasesInput = {
@@ -84194,6 +84487,37 @@ export namespace Prisma {
     screening_answers?: screening_answersUncheckedUpdateManyWithoutScreening_sessionsNestedInput
     search_queries?: search_queriesUncheckedUpdateManyWithoutScreening_sessionsNestedInput
     session_document_checklist?: session_document_checklistUncheckedUpdateManyWithoutScreening_sessionsNestedInput
+  }
+
+  export type ai_conversationsUpsertWithoutCasesInput = {
+    update: XOR<ai_conversationsUpdateWithoutCasesInput, ai_conversationsUncheckedUpdateWithoutCasesInput>
+    create: XOR<ai_conversationsCreateWithoutCasesInput, ai_conversationsUncheckedCreateWithoutCasesInput>
+    where?: ai_conversationsWhereInput
+  }
+
+  export type ai_conversationsUpdateToOneWithWhereWithoutCasesInput = {
+    where?: ai_conversationsWhereInput
+    data: XOR<ai_conversationsUpdateWithoutCasesInput, ai_conversationsUncheckedUpdateWithoutCasesInput>
+  }
+
+  export type ai_conversationsUpdateWithoutCasesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    human_handoff_requested?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    languages?: languagesUpdateOneWithoutAi_conversationsNestedInput
+    screening_sessions?: screening_sessionsUpdateOneWithoutAi_conversationsNestedInput
+    users?: usersUpdateOneWithoutAi_conversationsNestedInput
+    ai_messages?: ai_messagesUpdateManyWithoutAi_conversationsNestedInput
+  }
+
+  export type ai_conversationsUncheckedUpdateWithoutCasesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    session_id?: NullableStringFieldUpdateOperationsInput | string | null
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null
+    language_code?: NullableStringFieldUpdateOperationsInput | string | null
+    human_handoff_requested?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    ai_messages?: ai_messagesUncheckedUpdateManyWithoutAi_conversationsNestedInput
   }
 
   export type document_typesCreateWithoutDocument_type_translationsInput = {
@@ -85697,6 +86021,7 @@ export namespace Prisma {
     screening_sessions?: screening_sessionsCreateNestedOneWithoutAi_conversationsInput
     users?: usersCreateNestedOneWithoutAi_conversationsInput
     ai_messages?: ai_messagesCreateNestedManyWithoutAi_conversationsInput
+    cases?: casesCreateNestedManyWithoutAi_conversationsInput
   }
 
   export type ai_conversationsUncheckedCreateWithoutLanguagesInput = {
@@ -85706,6 +86031,7 @@ export namespace Prisma {
     human_handoff_requested?: boolean
     created_at?: Date | string
     ai_messages?: ai_messagesUncheckedCreateNestedManyWithoutAi_conversationsInput
+    cases?: casesUncheckedCreateNestedManyWithoutAi_conversationsInput
   }
 
   export type ai_conversationsCreateOrConnectWithoutLanguagesInput = {
@@ -89577,6 +89903,7 @@ export namespace Prisma {
     languages?: languagesCreateNestedOneWithoutAi_conversationsInput
     users?: usersCreateNestedOneWithoutAi_conversationsInput
     ai_messages?: ai_messagesCreateNestedManyWithoutAi_conversationsInput
+    cases?: casesCreateNestedManyWithoutAi_conversationsInput
   }
 
   export type ai_conversationsUncheckedCreateWithoutScreening_sessionsInput = {
@@ -89586,6 +89913,7 @@ export namespace Prisma {
     human_handoff_requested?: boolean
     created_at?: Date | string
     ai_messages?: ai_messagesUncheckedCreateNestedManyWithoutAi_conversationsInput
+    cases?: casesUncheckedCreateNestedManyWithoutAi_conversationsInput
   }
 
   export type ai_conversationsCreateOrConnectWithoutScreening_sessionsInput = {
@@ -89756,10 +90084,12 @@ export namespace Prisma {
     updated_at?: Date | string
     case_notes?: case_notesCreateNestedManyWithoutCasesInput
     users?: usersCreateNestedOneWithoutCasesInput
+    ai_conversations?: ai_conversationsCreateNestedOneWithoutCasesInput
   }
 
   export type casesUncheckedCreateWithoutScreening_sessionsInput = {
     id?: string
+    conversation_id?: string | null
     assigned_to?: string | null
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
@@ -90306,23 +90636,6 @@ export namespace Prisma {
   export type casesUpdateManyWithWhereWithoutScreening_sessionsInput = {
     where: casesScalarWhereInput
     data: XOR<casesUpdateManyMutationInput, casesUncheckedUpdateManyWithoutScreening_sessionsInput>
-  }
-
-  export type casesScalarWhereInput = {
-    AND?: casesScalarWhereInput | casesScalarWhereInput[]
-    OR?: casesScalarWhereInput[]
-    NOT?: casesScalarWhereInput | casesScalarWhereInput[]
-    id?: UuidFilter<"cases"> | string
-    session_id?: UuidFilter<"cases"> | string
-    assigned_to?: UuidNullableFilter<"cases"> | string | null
-    status?: Enumcase_statusFilter<"cases"> | $Enums.case_status
-    priority?: Enumcase_priorityNullableFilter<"cases"> | $Enums.case_priority | null
-    priority_reason?: StringNullableFilter<"cases"> | string | null
-    contact_name?: StringNullableFilter<"cases"> | string | null
-    contact_email?: StringNullableFilter<"cases"> | string | null
-    contact_phone?: StringNullableFilter<"cases"> | string | null
-    created_at?: DateTimeFilter<"cases"> | Date | string
-    updated_at?: DateTimeFilter<"cases"> | Date | string
   }
 
   export type document_uploadsUpsertWithWhereUniqueWithoutScreening_sessionsInput = {
@@ -91174,6 +91487,7 @@ export namespace Prisma {
     languages?: languagesCreateNestedOneWithoutAi_conversationsInput
     screening_sessions?: screening_sessionsCreateNestedOneWithoutAi_conversationsInput
     ai_messages?: ai_messagesCreateNestedManyWithoutAi_conversationsInput
+    cases?: casesCreateNestedManyWithoutAi_conversationsInput
   }
 
   export type ai_conversationsUncheckedCreateWithoutUsersInput = {
@@ -91183,6 +91497,7 @@ export namespace Prisma {
     human_handoff_requested?: boolean
     created_at?: Date | string
     ai_messages?: ai_messagesUncheckedCreateNestedManyWithoutAi_conversationsInput
+    cases?: casesUncheckedCreateNestedManyWithoutAi_conversationsInput
   }
 
   export type ai_conversationsCreateOrConnectWithoutUsersInput = {
@@ -91384,12 +91699,14 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     case_notes?: case_notesCreateNestedManyWithoutCasesInput
-    screening_sessions: screening_sessionsCreateNestedOneWithoutCasesInput
+    screening_sessions?: screening_sessionsCreateNestedOneWithoutCasesInput
+    ai_conversations?: ai_conversationsCreateNestedOneWithoutCasesInput
   }
 
   export type casesUncheckedCreateWithoutUsersInput = {
     id?: string
-    session_id: string
+    session_id?: string | null
+    conversation_id?: string | null
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
     priority_reason?: string | null
@@ -93941,6 +94258,20 @@ export namespace Prisma {
     created_at?: Date | string
   }
 
+  export type casesCreateManyAi_conversationsInput = {
+    id?: string
+    session_id?: string | null
+    assigned_to?: string | null
+    status?: $Enums.case_status
+    priority?: $Enums.case_priority | null
+    priority_reason?: string | null
+    contact_name?: string | null
+    contact_email?: string | null
+    contact_phone?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
   export type ai_messagesUpdateWithoutAi_conversationsInput = {
     id?: StringFieldUpdateOperationsInput | string
     role?: StringFieldUpdateOperationsInput | string
@@ -93963,6 +94294,50 @@ export namespace Prisma {
     content?: StringFieldUpdateOperationsInput | string
     citations?: NullableJsonNullValueInput | InputJsonValue
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type casesUpdateWithoutAi_conversationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
+    priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    contact_name?: NullableStringFieldUpdateOperationsInput | string | null
+    contact_email?: NullableStringFieldUpdateOperationsInput | string | null
+    contact_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    case_notes?: case_notesUpdateManyWithoutCasesNestedInput
+    users?: usersUpdateOneWithoutCasesNestedInput
+    screening_sessions?: screening_sessionsUpdateOneWithoutCasesNestedInput
+  }
+
+  export type casesUncheckedUpdateWithoutAi_conversationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    session_id?: NullableStringFieldUpdateOperationsInput | string | null
+    assigned_to?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
+    priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    contact_name?: NullableStringFieldUpdateOperationsInput | string | null
+    contact_email?: NullableStringFieldUpdateOperationsInput | string | null
+    contact_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    case_notes?: case_notesUncheckedUpdateManyWithoutCasesNestedInput
+  }
+
+  export type casesUncheckedUpdateManyWithoutAi_conversationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    session_id?: NullableStringFieldUpdateOperationsInput | string | null
+    assigned_to?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
+    priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
+    priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    contact_name?: NullableStringFieldUpdateOperationsInput | string | null
+    contact_email?: NullableStringFieldUpdateOperationsInput | string | null
+    contact_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type answer_option_translationsCreateManyAnswer_optionsInput = {
@@ -94462,6 +94837,7 @@ export namespace Prisma {
     screening_sessions?: screening_sessionsUpdateOneWithoutAi_conversationsNestedInput
     users?: usersUpdateOneWithoutAi_conversationsNestedInput
     ai_messages?: ai_messagesUpdateManyWithoutAi_conversationsNestedInput
+    cases?: casesUpdateManyWithoutAi_conversationsNestedInput
   }
 
   export type ai_conversationsUncheckedUpdateWithoutLanguagesInput = {
@@ -94471,6 +94847,7 @@ export namespace Prisma {
     human_handoff_requested?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     ai_messages?: ai_messagesUncheckedUpdateManyWithoutAi_conversationsNestedInput
+    cases?: casesUncheckedUpdateManyWithoutAi_conversationsNestedInput
   }
 
   export type ai_conversationsUncheckedUpdateManyWithoutLanguagesInput = {
@@ -95485,6 +95862,7 @@ export namespace Prisma {
 
   export type casesCreateManyScreening_sessionsInput = {
     id?: string
+    conversation_id?: string | null
     assigned_to?: string | null
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
@@ -95616,6 +95994,7 @@ export namespace Prisma {
     languages?: languagesUpdateOneWithoutAi_conversationsNestedInput
     users?: usersUpdateOneWithoutAi_conversationsNestedInput
     ai_messages?: ai_messagesUpdateManyWithoutAi_conversationsNestedInput
+    cases?: casesUpdateManyWithoutAi_conversationsNestedInput
   }
 
   export type ai_conversationsUncheckedUpdateWithoutScreening_sessionsInput = {
@@ -95625,6 +96004,7 @@ export namespace Prisma {
     human_handoff_requested?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     ai_messages?: ai_messagesUncheckedUpdateManyWithoutAi_conversationsNestedInput
+    cases?: casesUncheckedUpdateManyWithoutAi_conversationsNestedInput
   }
 
   export type ai_conversationsUncheckedUpdateManyWithoutScreening_sessionsInput = {
@@ -95806,10 +96186,12 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     case_notes?: case_notesUpdateManyWithoutCasesNestedInput
     users?: usersUpdateOneWithoutCasesNestedInput
+    ai_conversations?: ai_conversationsUpdateOneWithoutCasesNestedInput
   }
 
   export type casesUncheckedUpdateWithoutScreening_sessionsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    conversation_id?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_to?: NullableStringFieldUpdateOperationsInput | string | null
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
@@ -95824,6 +96206,7 @@ export namespace Prisma {
 
   export type casesUncheckedUpdateManyWithoutScreening_sessionsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    conversation_id?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_to?: NullableStringFieldUpdateOperationsInput | string | null
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
@@ -96170,7 +96553,8 @@ export namespace Prisma {
 
   export type casesCreateManyUsersInput = {
     id?: string
-    session_id: string
+    session_id?: string | null
+    conversation_id?: string | null
     status?: $Enums.case_status
     priority?: $Enums.case_priority | null
     priority_reason?: string | null
@@ -96311,6 +96695,7 @@ export namespace Prisma {
     languages?: languagesUpdateOneWithoutAi_conversationsNestedInput
     screening_sessions?: screening_sessionsUpdateOneWithoutAi_conversationsNestedInput
     ai_messages?: ai_messagesUpdateManyWithoutAi_conversationsNestedInput
+    cases?: casesUpdateManyWithoutAi_conversationsNestedInput
   }
 
   export type ai_conversationsUncheckedUpdateWithoutUsersInput = {
@@ -96320,6 +96705,7 @@ export namespace Prisma {
     human_handoff_requested?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     ai_messages?: ai_messagesUncheckedUpdateManyWithoutAi_conversationsNestedInput
+    cases?: casesUncheckedUpdateManyWithoutAi_conversationsNestedInput
   }
 
   export type ai_conversationsUncheckedUpdateManyWithoutUsersInput = {
@@ -96533,12 +96919,14 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     case_notes?: case_notesUpdateManyWithoutCasesNestedInput
-    screening_sessions?: screening_sessionsUpdateOneRequiredWithoutCasesNestedInput
+    screening_sessions?: screening_sessionsUpdateOneWithoutCasesNestedInput
+    ai_conversations?: ai_conversationsUpdateOneWithoutCasesNestedInput
   }
 
   export type casesUncheckedUpdateWithoutUsersInput = {
     id?: StringFieldUpdateOperationsInput | string
-    session_id?: StringFieldUpdateOperationsInput | string
+    session_id?: NullableStringFieldUpdateOperationsInput | string | null
+    conversation_id?: NullableStringFieldUpdateOperationsInput | string | null
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
     priority_reason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -96552,7 +96940,8 @@ export namespace Prisma {
 
   export type casesUncheckedUpdateManyWithoutUsersInput = {
     id?: StringFieldUpdateOperationsInput | string
-    session_id?: StringFieldUpdateOperationsInput | string
+    session_id?: NullableStringFieldUpdateOperationsInput | string | null
+    conversation_id?: NullableStringFieldUpdateOperationsInput | string | null
     status?: Enumcase_statusFieldUpdateOperationsInput | $Enums.case_status
     priority?: NullableEnumcase_priorityFieldUpdateOperationsInput | $Enums.case_priority | null
     priority_reason?: NullableStringFieldUpdateOperationsInput | string | null

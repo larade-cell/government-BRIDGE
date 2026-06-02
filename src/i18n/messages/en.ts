@@ -31,6 +31,8 @@ export const en = {
     disclaimer:
       "AI assistant — general information, not an official eligibility decision.",
     handoff: "Talk to a person",
+    handoffIntro: "Share your contact info and a caseworker will reach out:",
+    handoffSubmit: "Request a caseworker",
     handoffDone: "Thanks — a caseworker will follow up.",
     error: "Sorry, something went wrong. Please try again.",
     close: "Close",

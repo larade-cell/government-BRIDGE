@@ -242,6 +242,10 @@ exports.Prisma.Document_uploadsScalarFieldEnum = {
   storage_url: 'storage_url',
   status: 'status',
   ocr_text: 'ocr_text',
+  validation_status: 'validation_status',
+  validation_reason: 'validation_reason',
+  validation_confidence: 'validation_confidence',
+  validated_at: 'validated_at',
   created_at: 'created_at'
 };
 
@@ -666,6 +670,14 @@ exports.upload_status = exports.$Enums.upload_status = {
   ocr_complete: 'ocr_complete',
   failed: 'failed',
   deleted: 'deleted'
+};
+
+exports.validation_status = exports.$Enums.validation_status = {
+  unvalidated: 'unvalidated',
+  valid: 'valid',
+  invalid: 'invalid',
+  unreadable: 'unreadable',
+  needs_review: 'needs_review'
 };
 
 exports.eligibility_outcome = exports.$Enums.eligibility_outcome = {

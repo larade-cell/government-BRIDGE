@@ -159,6 +159,27 @@ export interface DocumentAnalysis {
   suggested_type: string | null;
 }
 
+/** The three things the validator can conclude about an uploaded image. */
+export type DocumentVerdict = "valid" | "invalid" | "unreadable";
+
+export interface DocumentValidation {
+  /**
+   * `valid` — a legible document that matches the claimed type.
+   * `invalid` — legible, but not the claimed type (wrong document, or not a
+   *   document at all, e.g. a photo of a pet).
+   * `unreadable` — too blurry/cropped/dark to tell.
+   */
+  verdict: DocumentVerdict;
+  /** Whether the document appears to be the claimed type. */
+  matches_type: boolean;
+  /** Whether the image is a legible document at all. */
+  legible: boolean;
+  /** Model confidence in the verdict, in [0, 1]. */
+  confidence: number;
+  /** One short, applicant-safe sentence explaining the verdict. */
+  reason: string;
+}
+
 // ---------------------------------------------------------------------------
 // Embeddings — powers semantic program search and RAG retrieval.
 // ---------------------------------------------------------------------------
@@ -417,6 +438,100 @@ export async function analyzeDocument(params: {
       summary: typeof parsed.summary === "string" ? parsed.summary : "",
       suggested_type:
         typeof parsed.suggested_type === "string" ? parsed.suggested_type : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Document validation (vision) — does the uploaded image genuinely look like a
+// legible document of the type the applicant claimed? Assistive only: a low
+// confidence verdict routes to human review, and it never decides eligibility.
+// ---------------------------------------------------------------------------
+
+const VALIDATOR_SYSTEM_PROMPT = `You inspect an image that an applicant uploaded as a specific kind of benefits document and judge whether it genuinely is that document.
+
+You are told the expected document type (a name and description). Look at the image and decide:
+- Is the image a legible document at all (not a photo of a person, pet, object, landscape, screenshot of something unrelated, or a blank/unreadable page)?
+- Does it appear to be the expected type?
+
+Do NOT make eligibility decisions. Do NOT transcribe sensitive numbers. Judge only the document's kind and legibility.
+
+Return ONLY a JSON object: { "verdict": "valid" | "invalid" | "unreadable", "matches_type": boolean, "legible": boolean, "confidence": number, "reason": string }
+- verdict "valid": a legible document that matches the expected type.
+- verdict "invalid": legible, but clearly NOT the expected type (wrong document, or not a document at all).
+- verdict "unreadable": too blurry, dark, or cropped to determine.
+- confidence: your certainty in the verdict, in [0, 1].
+- reason: one short sentence an applicant can read (e.g. "This looks like a photo of a dog, not a government ID."). No sensitive data.`;
+
+/**
+ * Validate an uploaded document image against the type the applicant claimed.
+ * `imageUrl` may be a publicly reachable URL or a base64 `data:` URL. Returns
+ * `null` when AI is disabled or the response can't be parsed, so callers route
+ * the upload to human review rather than silently accepting or rejecting it.
+ */
+export async function validateDocument(params: {
+  imageUrl: string;
+  expectedType: { doc_key: string; name: string; description?: string | null };
+  language_code?: string;
+}): Promise<DocumentValidation | null> {
+  const client = getClient();
+  if (!client) return null;
+
+  const lang = params.language_code ?? "en";
+  const { name, description } = params.expectedType;
+  const completion = await safeCall("validateDocument", () =>
+    client.chat.completions.create(
+      {
+        model: CHAT_MODEL,
+        temperature: 0,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: VALIDATOR_SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: [
+                  `EXPECTED DOCUMENT TYPE: ${name}`,
+                  description ? `DESCRIPTION: ${description}` : null,
+                  `Judge the image against that type. Write "reason" in ${lang}.`,
+                ]
+                  .filter(Boolean)
+                  .join("\n"),
+              },
+              { type: "image_url", image_url: { url: params.imageUrl } },
+            ],
+          },
+        ],
+      },
+      { timeout: VISION_TIMEOUT_MS },
+    ),
+  );
+  if (!completion) return null;
+
+  const raw = completion.choices[0]?.message.content;
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<DocumentValidation>;
+    const verdict: DocumentVerdict =
+      parsed.verdict === "valid" ||
+      parsed.verdict === "invalid" ||
+      parsed.verdict === "unreadable"
+        ? parsed.verdict
+        : "unreadable";
+    return {
+      verdict,
+      matches_type: parsed.matches_type === true,
+      legible: parsed.legible === true,
+      confidence:
+        typeof parsed.confidence === "number"
+          ? Math.max(0, Math.min(1, parsed.confidence))
+          : 0,
+      reason: typeof parsed.reason === "string" ? parsed.reason : "",
     };
   } catch {
     return null;

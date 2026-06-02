@@ -374,6 +374,48 @@ describe("Phase 2 — programs, checklist, uploads", () => {
     });
     expect(upload.id).toBeTruthy();
   });
+
+  it("validates an upload and surfaces the verdict in the checklist", async () => {
+    const session = await newSession();
+    await caller(null).eligibility.run({ session_id: session.id });
+
+    const upload = await caller(null).documentUpload.create({
+      session_id: session.id,
+      file_name: "id.png",
+      file_mime_type: "image/png",
+      document_type_id: docTypeId,
+    });
+
+    // Before validation runs, the document is received but only pending review —
+    // never auto-"verified" just because the user picked a type.
+    const before = await caller(null).documentChecklist.bySession({
+      session_id: session.id,
+      language_code: "en",
+    });
+    expect(
+      before.data.find((d) => d.document_type.id === docTypeId)?.upload_status,
+    ).toBe("uploaded");
+
+    // Validate. AI is disabled in tests, so the fail-safe routes to a human
+    // (needs_review) rather than guessing valid/invalid.
+    const verdict = await caller(null).documentUpload.validate({
+      session_id: session.id,
+      id: upload.id,
+      language_code: "en",
+    });
+    expect(verdict.validation_status).toBe("needs_review");
+    expect(verdict.validation_reason).toEqual(expect.any(String));
+
+    // The checklist now reflects the verdict and carries its reason.
+    const after = await caller(null).documentChecklist.bySession({
+      session_id: session.id,
+      language_code: "en",
+    });
+    const row = after.data.find((d) => d.document_type.id === docTypeId);
+    expect(row?.upload_status).toBe("needs_review");
+    expect(row?.upload_status).not.toBe("verified");
+    expect(row?.validation_reason).toEqual(expect.any(String));
+  });
 });
 
 describe("Phase 4 — AI, reports, cases, rule versions", () => {

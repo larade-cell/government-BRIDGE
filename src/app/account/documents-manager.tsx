@@ -19,6 +19,8 @@ const STATUS_STYLES: Record<string, string> = {
   verified: "bg-emerald-100 text-emerald-700",
   uploaded: "bg-sky-100 text-sky-700",
   missing: "bg-slate-100 text-slate-600",
+  invalid: "bg-rose-100 text-rose-700",
+  needs_review: "bg-amber-100 text-amber-700",
 };
 
 export function DocumentsManager({ sessionId }: { sessionId: string }) {
@@ -35,6 +37,8 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
     verified: t.account.docs.statusVerified,
     uploaded: t.account.docs.statusUploaded,
     missing: t.account.docs.statusMissing,
+    invalid: t.account.docs.statusInvalid,
+    needs_review: t.account.docs.statusNeedsReview,
   };
 
   const checklist = api.documentChecklist.bySession.useQuery({
@@ -51,13 +55,31 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
       }),
   });
 
-  const createUpload = api.documentUpload.create.useMutation({
+  // Validates a just-uploaded file against its claimed type; the verdict
+  // (verified / needs review / not valid) refreshes the checklist.
+  const validate = api.documentUpload.validate.useMutation({
     onSuccess: () => {
+      void utils.documentChecklist.bySession.invalidate({
+        session_id: sessionId,
+      });
+      void utils.documentUpload.list.invalidate({ session_id: sessionId });
+    },
+  });
+
+  const createUpload = api.documentUpload.create.useMutation({
+    onSuccess: (data) => {
       if (fileRef.current) fileRef.current.value = "";
       setDocTypeId("");
       void utils.documentUpload.list.invalidate({ session_id: sessionId });
       void utils.documentChecklist.bySession.invalidate({
         session_id: sessionId,
+      });
+      // Kick off validation of the new upload (no-op-safe if AI is disabled —
+      // it lands in "needs review" for a human).
+      validate.mutate({
+        session_id: sessionId,
+        id: data.id,
+        language_code: locale,
       });
     },
   });
@@ -107,7 +129,7 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
     pendingTypeRef.current = null;
   }
 
-  const items = checklist.data?.data ?? [];
+  const items = useMemo(() => checklist.data?.data ?? [], [checklist.data]);
 
   // Group required documents by the program that requires them; each program
   // renders as a collapsible section. Items with no program (program_id null)
@@ -187,8 +209,10 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
         ) : (
           <div className="flex flex-col gap-2">
             {groups.map((group) => {
+              // "Ready" = validated as the correct document. Pending/invalid
+              // uploads don't count toward the program being document-complete.
               const done = group.items.filter(
-                (i) => i.upload_status !== "missing",
+                (i) => i.upload_status === "verified",
               ).length;
               return (
                 <details
@@ -221,18 +245,23 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
                           <div className="flex items-center justify-between gap-3">
                             <span>{item.document_type.name}</span>
                             <div className="flex items-center gap-2">
-                              {item.upload_status === "missing" && (
+                              {(item.upload_status === "missing" ||
+                                item.upload_status === "invalid") && (
                                 <Button
                                   size="xs"
                                   variant="outline"
-                                  disabled={createUpload.isPending}
+                                  disabled={
+                                    createUpload.isPending || validate.isPending
+                                  }
                                   onClick={() =>
                                     handleRequirementUpload(
                                       item.document_type.id,
                                     )
                                   }
                                 >
-                                  {t.account.docs.uploadDoc}
+                                  {item.upload_status === "invalid"
+                                    ? t.account.docs.reupload
+                                    : t.account.docs.uploadDoc}
                                 </Button>
                               )}
                               <span
@@ -246,6 +275,21 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
                               </span>
                             </div>
                           </div>
+                          {/* Why a document was flagged — shown for invalid /
+                              needs-review so the applicant knows what to do. */}
+                          {item.validation_reason &&
+                            (item.upload_status === "invalid" ||
+                              item.upload_status === "needs_review") && (
+                              <span
+                                className={`text-xs ${
+                                  item.upload_status === "invalid"
+                                    ? "text-rose-600"
+                                    : "text-amber-600"
+                                }`}
+                              >
+                                {item.validation_reason}
+                              </span>
+                            )}
                           {shared.length > 0 && (
                             <span className="text-xs text-muted-foreground">
                               {fmt(t.account.docs.alsoCounts, {

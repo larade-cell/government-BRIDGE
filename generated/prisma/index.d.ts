@@ -438,6 +438,17 @@ export const upload_status: {
 export type upload_status = (typeof upload_status)[keyof typeof upload_status]
 
 
+export const validation_status: {
+  unvalidated: 'unvalidated',
+  valid: 'valid',
+  invalid: 'invalid',
+  unreadable: 'unreadable',
+  needs_review: 'needs_review'
+};
+
+export type validation_status = (typeof validation_status)[keyof typeof validation_status]
+
+
 export const user_role: {
   resident: 'resident',
   navigator: 'navigator',
@@ -512,6 +523,10 @@ export const search_target_type: typeof $Enums.search_target_type
 export type upload_status = $Enums.upload_status
 
 export const upload_status: typeof $Enums.upload_status
+
+export type validation_status = $Enums.validation_status
+
+export const validation_status: typeof $Enums.validation_status
 
 export type user_role = $Enums.user_role
 
@@ -19341,10 +19356,12 @@ export namespace Prisma {
 
   export type Document_uploadsAvgAggregateOutputType = {
     classification_confidence: Decimal | null
+    validation_confidence: Decimal | null
   }
 
   export type Document_uploadsSumAggregateOutputType = {
     classification_confidence: Decimal | null
+    validation_confidence: Decimal | null
   }
 
   export type Document_uploadsMinAggregateOutputType = {
@@ -19360,6 +19377,10 @@ export namespace Prisma {
     storage_url: string | null
     status: $Enums.upload_status | null
     ocr_text: string | null
+    validation_status: $Enums.validation_status | null
+    validation_reason: string | null
+    validation_confidence: Decimal | null
+    validated_at: Date | null
     created_at: Date | null
   }
 
@@ -19376,6 +19397,10 @@ export namespace Prisma {
     storage_url: string | null
     status: $Enums.upload_status | null
     ocr_text: string | null
+    validation_status: $Enums.validation_status | null
+    validation_reason: string | null
+    validation_confidence: Decimal | null
+    validated_at: Date | null
     created_at: Date | null
   }
 
@@ -19392,6 +19417,10 @@ export namespace Prisma {
     storage_url: number
     status: number
     ocr_text: number
+    validation_status: number
+    validation_reason: number
+    validation_confidence: number
+    validated_at: number
     created_at: number
     _all: number
   }
@@ -19399,10 +19428,12 @@ export namespace Prisma {
 
   export type Document_uploadsAvgAggregateInputType = {
     classification_confidence?: true
+    validation_confidence?: true
   }
 
   export type Document_uploadsSumAggregateInputType = {
     classification_confidence?: true
+    validation_confidence?: true
   }
 
   export type Document_uploadsMinAggregateInputType = {
@@ -19418,6 +19449,10 @@ export namespace Prisma {
     storage_url?: true
     status?: true
     ocr_text?: true
+    validation_status?: true
+    validation_reason?: true
+    validation_confidence?: true
+    validated_at?: true
     created_at?: true
   }
 
@@ -19434,6 +19469,10 @@ export namespace Prisma {
     storage_url?: true
     status?: true
     ocr_text?: true
+    validation_status?: true
+    validation_reason?: true
+    validation_confidence?: true
+    validated_at?: true
     created_at?: true
   }
 
@@ -19450,6 +19489,10 @@ export namespace Prisma {
     storage_url?: true
     status?: true
     ocr_text?: true
+    validation_status?: true
+    validation_reason?: true
+    validation_confidence?: true
+    validated_at?: true
     created_at?: true
     _all?: true
   }
@@ -19553,6 +19596,10 @@ export namespace Prisma {
     storage_url: string
     status: $Enums.upload_status
     ocr_text: string | null
+    validation_status: $Enums.validation_status
+    validation_reason: string | null
+    validation_confidence: Decimal | null
+    validated_at: Date | null
     created_at: Date
     _count: Document_uploadsCountAggregateOutputType | null
     _avg: Document_uploadsAvgAggregateOutputType | null
@@ -19588,6 +19635,10 @@ export namespace Prisma {
     storage_url?: boolean
     status?: boolean
     ocr_text?: boolean
+    validation_status?: boolean
+    validation_reason?: boolean
+    validation_confidence?: boolean
+    validated_at?: boolean
     created_at?: boolean
     document_classifications?: boolean | document_uploads$document_classificationsArgs<ExtArgs>
     document_types?: boolean | document_uploads$document_typesArgs<ExtArgs>
@@ -19609,6 +19660,10 @@ export namespace Prisma {
     storage_url?: boolean
     status?: boolean
     ocr_text?: boolean
+    validation_status?: boolean
+    validation_reason?: boolean
+    validation_confidence?: boolean
+    validated_at?: boolean
     created_at?: boolean
     document_types?: boolean | document_uploads$document_typesArgs<ExtArgs>
     predicted_document_type?: boolean | document_uploads$predicted_document_typeArgs<ExtArgs>
@@ -19628,6 +19683,10 @@ export namespace Prisma {
     storage_url?: boolean
     status?: boolean
     ocr_text?: boolean
+    validation_status?: boolean
+    validation_reason?: boolean
+    validation_confidence?: boolean
+    validated_at?: boolean
     created_at?: boolean
     document_types?: boolean | document_uploads$document_typesArgs<ExtArgs>
     predicted_document_type?: boolean | document_uploads$predicted_document_typeArgs<ExtArgs>
@@ -19647,10 +19706,14 @@ export namespace Prisma {
     storage_url?: boolean
     status?: boolean
     ocr_text?: boolean
+    validation_status?: boolean
+    validation_reason?: boolean
+    validation_confidence?: boolean
+    validated_at?: boolean
     created_at?: boolean
   }
 
-  export type document_uploadsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "session_id" | "document_type_id" | "predicted_document_type_id" | "classification_confidence" | "classified_by" | "classified_at" | "file_name" | "file_mime_type" | "storage_url" | "status" | "ocr_text" | "created_at", ExtArgs["result"]["document_uploads"]>
+  export type document_uploadsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "session_id" | "document_type_id" | "predicted_document_type_id" | "classification_confidence" | "classified_by" | "classified_at" | "file_name" | "file_mime_type" | "storage_url" | "status" | "ocr_text" | "validation_status" | "validation_reason" | "validation_confidence" | "validated_at" | "created_at", ExtArgs["result"]["document_uploads"]>
   export type document_uploadsInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     document_classifications?: boolean | document_uploads$document_classificationsArgs<ExtArgs>
     document_types?: boolean | document_uploads$document_typesArgs<ExtArgs>
@@ -19690,6 +19753,10 @@ export namespace Prisma {
       storage_url: string
       status: $Enums.upload_status
       ocr_text: string | null
+      validation_status: $Enums.validation_status
+      validation_reason: string | null
+      validation_confidence: Prisma.Decimal | null
+      validated_at: Date | null
       created_at: Date
     }, ExtArgs["result"]["document_uploads"]>
     composites: {}
@@ -20130,6 +20197,10 @@ export namespace Prisma {
     readonly storage_url: FieldRef<"document_uploads", 'String'>
     readonly status: FieldRef<"document_uploads", 'upload_status'>
     readonly ocr_text: FieldRef<"document_uploads", 'String'>
+    readonly validation_status: FieldRef<"document_uploads", 'validation_status'>
+    readonly validation_reason: FieldRef<"document_uploads", 'String'>
+    readonly validation_confidence: FieldRef<"document_uploads", 'Decimal'>
+    readonly validated_at: FieldRef<"document_uploads", 'DateTime'>
     readonly created_at: FieldRef<"document_uploads", 'DateTime'>
   }
     
@@ -66162,6 +66233,10 @@ export namespace Prisma {
     storage_url: 'storage_url',
     status: 'status',
     ocr_text: 'ocr_text',
+    validation_status: 'validation_status',
+    validation_reason: 'validation_reason',
+    validation_confidence: 'validation_confidence',
+    validated_at: 'validated_at',
     created_at: 'created_at'
   };
 
@@ -66836,6 +66911,20 @@ export namespace Prisma {
    * Reference to a field of type 'upload_status[]'
    */
   export type ListEnumupload_statusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'upload_status[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'validation_status'
+   */
+  export type Enumvalidation_statusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'validation_status'>
+    
+
+
+  /**
+   * Reference to a field of type 'validation_status[]'
+   */
+  export type ListEnumvalidation_statusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'validation_status[]'>
     
 
 
@@ -67823,6 +67912,10 @@ export namespace Prisma {
     storage_url?: StringFilter<"document_uploads"> | string
     status?: Enumupload_statusFilter<"document_uploads"> | $Enums.upload_status
     ocr_text?: StringNullableFilter<"document_uploads"> | string | null
+    validation_status?: Enumvalidation_statusFilter<"document_uploads"> | $Enums.validation_status
+    validation_reason?: StringNullableFilter<"document_uploads"> | string | null
+    validation_confidence?: DecimalNullableFilter<"document_uploads"> | Decimal | DecimalJsLike | number | string | null
+    validated_at?: DateTimeNullableFilter<"document_uploads"> | Date | string | null
     created_at?: DateTimeFilter<"document_uploads"> | Date | string
     document_classifications?: Document_classificationsListRelationFilter
     document_types?: XOR<Document_typesNullableScalarRelationFilter, document_typesWhereInput> | null
@@ -67843,6 +67936,10 @@ export namespace Prisma {
     storage_url?: SortOrder
     status?: SortOrder
     ocr_text?: SortOrderInput | SortOrder
+    validation_status?: SortOrder
+    validation_reason?: SortOrderInput | SortOrder
+    validation_confidence?: SortOrderInput | SortOrder
+    validated_at?: SortOrderInput | SortOrder
     created_at?: SortOrder
     document_classifications?: document_classificationsOrderByRelationAggregateInput
     document_types?: document_typesOrderByWithRelationInput
@@ -67866,6 +67963,10 @@ export namespace Prisma {
     storage_url?: StringFilter<"document_uploads"> | string
     status?: Enumupload_statusFilter<"document_uploads"> | $Enums.upload_status
     ocr_text?: StringNullableFilter<"document_uploads"> | string | null
+    validation_status?: Enumvalidation_statusFilter<"document_uploads"> | $Enums.validation_status
+    validation_reason?: StringNullableFilter<"document_uploads"> | string | null
+    validation_confidence?: DecimalNullableFilter<"document_uploads"> | Decimal | DecimalJsLike | number | string | null
+    validated_at?: DateTimeNullableFilter<"document_uploads"> | Date | string | null
     created_at?: DateTimeFilter<"document_uploads"> | Date | string
     document_classifications?: Document_classificationsListRelationFilter
     document_types?: XOR<Document_typesNullableScalarRelationFilter, document_typesWhereInput> | null
@@ -67886,6 +67987,10 @@ export namespace Prisma {
     storage_url?: SortOrder
     status?: SortOrder
     ocr_text?: SortOrderInput | SortOrder
+    validation_status?: SortOrder
+    validation_reason?: SortOrderInput | SortOrder
+    validation_confidence?: SortOrderInput | SortOrder
+    validated_at?: SortOrderInput | SortOrder
     created_at?: SortOrder
     _count?: document_uploadsCountOrderByAggregateInput
     _avg?: document_uploadsAvgOrderByAggregateInput
@@ -67910,6 +68015,10 @@ export namespace Prisma {
     storage_url?: StringWithAggregatesFilter<"document_uploads"> | string
     status?: Enumupload_statusWithAggregatesFilter<"document_uploads"> | $Enums.upload_status
     ocr_text?: StringNullableWithAggregatesFilter<"document_uploads"> | string | null
+    validation_status?: Enumvalidation_statusWithAggregatesFilter<"document_uploads"> | $Enums.validation_status
+    validation_reason?: StringNullableWithAggregatesFilter<"document_uploads"> | string | null
+    validation_confidence?: DecimalNullableWithAggregatesFilter<"document_uploads"> | Decimal | DecimalJsLike | number | string | null
+    validated_at?: DateTimeNullableWithAggregatesFilter<"document_uploads"> | Date | string | null
     created_at?: DateTimeWithAggregatesFilter<"document_uploads"> | Date | string
   }
 
@@ -71425,6 +71534,10 @@ export namespace Prisma {
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
+    validation_status?: $Enums.validation_status
+    validation_reason?: string | null
+    validation_confidence?: Decimal | DecimalJsLike | number | string | null
+    validated_at?: Date | string | null
     created_at?: Date | string
     document_classifications?: document_classificationsCreateNestedManyWithoutDocument_uploadsInput
     document_types?: document_typesCreateNestedOneWithoutDocument_uploads_confirmed_typeInput
@@ -71445,6 +71558,10 @@ export namespace Prisma {
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
+    validation_status?: $Enums.validation_status
+    validation_reason?: string | null
+    validation_confidence?: Decimal | DecimalJsLike | number | string | null
+    validated_at?: Date | string | null
     created_at?: Date | string
     document_classifications?: document_classificationsUncheckedCreateNestedManyWithoutDocument_uploadsInput
   }
@@ -71459,6 +71576,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     document_classifications?: document_classificationsUpdateManyWithoutDocument_uploadsNestedInput
     document_types?: document_typesUpdateOneWithoutDocument_uploads_confirmed_typeNestedInput
@@ -71479,6 +71600,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     document_classifications?: document_classificationsUncheckedUpdateManyWithoutDocument_uploadsNestedInput
   }
@@ -71496,6 +71621,10 @@ export namespace Prisma {
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
+    validation_status?: $Enums.validation_status
+    validation_reason?: string | null
+    validation_confidence?: Decimal | DecimalJsLike | number | string | null
+    validated_at?: Date | string | null
     created_at?: Date | string
   }
 
@@ -71509,6 +71638,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -71525,6 +71658,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -75147,6 +75284,13 @@ export namespace Prisma {
     not?: NestedEnumupload_statusFilter<$PrismaModel> | $Enums.upload_status
   }
 
+  export type Enumvalidation_statusFilter<$PrismaModel = never> = {
+    equals?: $Enums.validation_status | Enumvalidation_statusFieldRefInput<$PrismaModel>
+    in?: $Enums.validation_status[] | ListEnumvalidation_statusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.validation_status[] | ListEnumvalidation_statusFieldRefInput<$PrismaModel>
+    not?: NestedEnumvalidation_statusFilter<$PrismaModel> | $Enums.validation_status
+  }
+
   export type Document_typesNullableScalarRelationFilter = {
     is?: document_typesWhereInput | null
     isNot?: document_typesWhereInput | null
@@ -75165,11 +75309,16 @@ export namespace Prisma {
     storage_url?: SortOrder
     status?: SortOrder
     ocr_text?: SortOrder
+    validation_status?: SortOrder
+    validation_reason?: SortOrder
+    validation_confidence?: SortOrder
+    validated_at?: SortOrder
     created_at?: SortOrder
   }
 
   export type document_uploadsAvgOrderByAggregateInput = {
     classification_confidence?: SortOrder
+    validation_confidence?: SortOrder
   }
 
   export type document_uploadsMaxOrderByAggregateInput = {
@@ -75185,6 +75334,10 @@ export namespace Prisma {
     storage_url?: SortOrder
     status?: SortOrder
     ocr_text?: SortOrder
+    validation_status?: SortOrder
+    validation_reason?: SortOrder
+    validation_confidence?: SortOrder
+    validated_at?: SortOrder
     created_at?: SortOrder
   }
 
@@ -75201,11 +75354,16 @@ export namespace Prisma {
     storage_url?: SortOrder
     status?: SortOrder
     ocr_text?: SortOrder
+    validation_status?: SortOrder
+    validation_reason?: SortOrder
+    validation_confidence?: SortOrder
+    validated_at?: SortOrder
     created_at?: SortOrder
   }
 
   export type document_uploadsSumOrderByAggregateInput = {
     classification_confidence?: SortOrder
+    validation_confidence?: SortOrder
   }
 
   export type Enumclassification_sourceNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -75240,6 +75398,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumupload_statusFilter<$PrismaModel>
     _max?: NestedEnumupload_statusFilter<$PrismaModel>
+  }
+
+  export type Enumvalidation_statusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.validation_status | Enumvalidation_statusFieldRefInput<$PrismaModel>
+    in?: $Enums.validation_status[] | ListEnumvalidation_statusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.validation_status[] | ListEnumvalidation_statusFieldRefInput<$PrismaModel>
+    not?: NestedEnumvalidation_statusWithAggregatesFilter<$PrismaModel> | $Enums.validation_status
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumvalidation_statusFilter<$PrismaModel>
+    _max?: NestedEnumvalidation_statusFilter<$PrismaModel>
   }
 
   export type Enumeligibility_outcomeFilter<$PrismaModel = never> = {
@@ -77943,6 +78111,10 @@ export namespace Prisma {
 
   export type Enumupload_statusFieldUpdateOperationsInput = {
     set?: $Enums.upload_status
+  }
+
+  export type Enumvalidation_statusFieldUpdateOperationsInput = {
+    set?: $Enums.validation_status
   }
 
   export type document_classificationsUpdateManyWithoutDocument_uploadsNestedInput = {
@@ -82190,6 +82362,13 @@ export namespace Prisma {
     not?: NestedEnumupload_statusFilter<$PrismaModel> | $Enums.upload_status
   }
 
+  export type NestedEnumvalidation_statusFilter<$PrismaModel = never> = {
+    equals?: $Enums.validation_status | Enumvalidation_statusFieldRefInput<$PrismaModel>
+    in?: $Enums.validation_status[] | ListEnumvalidation_statusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.validation_status[] | ListEnumvalidation_statusFieldRefInput<$PrismaModel>
+    not?: NestedEnumvalidation_statusFilter<$PrismaModel> | $Enums.validation_status
+  }
+
   export type NestedEnumclassification_sourceNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.classification_source | Enumclassification_sourceFieldRefInput<$PrismaModel> | null
     in?: $Enums.classification_source[] | ListEnumclassification_sourceFieldRefInput<$PrismaModel> | null
@@ -82222,6 +82401,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumupload_statusFilter<$PrismaModel>
     _max?: NestedEnumupload_statusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumvalidation_statusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.validation_status | Enumvalidation_statusFieldRefInput<$PrismaModel>
+    in?: $Enums.validation_status[] | ListEnumvalidation_statusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.validation_status[] | ListEnumvalidation_statusFieldRefInput<$PrismaModel>
+    not?: NestedEnumvalidation_statusWithAggregatesFilter<$PrismaModel> | $Enums.validation_status
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumvalidation_statusFilter<$PrismaModel>
+    _max?: NestedEnumvalidation_statusFilter<$PrismaModel>
   }
 
   export type NestedEnumeligibility_outcomeFilter<$PrismaModel = never> = {
@@ -84766,6 +84955,10 @@ export namespace Prisma {
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
+    validation_status?: $Enums.validation_status
+    validation_reason?: string | null
+    validation_confidence?: Decimal | DecimalJsLike | number | string | null
+    validated_at?: Date | string | null
     created_at?: Date | string
     document_classifications?: document_classificationsCreateNestedManyWithoutDocument_uploadsInput
     predicted_document_type?: document_typesCreateNestedOneWithoutDocument_uploads_predicted_typeInput
@@ -84784,6 +84977,10 @@ export namespace Prisma {
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
+    validation_status?: $Enums.validation_status
+    validation_reason?: string | null
+    validation_confidence?: Decimal | DecimalJsLike | number | string | null
+    validated_at?: Date | string | null
     created_at?: Date | string
     document_classifications?: document_classificationsUncheckedCreateNestedManyWithoutDocument_uploadsInput
   }
@@ -84808,6 +85005,10 @@ export namespace Prisma {
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
+    validation_status?: $Enums.validation_status
+    validation_reason?: string | null
+    validation_confidence?: Decimal | DecimalJsLike | number | string | null
+    validated_at?: Date | string | null
     created_at?: Date | string
     document_classifications?: document_classificationsCreateNestedManyWithoutDocument_uploadsInput
     document_types?: document_typesCreateNestedOneWithoutDocument_uploads_confirmed_typeInput
@@ -84826,6 +85027,10 @@ export namespace Prisma {
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
+    validation_status?: $Enums.validation_status
+    validation_reason?: string | null
+    validation_confidence?: Decimal | DecimalJsLike | number | string | null
+    validated_at?: Date | string | null
     created_at?: Date | string
     document_classifications?: document_classificationsUncheckedCreateNestedManyWithoutDocument_uploadsInput
   }
@@ -84980,6 +85185,10 @@ export namespace Prisma {
     storage_url?: StringFilter<"document_uploads"> | string
     status?: Enumupload_statusFilter<"document_uploads"> | $Enums.upload_status
     ocr_text?: StringNullableFilter<"document_uploads"> | string | null
+    validation_status?: Enumvalidation_statusFilter<"document_uploads"> | $Enums.validation_status
+    validation_reason?: StringNullableFilter<"document_uploads"> | string | null
+    validation_confidence?: DecimalNullableFilter<"document_uploads"> | Decimal | DecimalJsLike | number | string | null
+    validated_at?: DateTimeNullableFilter<"document_uploads"> | Date | string | null
     created_at?: DateTimeFilter<"document_uploads"> | Date | string
   }
 
@@ -90160,6 +90369,10 @@ export namespace Prisma {
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
+    validation_status?: $Enums.validation_status
+    validation_reason?: string | null
+    validation_confidence?: Decimal | DecimalJsLike | number | string | null
+    validated_at?: Date | string | null
     created_at?: Date | string
     document_classifications?: document_classificationsCreateNestedManyWithoutDocument_uploadsInput
     document_types?: document_typesCreateNestedOneWithoutDocument_uploads_confirmed_typeInput
@@ -90178,6 +90391,10 @@ export namespace Prisma {
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
+    validation_status?: $Enums.validation_status
+    validation_reason?: string | null
+    validation_confidence?: Decimal | DecimalJsLike | number | string | null
+    validated_at?: Date | string | null
     created_at?: Date | string
     document_classifications?: document_classificationsUncheckedCreateNestedManyWithoutDocument_uploadsInput
   }
@@ -93262,6 +93479,10 @@ export namespace Prisma {
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
+    validation_status?: $Enums.validation_status
+    validation_reason?: string | null
+    validation_confidence?: Decimal | DecimalJsLike | number | string | null
+    validated_at?: Date | string | null
     created_at?: Date | string
     document_types?: document_typesCreateNestedOneWithoutDocument_uploads_confirmed_typeInput
     predicted_document_type?: document_typesCreateNestedOneWithoutDocument_uploads_predicted_typeInput
@@ -93281,6 +93502,10 @@ export namespace Prisma {
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
+    validation_status?: $Enums.validation_status
+    validation_reason?: string | null
+    validation_confidence?: Decimal | DecimalJsLike | number | string | null
+    validated_at?: Date | string | null
     created_at?: Date | string
   }
 
@@ -93408,6 +93633,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     document_types?: document_typesUpdateOneWithoutDocument_uploads_confirmed_typeNestedInput
     predicted_document_type?: document_typesUpdateOneWithoutDocument_uploads_predicted_typeNestedInput
@@ -93427,6 +93656,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -94466,6 +94699,10 @@ export namespace Prisma {
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
+    validation_status?: $Enums.validation_status
+    validation_reason?: string | null
+    validation_confidence?: Decimal | DecimalJsLike | number | string | null
+    validated_at?: Date | string | null
     created_at?: Date | string
   }
 
@@ -94481,6 +94718,10 @@ export namespace Prisma {
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
+    validation_status?: $Enums.validation_status
+    validation_reason?: string | null
+    validation_confidence?: Decimal | DecimalJsLike | number | string | null
+    validated_at?: Date | string | null
     created_at?: Date | string
   }
 
@@ -94563,6 +94804,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     document_classifications?: document_classificationsUpdateManyWithoutDocument_uploadsNestedInput
     predicted_document_type?: document_typesUpdateOneWithoutDocument_uploads_predicted_typeNestedInput
@@ -94581,6 +94826,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     document_classifications?: document_classificationsUncheckedUpdateManyWithoutDocument_uploadsNestedInput
   }
@@ -94597,6 +94846,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -94610,6 +94863,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     document_classifications?: document_classificationsUpdateManyWithoutDocument_uploadsNestedInput
     document_types?: document_typesUpdateOneWithoutDocument_uploads_confirmed_typeNestedInput
@@ -94628,6 +94885,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     document_classifications?: document_classificationsUncheckedUpdateManyWithoutDocument_uploadsNestedInput
   }
@@ -94644,6 +94905,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -95931,6 +96196,10 @@ export namespace Prisma {
     storage_url: string
     status?: $Enums.upload_status
     ocr_text?: string | null
+    validation_status?: $Enums.validation_status
+    validation_reason?: string | null
+    validation_confidence?: Decimal | DecimalJsLike | number | string | null
+    validated_at?: Date | string | null
     created_at?: Date | string
   }
 
@@ -96276,6 +96545,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     document_classifications?: document_classificationsUpdateManyWithoutDocument_uploadsNestedInput
     document_types?: document_typesUpdateOneWithoutDocument_uploads_confirmed_typeNestedInput
@@ -96294,6 +96567,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     document_classifications?: document_classificationsUncheckedUpdateManyWithoutDocument_uploadsNestedInput
   }
@@ -96310,6 +96587,10 @@ export namespace Prisma {
     storage_url?: StringFieldUpdateOperationsInput | string
     status?: Enumupload_statusFieldUpdateOperationsInput | $Enums.upload_status
     ocr_text?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_status?: Enumvalidation_statusFieldUpdateOperationsInput | $Enums.validation_status
+    validation_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    validation_confidence?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    validated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

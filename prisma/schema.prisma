@@ -169,6 +169,10 @@ model document_uploads {
   storage_url                String
   status                     upload_status              @default(uploaded)
   ocr_text                   String?
+  validation_status          validation_status          @default(unvalidated)
+  validation_reason          String?
+  validation_confidence      Decimal?                   @db.Decimal(4, 3)
+  validated_at               DateTime?                  @db.Timestamptz(6)
   created_at                 DateTime                   @default(now()) @db.Timestamptz(6)
   document_classifications   document_classifications[]
   document_types             document_types?            @relation("document_uploads_confirmed_type", fields: [document_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -805,6 +809,18 @@ enum upload_status {
   ocr_complete
   failed
   deleted
+}
+
+// Outcome of AI/human document validation — does the uploaded file genuinely
+// appear to be a legible document of its claimed type? Distinct from
+// `upload_status` (the file/OCR lifecycle): a row can be `uploaded` yet still
+// `unvalidated`, or `valid`/`invalid` once checked.
+enum validation_status {
+  unvalidated
+  valid
+  invalid
+  unreadable
+  needs_review
 }
 
 enum user_role {

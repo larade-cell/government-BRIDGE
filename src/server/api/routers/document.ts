@@ -8,6 +8,7 @@ import {
   isAiEnabled,
 } from "../../../../lib/ai-service";
 import { generateSessionChecklist } from "~/server/api/helpers/document-checklist";
+import { runUploadValidation } from "~/server/api/helpers/document-validation";
 import { assertSessionAccess } from "~/server/api/helpers/session";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -36,6 +37,42 @@ const UPLOAD_SLOT_TTL_MS = 20 * 60 * 1000; // 20 minutes
 // them (a separate OCR/convert step would feed `classifyDocument` text instead).
 const VISION_MIME = ["image/jpeg", "image/png"] as const;
 
+/** A checklist row's status, after folding in the document's validation verdict. */
+type ChecklistStatus =
+  | "missing"
+  | "uploaded"
+  | "verified"
+  | "invalid"
+  | "needs_review";
+
+/**
+ * Collapse one document type's per-upload validation verdicts into a single
+ * checklist status (+ an explanatory reason for the actionable ones). A `valid`
+ * upload wins (verified); one still awaiting its verdict keeps the type pending
+ * (`uploaded`); otherwise the most relevant problem surfaces. `unreadable`
+ * folds into `invalid` — both mean "re-upload a better file".
+ */
+function deriveTypeStatus(
+  rows: { validation_status: string; validation_reason: string | null }[],
+): { status: ChecklistStatus; reason: string | null } {
+  if (rows.some((r) => r.validation_status === "valid")) {
+    return { status: "verified", reason: null };
+  }
+  if (rows.some((r) => r.validation_status === "unvalidated")) {
+    return { status: "uploaded", reason: null };
+  }
+  const review = rows.find((r) => r.validation_status === "needs_review");
+  if (review) {
+    return { status: "needs_review", reason: review.validation_reason };
+  }
+  const bad = rows.find(
+    (r) =>
+      r.validation_status === "invalid" || r.validation_status === "unreadable",
+  );
+  if (bad) return { status: "invalid", reason: bad.validation_reason };
+  return { status: "missing", reason: null };
+}
+
 export const documentChecklistRouter = createTRPCRouter({
   bySession: publicProcedure
     .input(
@@ -43,7 +80,9 @@ export const documentChecklistRouter = createTRPCRouter({
         session_id: z.string().uuid(),
         language_code: langSchema,
         program_id: z.string().uuid().optional(),
-        status: z.enum(["missing", "uploaded", "verified"]).optional(),
+        status: z
+          .enum(["missing", "uploaded", "verified", "invalid", "needs_review"])
+          .optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -94,26 +133,40 @@ export const documentChecklistRouter = createTRPCRouter({
           },
           select: {
             document_type_id: true,
+            validation_status: true,
+            validation_reason: true,
           },
         }),
       ]);
 
-      // Derive per-document-type upload status. An upload marks its type as
-      // received ("uploaded" = pending review). "verified" is reserved for a
-      // real validation step (AI/human) that confirms the file genuinely is
-      // that document — picking a type at upload time is an unchecked user
-      // *claim*, so it must NOT promote to verified. (Otherwise a photo of a
-      // dog tagged "Photo ID" would read as verified.)
-      const statusByType = new Map<string, "uploaded" | "verified">();
+      // Derive each document type's checklist status from its uploads'
+      // validation verdicts (a verdict lives per upload, but the checklist is
+      // per type, and one valid file satisfies every program needing that
+      // type). Precedence, best first: a `valid` upload makes the type
+      // `verified`; an upload still awaiting its verdict keeps it pending
+      // (`uploaded`); otherwise surface the actionable verdict (`needs_review`
+      // for a human, `invalid` for a wrong/unreadable file to re-upload),
+      // carrying the reason so the UI can explain it. "verified" is now earned
+      // by a check, never by the user merely claiming a type.
+      const byType = new Map<
+        string,
+        { status: ChecklistStatus; reason: string | null }
+      >();
+      const byTypeUploads = new Map<string, typeof uploads>();
       for (const u of uploads) {
         if (!u.document_type_id) continue;
-        if (statusByType.get(u.document_type_id) === "verified") continue;
-        statusByType.set(u.document_type_id, "uploaded");
+        const list = byTypeUploads.get(u.document_type_id) ?? [];
+        list.push(u);
+        byTypeUploads.set(u.document_type_id, list);
+      }
+      for (const [typeId, rows] of byTypeUploads) {
+        byType.set(typeId, deriveTypeStatus(rows));
       }
 
       const data = items.map((item) => {
-        const upload_status =
-          statusByType.get(item.document_type_id) ?? "missing";
+        const derived = byType.get(item.document_type_id);
+        const upload_status: ChecklistStatus = derived?.status ?? "missing";
+        const validation_reason = derived?.reason ?? null;
         const t = item.document_types.document_type_translations[0];
         return {
           id: item.id,
@@ -129,6 +182,7 @@ export const documentChecklistRouter = createTRPCRouter({
           reason: item.reason,
           created_at: item.created_at,
           upload_status,
+          validation_reason,
           document_type: {
             id: item.document_types.id,
             doc_key: item.document_types.doc_key,
@@ -287,6 +341,41 @@ export const documentUploadRouter = createTRPCRouter({
     }),
 
   /**
+   * Run document validation: judge whether the uploaded file genuinely is a
+   * legible document of its claimed type, and persist the verdict. The client
+   * calls this right after an upload. Fail-safe — anything inconclusive (AI
+   * off, low confidence, unreadable, no claimed type) becomes `needs_review`,
+   * never a silent pass. See runUploadValidation for the decision rules.
+   */
+  validate: publicProcedure
+    .input(
+      z.object({
+        session_id: z.string().uuid(),
+        id: z.string().uuid(),
+        language_code: langSchema,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertSessionAccess(ctx, input.session_id);
+      const existing = await ctx.db.document_uploads.findUnique({
+        where: { id: input.id },
+        select: { id: true, session_id: true },
+      });
+      if (existing?.session_id !== input.session_id) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Upload not found" });
+      }
+      const outcome = await runUploadValidation(
+        ctx.db,
+        input.id,
+        input.language_code,
+      );
+      if (!outcome) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Upload not found" });
+      }
+      return outcome;
+    }),
+
+  /**
    * AI analysis of an uploaded image (Story 8/15): vision-OCR the document,
    * map the extracted text to a known document type, and persist the result
    * plus an audit row. Advisory only — a user-confirmed type is never
@@ -428,6 +517,9 @@ export const documentUploadRouter = createTRPCRouter({
       }
       // Transition to uploaded and persist canonical storage URL.
       const updated = await ctx.db.document_uploads.update({ where: { id: input.id }, data: { storage_url: input.storage_url, status: "uploaded" } });
+      // The bytes are now reachable, so validate against the claimed type.
+      // Fail-safe internally; never let a validation hiccup fail the webhook.
+      await runUploadValidation(ctx.db, input.id).catch(() => null);
       return { id: updated.id, status: updated.status, storage_url: updated.storage_url };
     }),
 

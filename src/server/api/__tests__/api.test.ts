@@ -702,6 +702,72 @@ describe("Citizen & admin views — dashboards", () => {
 
     await db.programs.delete({ where: { id: created.id } });
   });
+
+  it("organizations CRUD is admin-gated; delete blocked while referenced", async () => {
+    const pub = await caller(null).organization.list();
+    expect(Array.isArray(pub)).toBe(true);
+
+    await expectCode(
+      caller(residentId).organization.create({
+        name: "X",
+        organization_type: "food_bank",
+      }),
+      "FORBIDDEN",
+    );
+
+    const org = await caller(adminId).organization.create({
+      name: "Test Food Bank",
+      organization_type: "food_bank",
+      email: "fb@example.test",
+      service_categories: ["food"],
+    });
+    expect(org.id).toBeTruthy();
+
+    const fetched = await caller(null).organization.byId({ id: org.id });
+    expect(fetched.name).toBe("Test Food Bank");
+
+    await caller(adminId).organization.update({
+      id: org.id,
+      name: "Updated Food Bank",
+    });
+
+    // Referencing referral blocks deletion.
+    const session = await newSession(residentId);
+    const ref = await caller(residentId).referral.create({
+      session_id: session.id,
+      organization_id: org.id,
+      need_category: "food",
+    });
+    await expectCode(
+      caller(adminId).organization.delete({ id: org.id }),
+      "CONFLICT",
+    );
+
+    await db.referrals.delete({ where: { id: ref.id } });
+    const del = await caller(adminId).organization.delete({ id: org.id });
+    expect(del.deleted).toBe(true);
+  });
+
+  it("referral detail/update — owner and staff; marking sent stamps sent_at", async () => {
+    const session = await newSession(residentId);
+    const ref = await caller(residentId).referral.create({
+      session_id: session.id,
+      need_category: "housing",
+    });
+
+    expect((await caller(residentId).referral.byId({ id: ref.id })).id).toBe(ref.id);
+    expect((await caller(caseworkerId).referral.byId({ id: ref.id })).id).toBe(ref.id);
+
+    const updated = await caller(caseworkerId).referral.update({
+      id: ref.id,
+      status: "sent",
+      notes: "Referred to a local shelter.",
+    });
+    expect(updated.status).toBe("sent");
+    expect(updated.sent_at).toBeTruthy();
+
+    await db.referrals.delete({ where: { id: ref.id } });
+  });
 });
 
 describe("Phase 3 — profile, notifications, referrals", () => {

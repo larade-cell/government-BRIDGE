@@ -17,6 +17,7 @@ export default async function AdminLayout({
           { href: "/admin/rules", label: "Eligibility rules" },
           { href: "/admin/programs", label: "Programs & questions" },
           { href: "/admin/knowledge", label: "Knowledge base" },
+          { href: "/admin/organizations", label: "Organizations" },
           { href: "/admin/audit", label: "Audit log" },
         ]
       : []),

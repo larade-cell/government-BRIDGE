@@ -8,6 +8,7 @@ import {
 import { eligibilityRuleRouter } from "~/server/api/routers/eligibilityRule";
 import { knowledgeRouter } from "~/server/api/routers/knowledge";
 import { notificationPreferenceRouter } from "~/server/api/routers/notification";
+import { organizationRouter } from "~/server/api/routers/organization";
 import {
   documentTypeRouter,
   programRouter,
@@ -44,6 +45,7 @@ export const appRouter = createTRPCRouter({
   // Phase 3 — profile, notifications, referrals
   notificationPreference: notificationPreferenceRouter,
   referral: referralRouter,
+  organization: organizationRouter,
   // Phase 4 — AI, reports, cases, rule versioning
   ai: aiRouter,
   report: reportRouter,

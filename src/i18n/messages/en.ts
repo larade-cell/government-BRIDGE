@@ -14,6 +14,12 @@ export const en = {
     back: "Back",
     saving: "Saving…",
     loading: "Loading…",
+    skipToContent: "Skip to main content",
+  },
+  gov: {
+    official: "An official benefits screening platform",
+    secure:
+      "Your information is private and secure. We never ask for a Social Security number.",
   },
   nav: {
     overview: "Overview",
@@ -46,6 +52,21 @@ export const en = {
     startScreening: "Start screening",
     goToDashboard: "Go to my dashboard",
     staffSignIn: "Staff sign-in →",
+    screenerNote: "Takes about 10 minutes. No account needed to begin.",
+    howCanWeHelp: "How can we help you today?",
+    helpLead: "Choose where you'd like to start.",
+    checkTitle: "Check what you qualify for",
+    checkDesc:
+      "Answer a few plain-language questions to see programs you may be eligible for.",
+    continueTitle: "Continue an application",
+    continueDesc:
+      "Sign in with a secure link to pick up where you left off and manage documents.",
+    helpTitle: "Get help in your language",
+    helpDesc:
+      "Use the assistant or request a caseworker. Available in English and Spanish.",
+    programsTitle: "Programs we screen for",
+    programsLead:
+      "One questionnaire checks your eligibility across all of these at once.",
   },
   auth: {
     signInTitle: "Sign in",

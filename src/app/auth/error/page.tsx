@@ -36,12 +36,15 @@ export default async function AuthErrorPage({
   const { title, body } = messages[error ?? "Default"] ?? messages.Default!;
 
   return (
-    <main className="brand-gradient flex min-h-screen flex-col items-center justify-center px-4 text-white">
+    <main
+      id="main-content"
+      className="brand-gradient flex min-h-screen flex-col items-center justify-center px-4 text-white"
+    >
       <div className="w-full max-w-md duration-500 animate-in fade-in slide-in-from-bottom-3">
         <div className="mb-6 flex justify-center">
           <Brand href="/" />
         </div>
-        <div className="rounded-2xl bg-white/10 p-8 shadow-xl ring-1 ring-white/10 backdrop-blur">
+        <div className="rounded border-t-4 border-t-[#face00] bg-white/10 p-8 shadow-xl ring-1 ring-white/10 backdrop-blur">
           <div className="mb-3 flex items-center gap-2.5">
             <span className="grid size-9 place-items-center rounded-full bg-amber-400/20 text-amber-300">
               <WarningIcon className="size-5" />
@@ -52,13 +55,13 @@ export default async function AuthErrorPage({
           <div className="flex flex-wrap gap-3">
             <Link
               href="/auth/magic-link"
-              className="rounded-full bg-white px-5 py-2.5 font-semibold text-slate-900 shadow-sm transition hover:bg-white/90 active:translate-y-px"
+              className="rounded bg-white px-5 py-2.5 font-bold text-[#1a4480] shadow-sm transition hover:bg-white/90 active:translate-y-px"
             >
               {t.auth.errorRequestNew}
             </Link>
             <Link
               href="/"
-              className="rounded-full bg-white/10 px-5 py-2.5 font-semibold ring-1 ring-white/15 transition hover:bg-white/20 active:translate-y-px"
+              className="rounded border-2 border-white/40 bg-white/10 px-5 py-2.5 font-semibold transition hover:bg-white/20 active:translate-y-px"
             >
               {t.auth.errorGoHome}
             </Link>

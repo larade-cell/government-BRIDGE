@@ -7,92 +7,213 @@ import { getI18n } from "~/i18n/server";
 import { auth } from "~/server/auth";
 import { HydrateClient } from "~/trpc/server";
 
-const primaryPill =
-  "inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 font-semibold text-slate-900 shadow-sm transition hover:bg-white/90 active:translate-y-px";
-const ghostPill =
-  "inline-flex items-center gap-2 rounded-full bg-white/10 px-6 py-3 font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/20 active:translate-y-px";
+// Squared, high-contrast government buttons (USWDS style) — no decorative pills.
+const primaryBtn =
+  "inline-flex items-center justify-center gap-2 rounded bg-white px-6 py-3 text-base font-bold text-[#1a4480] shadow-sm transition hover:bg-white/90 active:translate-y-px";
+const ghostBtn =
+  "inline-flex items-center justify-center gap-2 rounded border-2 border-white/70 px-6 py-3 text-base font-bold text-white transition hover:bg-white/10 active:translate-y-px";
+
+// Programs a single questionnaire screens for. Names are proper nouns, so they
+// read the same in every locale; the section heading carries the language.
+const PROGRAMS = [
+  { name: "SNAP", tag: "Food assistance" },
+  { name: "WIC", tag: "Women, Infants & Children" },
+  { name: "Medicaid / CHIP", tag: "Health coverage" },
+  { name: "LIHEAP", tag: "Utility & energy help" },
+  { name: "Rental assistance", tag: "Housing" },
+  { name: "Childcare subsidies", tag: "Childcare" },
+];
 
 export default async function Home() {
   const [session, { t }] = await Promise.all([auth(), getI18n()]);
 
   return (
     <HydrateClient>
-      <main className="brand-gradient flex min-h-screen flex-col text-white">
-        <header className="page-container flex items-center justify-between gap-3 py-5">
-          <Brand href="/" />
-          <div className="flex items-center gap-3">
-            <LocaleToggle variant="dark" />
-            {session?.user ? (
-              <Link
-                href="/dashboard"
-                className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium ring-1 ring-white/15 transition hover:bg-white/20"
-              >
-                {t.common.dashboard}
-              </Link>
-            ) : (
-              <Link
-                href="/auth/magic-link"
-                className="rounded-full px-4 py-2 text-sm font-medium text-white/80 transition hover:text-white"
-              >
-                {t.common.signIn}
-              </Link>
-            )}
-          </div>
-        </header>
-
-        <div className="page-container flex flex-1 flex-col items-center justify-center gap-10 py-16 text-center">
-          <div className="flex max-w-2xl flex-col items-center gap-4 duration-500 animate-in fade-in slide-in-from-bottom-3">
-            <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80 ring-1 ring-white/15">
-              {t.home.badge}
-            </span>
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl">
-              {t.home.title}
-            </h1>
-            <p className="text-pretty text-lg text-white/80 sm:text-xl">
-              {t.home.subtitle}
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center gap-4 duration-700 animate-in fade-in">
-            {session?.user && (
-              <p className="text-sm text-white/70">
-                {t.home.signedInAs}{" "}
-                <span className="font-semibold text-white">
-                  {session.user.name ?? session.user.email}
-                </span>
-              </p>
-            )}
-            <div className="flex flex-wrap justify-center gap-3">
-              <Link href="/screening/start" className={primaryPill}>
-                {t.home.startScreening}
-                <ArrowRightIcon className="size-4" />
-              </Link>
+      <div className="flex min-h-screen flex-col bg-background text-foreground">
+        {/* Site header: brand + utility nav, sitting under the official banner. */}
+        <header className="brand-gradient text-white">
+          <div className="page-container flex items-center justify-between gap-3 py-4">
+            <Brand href="/" />
+            <div className="flex items-center gap-3 text-sm">
+              <LocaleToggle variant="dark" />
               {session?.user ? (
-                <>
-                  <Link href="/dashboard" className={ghostPill}>
-                    {t.home.goToDashboard}
-                  </Link>
-                  <Link href="/api/auth/signout" className={ghostPill}>
-                    {t.common.signOut}
-                  </Link>
-                </>
+                <Link
+                  href="/dashboard"
+                  className="rounded border border-white/40 px-3 py-1.5 font-semibold transition hover:bg-white/10"
+                >
+                  {t.common.dashboard}
+                </Link>
               ) : (
-                <Link href="/auth/magic-link" className={ghostPill}>
+                <Link
+                  href="/auth/magic-link"
+                  className="rounded px-3 py-1.5 font-semibold text-white/90 underline-offset-4 transition hover:underline"
+                >
                   {t.common.signIn}
                 </Link>
               )}
             </div>
+          </div>
+
+          {/* Hero — editorial serif headline over federal navy. */}
+          <div className="page-container py-12 sm:py-16">
+            <div className="max-w-3xl">
+              <span className="inline-block border-l-4 border-white/70 pl-3 text-sm font-semibold tracking-wide text-white/80 uppercase">
+                {t.home.badge}
+              </span>
+              <h1 className="font-display mt-4 text-4xl font-black tracking-tight text-balance sm:text-5xl">
+                {t.home.title}
+              </h1>
+              <p className="mt-4 max-w-2xl text-lg text-pretty text-white/90 sm:text-xl">
+                {t.home.subtitle}
+              </p>
+
+              {session?.user && (
+                <p className="mt-6 text-sm text-white/80">
+                  {t.home.signedInAs}{" "}
+                  <span className="font-semibold text-white">
+                    {session.user.name ?? session.user.email}
+                  </span>
+                </p>
+              )}
+
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Link href="/screening/start" className={primaryBtn}>
+                  {t.home.startScreening}
+                  <ArrowRightIcon className="size-4" />
+                </Link>
+                {session?.user ? (
+                  <>
+                    <Link href="/dashboard" className={ghostBtn}>
+                      {t.home.goToDashboard}
+                    </Link>
+                    <Link href="/api/auth/signout" className={ghostBtn}>
+                      {t.common.signOut}
+                    </Link>
+                  </>
+                ) : (
+                  <Link href="/auth/magic-link" className={ghostBtn}>
+                    {t.common.signIn}
+                  </Link>
+                )}
+              </div>
+              <p className="mt-4 text-sm text-white/75">{t.home.screenerNote}</p>
+            </div>
+          </div>
+        </header>
+
+        <main id="main-content" className="flex-1">
+          {/* "How can we help you today?" — DMV-style task cards. */}
+          <section
+            aria-labelledby="help-heading"
+            className="page-container py-12 sm:py-16"
+          >
+            <h2
+              id="help-heading"
+              className="font-display text-2xl font-bold sm:text-3xl"
+            >
+              {t.home.howCanWeHelp}
+            </h2>
+            <p className="mt-2 text-muted-foreground">{t.home.helpLead}</p>
+
+            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <TaskCard
+                href="/screening/start"
+                title={t.home.checkTitle}
+                desc={t.home.checkDesc}
+              />
+              <TaskCard
+                href={session?.user ? "/dashboard" : "/auth/magic-link"}
+                title={t.home.continueTitle}
+                desc={t.home.continueDesc}
+              />
+              <TaskCard
+                href="/screening/start"
+                title={t.home.helpTitle}
+                desc={t.home.helpDesc}
+              />
+            </ul>
+          </section>
+
+          {/* Programs we screen for — GOV.UK-style "popular" links. */}
+          <section
+            aria-labelledby="programs-heading"
+            className="border-y border-border bg-secondary"
+          >
+            <div className="page-container py-12 sm:py-16">
+              <h2
+                id="programs-heading"
+                className="font-display text-2xl font-bold sm:text-3xl"
+              >
+                {t.home.programsTitle}
+              </h2>
+              <p className="mt-2 text-muted-foreground">{t.home.programsLead}</p>
+
+              <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {PROGRAMS.map((p) => (
+                  <li key={p.name}>
+                    <Link
+                      href="/screening/start"
+                      className="group flex items-center justify-between gap-3 rounded border border-border bg-card px-4 py-3 transition hover:border-primary hover:bg-accent"
+                    >
+                      <span>
+                        <span className="block font-semibold text-foreground">
+                          {p.name}
+                        </span>
+                        <span className="block text-sm text-muted-foreground">
+                          {p.tag}
+                        </span>
+                      </span>
+                      <ArrowRightIcon className="size-4 shrink-0 text-primary transition group-hover:translate-x-0.5" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        </main>
+
+        <footer className="border-t border-border bg-background">
+          <div className="page-container flex flex-col items-start justify-between gap-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center">
+            <Brand />
             {!session?.user && (
               <Link
                 href="/auth/magic-link?staff=1"
-                className="text-sm text-white/70 transition hover:text-white hover:underline"
+                className="prose-link font-medium"
               >
                 {t.home.staffSignIn}
               </Link>
             )}
           </div>
-        </div>
-      </main>
+        </footer>
+      </div>
     </HydrateClient>
+  );
+}
+
+/** A single "how can we help" action card linking to a primary task. */
+function TaskCard({
+  href,
+  title,
+  desc,
+}: {
+  href: string;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <li>
+      <Link
+        href={href}
+        className="group flex h-full flex-col gap-2 rounded border border-border border-t-4 border-t-primary bg-card p-5 shadow-sm transition hover:border-primary hover:shadow-md"
+      >
+        <span className="flex items-center justify-between gap-2">
+          <span className="font-display text-lg font-bold text-foreground">
+            {title}
+          </span>
+          <ArrowRightIcon className="size-5 shrink-0 text-primary transition group-hover:translate-x-0.5" />
+        </span>
+        <span className="text-muted-foreground">{desc}</span>
+      </Link>
+    </li>
   );
 }

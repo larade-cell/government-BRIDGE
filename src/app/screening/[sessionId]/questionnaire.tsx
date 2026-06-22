@@ -102,7 +102,10 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
   const progress = ((index + 1) / questions.length) * 100;
 
   return (
-    <main className="brand-gradient flex min-h-screen flex-col items-center px-4 py-8 text-white sm:py-12">
+    <main
+      id="main-content"
+      className="brand-gradient flex min-h-screen flex-col items-center px-4 py-8 text-white sm:py-12"
+    >
       <div className="mb-8 flex w-full max-w-xl items-center justify-between gap-3">
         <Brand href="/" />
         <LocaleToggle variant="dark" />
@@ -171,6 +174,7 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
             <Button
               onClick={handleNext}
               disabled={upsert.isPending || complete.isPending}
+              className="!bg-white px-6 font-bold !text-[#1a4480] hover:!bg-white/90"
             >
               {upsert.isPending || complete.isPending ? (
                 <>

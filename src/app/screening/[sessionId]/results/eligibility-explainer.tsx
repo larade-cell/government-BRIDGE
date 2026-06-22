@@ -57,7 +57,7 @@ export function EligibilityExplainer({
   return (
     <div className="rounded-lg border border-sky-400/20 bg-sky-500/10 p-4">
       <div className="mb-2 flex items-center gap-2">
-        <h3 className="text-sm font-semibold text-sky-200">
+        <h3 className="text-sm font-semibold text-[#9cc6f0]">
           {t.results.explainer.title}
         </h3>
         <Tooltip label={t.results.explainer.about}>

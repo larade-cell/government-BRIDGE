@@ -9,6 +9,12 @@ export const es: Messages = {
     back: "Atrás",
     saving: "Guardando…",
     loading: "Cargando…",
+    skipToContent: "Saltar al contenido principal",
+  },
+  gov: {
+    official: "Una plataforma oficial de evaluación de beneficios",
+    secure:
+      "Su información es privada y segura. Nunca pedimos un número de Seguro Social.",
   },
   nav: {
     overview: "Resumen",
@@ -41,6 +47,21 @@ export const es: Messages = {
     startScreening: "Comenzar evaluación",
     goToDashboard: "Ir a mi panel",
     staffSignIn: "Acceso para personal →",
+    screenerNote: "Toma unos 10 minutos. No necesita una cuenta para empezar.",
+    howCanWeHelp: "¿Cómo podemos ayudarle hoy?",
+    helpLead: "Elija por dónde desea empezar.",
+    checkTitle: "Verifique para qué califica",
+    checkDesc:
+      "Responda algunas preguntas sencillas para ver los programas para los que podría ser elegible.",
+    continueTitle: "Continuar una solicitud",
+    continueDesc:
+      "Inicie sesión con un enlace seguro para retomar donde quedó y administrar documentos.",
+    helpTitle: "Obtenga ayuda en su idioma",
+    helpDesc:
+      "Use el asistente o solicite un trabajador de casos. Disponible en inglés y español.",
+    programsTitle: "Programas que evaluamos",
+    programsLead:
+      "Un solo cuestionario verifica su elegibilidad para todos estos a la vez.",
   },
   auth: {
     signInTitle: "Iniciar sesión",

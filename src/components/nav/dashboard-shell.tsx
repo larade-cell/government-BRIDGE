@@ -64,7 +64,9 @@ export function DashboardShell({
           <div className="mb-5 md:hidden">
             <DashboardNav items={items} variant="horizontal" />
           </div>
-          <main className="duration-300 animate-in fade-in">{children}</main>
+          <main id="main-content" className="duration-300 animate-in fade-in">
+            {children}
+          </main>
         </div>
       </div>
     </div>

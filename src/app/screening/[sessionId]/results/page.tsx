@@ -53,7 +53,10 @@ export default async function ResultsPage({
   });
 
   return (
-    <main className="brand-gradient flex min-h-screen flex-col items-center px-4 py-8 text-white sm:py-12">
+    <main
+      id="main-content"
+      className="brand-gradient flex min-h-screen flex-col items-center px-4 py-8 text-white sm:py-12"
+    >
       <div className="mb-8 flex w-full max-w-2xl items-center justify-between gap-3">
         <Brand href="/" />
         <LocaleToggle variant="dark" />
@@ -113,7 +116,7 @@ export default async function ResultsPage({
                       >
                         <span
                           tabIndex={0}
-                          className="inline-flex w-fit cursor-help items-center gap-1 rounded-full bg-indigo-500/20 px-2.5 py-0.5 text-xs font-medium text-indigo-200 ring-1 ring-indigo-400/30 outline-none"
+                          className="inline-flex w-fit cursor-help items-center gap-1 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-medium text-white/85 ring-1 ring-white/20 outline-none"
                         >
                           {fmt(t.results.adjustedFor, { state: exp.applied_state })}
                         </span>
@@ -132,7 +135,7 @@ export default async function ResultsPage({
                     <Link
                       href={r.program.authoritative_url}
                       target="_blank"
-                      className="text-sm font-semibold text-sky-300 hover:underline"
+                      className="text-sm font-semibold text-[#9cc6f0] underline underline-offset-2 hover:text-white"
                     >
                       {fmt(t.results.openApplication, { program: r.program.name })}
                     </Link>
@@ -156,7 +159,7 @@ export default async function ResultsPage({
         <div className="mt-10 text-center">
           <Link
             href="/"
-            className="rounded-full bg-white/10 px-6 py-3 font-semibold transition hover:bg-white/20"
+            className="rounded border-2 border-white/40 bg-white/10 px-6 py-3 font-semibold transition hover:bg-white/20"
           >
             {t.results.backHome}
           </Link>

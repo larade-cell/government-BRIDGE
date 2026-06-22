@@ -92,7 +92,7 @@ export function RequestHelp({ sessionId }: { sessionId: string }) {
             })
           }
           disabled={create.isPending}
-          className="rounded-full bg-white px-5 py-2 font-semibold text-slate-900 transition hover:bg-white/90 disabled:opacity-60"
+          className="rounded bg-white px-5 py-2.5 font-bold text-[#1a4480] transition hover:bg-white/90 disabled:opacity-60"
         >
           {create.isPending ? t.results.help.requesting : t.results.help.button}
         </button>

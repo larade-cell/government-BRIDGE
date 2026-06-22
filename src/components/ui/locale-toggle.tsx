@@ -42,7 +42,7 @@ export function LocaleToggle({
       role="group"
       aria-label="Language"
       className={cn(
-        "inline-flex items-center gap-0.5 rounded-full p-0.5 ring-1",
+        "inline-flex items-center gap-0.5 rounded p-0.5 ring-1",
         container,
         pending && "opacity-60",
         className,
@@ -66,7 +66,7 @@ export function LocaleToggle({
             aria-pressed={active}
             disabled={pending}
             className={cn(
-              "rounded-full px-2.5 py-1 text-xs font-semibold uppercase transition-colors outline-none",
+              "rounded-sm px-2.5 py-1 text-xs font-semibold uppercase transition-colors outline-none",
               active ? activeCls : idleCls,
             )}
           >

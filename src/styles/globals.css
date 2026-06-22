@@ -5,12 +5,17 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: var(--font-public-sans), var(--font-geist-sans), ui-sans-serif,
+    system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  /* Serif display face for headlines — the authoritative, editorial tone of
+     the federal sites (White House / State Dept "Building Back Better"). */
+  --font-display: var(--font-merriweather), Georgia, "Times New Roman", serif;
 }
 
 @theme inline {
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display), var(--font-sans);
+  --font-display: var(--font-display);
   --font-sans: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -53,85 +58,112 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  /* Brand: indigo. Drives buttons, links, active nav, and chart accents so
-     the light "app" and the dark public pages share one identity. */
-  --primary: oklch(0.511 0.214 277);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.96 0.02 277);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.6 0.18 277);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* ──────────────────────────────────────────────────────────────────────
+     Federal palette, modeled on the U.S. Web Design System (USWDS) tokens
+     used across government sites. Chosen for WCAG 2.1 AA contrast: ink on
+     white, a deep federal navy for primary actions, an accessible link blue,
+     a federal red for emphasis, and a high-visibility focus indicator.
+     ────────────────────────────────────────────────────────────────────── */
+  --background: #ffffff;
+  --foreground: #1b1b1b; /* USWDS "ink" — 16.1:1 on white */
+  --card: #ffffff;
+  --card-foreground: #1b1b1b;
+  --popover: #ffffff;
+  --popover-foreground: #1b1b1b;
+  /* Primary: federal navy. Drives buttons, active nav, and the brand mark so
+     the light "app" and the dark public pages share one official identity. */
+  --primary: #1a4480; /* blue-warm-70v — 8.6:1 on white */
+  --primary-foreground: #ffffff;
+  --secondary: #f0f0f0; /* gray-cool-4 surface */
+  --secondary-foreground: #1b1b1b;
+  --muted: #f0f0f0;
+  --muted-foreground: #565c65; /* gray-cool-50 — 5.7:1 on white */
+  --accent: #e7f0f7; /* pale federal blue wash for hovers/active surfaces */
+  --accent-foreground: #1a4480;
+  --destructive: #b50909; /* USWDS secondary (federal red) — 6.4:1 on white */
+  --border: #dfe1e2; /* gray-cool-10 hairline */
+  --input: #565c65; /* darker input borders stay visible (3:1 non-text AA) */
+  /* Focus: high-visibility blue ring, the USWDS focus indicator. Paired with
+     a contrasting outline so keyboard focus is obvious on any background. */
+  --ring: #2491ff;
+  /* Link color used by content links and the `link` button variant. */
+  --link: #005ea2; /* USWDS primary link — 5.9:1 on white */
+  --link-visited: #54278f;
+  --chart-1: #1a4480;
+  --chart-2: #2672de;
+  --chart-3: #00a398;
+  --chart-4: #e66f0e;
+  --chart-5: #b50909;
+  --radius: 0.25rem; /* government UIs read as squared/structural, not pill-y */
+  --sidebar: #f7f9fa;
+  --sidebar-foreground: #1b1b1b;
+  --sidebar-primary: #1a4480;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e7f0f7;
+  --sidebar-accent-foreground: #1a4480;
+  --sidebar-border: #dfe1e2;
+  --sidebar-ring: #2491ff;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.62 0.19 277);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #0b1b32; /* deep federal navy */
+  --foreground: #f7f9fa;
+  --card: #122844;
+  --card-foreground: #f7f9fa;
+  --popover: #122844;
+  --popover-foreground: #f7f9fa;
+  --primary: #73b3e7; /* lightened federal blue for AA on navy */
+  --primary-foreground: #0b1b32;
+  --secondary: #1b3a5f;
+  --secondary-foreground: #f7f9fa;
+  --muted: #1b3a5f;
+  --muted-foreground: #c6d6e6;
+  --accent: #1b3a5f;
+  --accent-foreground: #f7f9fa;
+  --destructive: #f2938c;
+  --border: rgb(255 255 255 / 14%);
+  --input: rgb(255 255 255 / 24%);
+  --ring: #2491ff;
+  --link: #73b3e7;
+  --link-visited: #c9b3e7;
+  --chart-1: #73b3e7;
+  --chart-2: #2672de;
+  --chart-3: #00b8b3;
+  --chart-4: #fa9441;
+  --chart-5: #f2938c;
+  --sidebar: #122844;
+  --sidebar-foreground: #f7f9fa;
+  --sidebar-primary: #73b3e7;
+  --sidebar-primary-foreground: #0b1b32;
+  --sidebar-accent: #1b3a5f;
+  --sidebar-accent-foreground: #f7f9fa;
+  --sidebar-border: rgb(255 255 255 / 14%);
+  --sidebar-ring: #2491ff;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    /* Strong, high-visibility keyboard focus everywhere (USWDS pattern): a
+       4px solid ring at full opacity, offset so it reads on any surface. */
+    @apply border-border;
+  }
+  :focus-visible {
+    outline: 4px solid var(--ring);
+    outline-offset: 2px;
   }
   body {
     @apply bg-background text-foreground;
+    /* Slightly larger base text for readability / low digital-literacy users. */
+    font-size: 1.0625rem;
+    line-height: 1.6;
   }
   html {
     @apply font-sans;
+  }
+  /* Headlines carry the serif display face for the official, editorial tone. */
+  h1,
+  h2 {
+    @apply font-display;
   }
 }
 
@@ -140,9 +172,32 @@
   .page-container {
     @apply mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8;
   }
-  /* Shared dark brand backdrop for the public/marketing + screening pages. */
+  /* Shared federal-navy backdrop for the public + screening pages. A solid,
+     official color instead of the old decorative gradient. */
   .brand-gradient {
-    @apply bg-gradient-to-b from-[#0f172a] to-[#020617];
+    background-color: #112e51;
+    background-image: linear-gradient(180deg, #1a4480 0%, #112e51 60%, #0b1b32 100%);
+  }
+  /* Skip link: visually hidden until focused, then pinned top-left so keyboard
+     and screen-reader users can jump past the banner straight to content. */
+  .skip-link {
+    @apply sr-only;
+  }
+  .skip-link:focus {
+    @apply not-sr-only fixed top-2 left-2 z-50 rounded-sm bg-primary px-4 py-2 font-semibold text-primary-foreground no-underline shadow-lg;
+  }
+  /* Official government banner strip across the very top of every page. */
+  .gov-banner {
+    @apply border-b border-[#dfe1e2] bg-[#f0f0f0] text-[#1b1b1b];
+  }
+  /* Content link styling for prose/inline links (gov standard: underlined). */
+  .prose-link {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .prose-link:visited {
+    color: var(--link-visited);
   }
 }
 

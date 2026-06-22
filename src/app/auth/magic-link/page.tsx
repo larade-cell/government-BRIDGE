@@ -15,13 +15,16 @@ export default async function MagicLinkPage({
   const isStaff = staff === "1";
 
   return (
-    <main className="brand-gradient flex min-h-screen flex-col items-center justify-center px-4 text-white">
+    <main
+      id="main-content"
+      className="brand-gradient flex min-h-screen flex-col items-center justify-center px-4 text-white"
+    >
       <div className="w-full max-w-sm duration-500 animate-in fade-in slide-in-from-bottom-3">
         <div className="mb-6 flex items-center justify-between">
           <Brand href="/" />
           <LocaleToggle variant="dark" />
         </div>
-        <div className="rounded-2xl bg-white/10 p-8 shadow-xl ring-1 ring-white/10 backdrop-blur">
+        <div className="rounded border-t-4 border-t-white/80 bg-white/10 p-8 shadow-xl ring-1 ring-white/10 backdrop-blur">
           <h1 className="mb-1 font-heading text-2xl font-bold">
             {isStaff ? t.auth.staffTitle : t.auth.signInTitle}
           </h1>
@@ -53,7 +56,7 @@ export default async function MagicLinkPage({
             </label>
             <button
               type="submit"
-              className="mt-2 rounded-full bg-white px-6 py-2.5 font-semibold text-slate-900 shadow-sm transition hover:bg-white/90 active:translate-y-px"
+              className="mt-2 rounded bg-white px-6 py-3 font-bold text-[#1a4480] shadow-sm transition hover:bg-white/90 active:translate-y-px"
             >
               {t.auth.sendLink}
             </button>

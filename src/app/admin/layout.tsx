@@ -10,16 +10,24 @@ export default async function AdminLayout({
   const { session, role } = await requireRolePage(STAFF_ROLES);
 
   const items: NavItem[] = [
-    { href: "/admin", label: "Overview", exact: true },
-    { href: "/admin/cases", label: "Cases" },
+    { href: "/admin", label: "Overview", icon: "grid", exact: true },
+    { href: "/admin/cases", label: "Cases", icon: "cases" },
     ...(role === "admin"
-      ? [
-          { href: "/admin/rules", label: "Eligibility rules" },
-          { href: "/admin/programs", label: "Programs & questions" },
-          { href: "/admin/knowledge", label: "Knowledge base" },
-          { href: "/admin/organizations", label: "Organizations" },
-          { href: "/admin/audit", label: "Audit log" },
-        ]
+      ? ([
+          { href: "/admin/rules", label: "Eligibility rules", icon: "rules" },
+          {
+            href: "/admin/programs",
+            label: "Programs & questions",
+            icon: "programs",
+          },
+          { href: "/admin/knowledge", label: "Knowledge base", icon: "knowledge" },
+          {
+            href: "/admin/organizations",
+            label: "Organizations",
+            icon: "organizations",
+          },
+          { href: "/admin/audit", label: "Audit log", icon: "audit" },
+        ] satisfies NavItem[])
       : []),
   ];
 

@@ -13,9 +13,9 @@ export default async function AccountLayout({
   const [session, { t }] = await Promise.all([requireUser(), getI18n()]);
 
   const items: NavItem[] = [
-    { href: "/account", label: t.nav.overview, exact: true },
-    { href: "/account/documents", label: t.nav.documents },
-    { href: "/account/profile", label: t.nav.profile },
+    { href: "/account", label: t.nav.overview, icon: "grid", exact: true },
+    { href: "/account/documents", label: t.nav.documents, icon: "documents" },
+    { href: "/account/profile", label: t.nav.profile, icon: "user" },
   ];
 
   return (
@@ -26,7 +26,7 @@ export default async function AccountLayout({
       headerActions={
         <Link
           href="/screening/start"
-          className="hidden rounded-lg px-2.5 py-1.5 font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white sm:inline-block"
+          className="hidden rounded-lg px-2.5 py-1.5 font-medium text-primary transition-colors hover:bg-primary/10 sm:inline-block"
         >
           {t.account.startNewScreening}
         </Link>

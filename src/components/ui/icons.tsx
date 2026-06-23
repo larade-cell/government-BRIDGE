@@ -161,6 +161,103 @@ export function ClockIcon(p: IconProps) {
   );
 }
 
+export function GridIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+    </Icon>
+  );
+}
+
+export function FileTextIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6" />
+      <path d="M16 13H8M16 17H8M10 9H8" />
+    </Icon>
+  );
+}
+
+export function UserIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </Icon>
+  );
+}
+
+export function BriefcaseIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <rect x="2" y="7" width="20" height="14" rx="2" />
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    </Icon>
+  );
+}
+
+export function ScaleIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <path d="M12 3v18M5 7h14M7 21h10" />
+      <path d="m5 7-3 6h6z" />
+      <path d="m19 7-3 6h6z" />
+    </Icon>
+  );
+}
+
+export function ClipboardIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <rect x="8" y="2" width="8" height="4" rx="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+      <path d="M9 12h6M9 16h6" />
+    </Icon>
+  );
+}
+
+export function BookIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </Icon>
+  );
+}
+
+export function BuildingIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <rect x="4" y="2" width="16" height="20" rx="2" />
+      <path d="M9 22v-4h6v4" />
+      <path d="M8 6h.01M16 6h.01M8 10h.01M16 10h.01M8 14h.01M16 14h.01" />
+    </Icon>
+  );
+}
+
+export function HistoryIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.36 2.64L3 8" />
+      <path d="M3 3v5h5" />
+      <path d="M12 7v5l3 2" />
+    </Icon>
+  );
+}
+
+export function TrendingUpIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <path d="M22 7 13.5 15.5 8.5 10.5 2 17" />
+      <path d="M16 7h6v6" />
+    </Icon>
+  );
+}
+
 export function SparkleIcon(p: IconProps) {
   return (
     <Icon {...p}>

@@ -2,6 +2,12 @@ import Link from "next/link";
 
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import {
+  CheckCircleIcon,
+  ClipboardIcon,
+  ClockIcon,
+  ScaleIcon,
+} from "~/components/ui/icons";
 import { PageContainer, PageHeader } from "~/components/ui/page";
 import { fmt, type Locale } from "~/i18n/config";
 import { getI18n } from "~/i18n/server";
@@ -15,6 +21,37 @@ function formatDate(d: Date, locale: Locale) {
   });
 }
 
+/** A colored icon tile + metric, mirroring the staff console's stat cards. */
+function Stat({
+  label,
+  value,
+  icon: Icon,
+  tone,
+}: {
+  label: string;
+  value: number;
+  icon: (props: { className?: string }) => React.ReactNode;
+  tone: string;
+}) {
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-4 py-5">
+        <span
+          className={`grid size-11 shrink-0 place-items-center rounded-xl ${tone}`}
+        >
+          <Icon className="size-5" />
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-sm text-muted-foreground">{label}</p>
+          <p className="font-heading text-3xl leading-tight font-bold">
+            {value}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default async function AccountOverviewPage() {
   const [{ locale, t }, me, sessions] = await Promise.all([
     getI18n(),
@@ -23,6 +60,11 @@ export default async function AccountOverviewPage() {
   ]);
 
   const inProgress = sessions.filter((s) => !s.completed_at);
+  const completedCount = sessions.length - inProgress.length;
+  const matchCount = sessions.reduce(
+    (sum, s) => sum + s._count.eligibility_results,
+    0,
+  );
 
   return (
     <PageContainer>
@@ -43,6 +85,35 @@ export default async function AccountOverviewPage() {
           </Button>
         }
       />
+
+      {sessions.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat
+            label={t.account.statScreenings}
+            value={sessions.length}
+            icon={ClipboardIcon}
+            tone="bg-sky-100 text-sky-700"
+          />
+          <Stat
+            label={t.account.completed}
+            value={completedCount}
+            icon={CheckCircleIcon}
+            tone="bg-emerald-100 text-emerald-700"
+          />
+          <Stat
+            label={t.account.inProgress}
+            value={inProgress.length}
+            icon={ClockIcon}
+            tone="bg-amber-100 text-amber-700"
+          />
+          <Stat
+            label={t.account.statMatches}
+            value={matchCount}
+            icon={ScaleIcon}
+            tone="bg-indigo-100 text-indigo-700"
+          />
+        </div>
+      )}
 
       {inProgress.length > 0 && (
         <Card className="border-primary/20 bg-primary/5">

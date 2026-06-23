@@ -1,5 +1,6 @@
 import { type PrismaClient } from "../../../../generated/prisma";
 import { isAiEnabled, validateDocument } from "../../../../lib/ai-service";
+import { redactSsn } from "./redact";
 
 /** A Prisma client or an interactive-transaction client. */
 type Db = PrismaClient | Parameters<Parameters<PrismaClient["$transaction"]>[0]>[0];
@@ -114,10 +115,13 @@ export async function runUploadValidation(
   // document into the caseworker queue — best-effort, never failing validation.
   const persist = async (
     status: ValidationOutcome["validation_status"],
-    reason: string | null,
+    rawReason: string | null,
     confidence: number | null = null,
     queueForReview = false,
   ): Promise<ValidationOutcome> => {
+    // The model's reason can echo content it read off the document, including
+    // an SSN — mask it before it touches the column or the case note.
+    const reason = redactSsn(rawReason);
     const r = await db.document_uploads.update({
       where: { id: uploadId },
       data: {

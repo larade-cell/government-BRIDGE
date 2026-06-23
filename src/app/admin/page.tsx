@@ -5,6 +5,14 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import {
+  BriefcaseIcon,
+  CheckCircleIcon,
+  ClipboardIcon,
+  FileTextIcon,
+  ScaleIcon,
+  TrendingUpIcon,
+} from "~/components/ui/icons";
 import { PageContainer, PageHeader } from "~/components/ui/page";
 import { api } from "~/trpc/server";
 
@@ -15,12 +23,32 @@ const OUTCOME_LABELS: Record<string, string> = {
   unlikely_eligible: "Unlikely eligible",
 };
 
-function Stat({ label, value }: { label: string; value: string | number }) {
+/** A colored icon tile + metric, in the style of an official admin console. */
+function Stat({
+  label,
+  value,
+  icon: Icon,
+  tone,
+}: {
+  label: string;
+  value: string | number;
+  icon: (props: { className?: string }) => React.ReactNode;
+  tone: string;
+}) {
   return (
     <Card>
-      <CardContent className="py-5">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="mt-1 font-heading text-3xl font-bold">{value}</p>
+      <CardContent className="flex items-center gap-4 py-5">
+        <span
+          className={`grid size-11 shrink-0 place-items-center rounded-xl ${tone}`}
+        >
+          <Icon className="size-5" />
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-sm text-muted-foreground">{label}</p>
+          <p className="font-heading text-3xl leading-tight font-bold">
+            {value}
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
@@ -44,15 +72,42 @@ export default async function AdminOverviewPage() {
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <Stat label="Total screenings" value={overview.total_sessions} />
-        <Stat label="Completed" value={overview.completed_sessions} />
-        <Stat label="Completion rate" value={pct(overview.completion_rate)} />
+        <Stat
+          label="Total screenings"
+          value={overview.total_sessions}
+          icon={ClipboardIcon}
+          tone="bg-sky-100 text-sky-700"
+        />
+        <Stat
+          label="Completed"
+          value={overview.completed_sessions}
+          icon={CheckCircleIcon}
+          tone="bg-emerald-100 text-emerald-700"
+        />
+        <Stat
+          label="Completion rate"
+          value={pct(overview.completion_rate)}
+          icon={TrendingUpIcon}
+          tone="bg-violet-100 text-violet-700"
+        />
         <Stat
           label="Eligibility results"
           value={overview.total_eligibility_results}
+          icon={ScaleIcon}
+          tone="bg-indigo-100 text-indigo-700"
         />
-        <Stat label="Documents uploaded" value={overview.total_uploads} />
-        <Stat label="Open cases" value={overview.open_cases} />
+        <Stat
+          label="Documents uploaded"
+          value={overview.total_uploads}
+          icon={FileTextIcon}
+          tone="bg-amber-100 text-amber-700"
+        />
+        <Stat
+          label="Open cases"
+          value={overview.open_cases}
+          icon={BriefcaseIcon}
+          tone="bg-rose-100 text-rose-700"
+        />
       </div>
 
       <Card>

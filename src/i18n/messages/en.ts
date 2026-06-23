@@ -191,6 +191,8 @@ export const en = {
     answersSoFar: "{n} answers so far",
     resume: "Resume",
     yourScreenings: "Your screenings",
+    statScreenings: "Screenings",
+    statMatches: "Program matches",
     newScreening: "New screening",
     noScreenings: "You haven't started a screening yet.",
     startOne: "Start one now",

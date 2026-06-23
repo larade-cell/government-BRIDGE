@@ -9,6 +9,7 @@ import {
 } from "../../../../lib/ai-service";
 import { generateSessionChecklist } from "~/server/api/helpers/document-checklist";
 import { runUploadValidation } from "~/server/api/helpers/document-validation";
+import { redactSsn } from "~/server/api/helpers/redact";
 import { assertSessionAccess } from "~/server/api/helpers/session";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -264,7 +265,8 @@ export const documentUploadRouter = createTRPCRouter({
         data: {
           session_id: input.session_id,
           document_type_id: input.document_type_id ?? null,
-          file_name: input.file_name,
+          // Defensive: a user could name the file with their SSN.
+          file_name: redactSsn(input.file_name),
           file_mime_type: input.file_mime_type,
           // Placeholder until object-store integration lands. The real flow
           // PUTs to `upload_url` then a webhook fills the canonical URL.
@@ -465,7 +467,10 @@ export const documentUploadRouter = createTRPCRouter({
       const updated = await ctx.db.document_uploads.update({
         where: { id: upload.id },
         data: {
-          ocr_text: analysis.extracted_text,
+          // Never persist the raw OCR text — an SSN card (or many tax/benefit
+          // docs) would land verbatim in the DB. Classification above already
+          // ran on the in-memory text; only the stored copy is masked.
+          ocr_text: redactSsn(analysis.extracted_text),
           status: "ocr_complete",
           predicted_document_type_id: predicted?.id ?? null,
           ...(predicted && !userConfirmed
@@ -487,7 +492,7 @@ export const documentUploadRouter = createTRPCRouter({
           classified_by: "ai",
           model_name: CHAT_MODEL,
           raw_response: {
-            summary: analysis.summary,
+            summary: redactSsn(analysis.summary),
             suggested_type: analysis.suggested_type,
           },
         },

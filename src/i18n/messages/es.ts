@@ -188,6 +188,8 @@ export const es: Messages = {
     answersSoFar: "{n} respuestas hasta ahora",
     resume: "Reanudar",
     yourScreenings: "Sus evaluaciones",
+    statScreenings: "Evaluaciones",
+    statMatches: "Coincidencias",
     newScreening: "Nueva evaluación",
     noScreenings: "Aún no ha comenzado una evaluación.",
     startOne: "Comience una ahora",

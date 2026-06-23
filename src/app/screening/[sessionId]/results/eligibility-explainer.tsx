@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { Button } from "~/components/ui/button";
+import { SparkleIcon } from "~/components/ui/icons";
 import { Spinner } from "~/components/ui/spinner";
 import { Tooltip } from "~/components/ui/tooltip";
 import { useI18n } from "~/i18n/client";
@@ -46,9 +47,10 @@ export function EligibilityExplainer({
       <Button
         variant="secondary"
         size="sm"
-        className="w-fit"
+        className="w-fit gap-1.5"
         onClick={() => setOpen(true)}
       >
+        <SparkleIcon className="size-4" />
         {t.results.explainer.button}
       </Button>
     );

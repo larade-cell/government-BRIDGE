@@ -26,7 +26,7 @@ export default async function AccountLayout({
       headerActions={
         <Link
           href="/screening/start"
-          className="hidden rounded-lg px-2.5 py-1.5 font-medium text-primary transition-colors hover:bg-primary/10 sm:inline-block"
+          className="hidden rounded-lg px-2.5 py-1.5 font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white sm:inline-block"
         >
           {t.account.startNewScreening}
         </Link>

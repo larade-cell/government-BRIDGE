@@ -29,7 +29,7 @@ export default async function AdminLayout({
       items={items}
       showLocaleToggle={false}
       badge={
-        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold tracking-wide text-primary uppercase">
+        <span className="rounded-full bg-white/15 px-2 py-0.5 text-xs font-semibold tracking-wide text-white uppercase ring-1 ring-white/20">
           {role === "admin" ? "Admin" : "Staff"} console
         </span>
       }

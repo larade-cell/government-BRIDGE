@@ -5,6 +5,12 @@ import { useMemo, useState } from "react";
 
 import { Brand } from "~/components/ui/brand";
 import { Button } from "~/components/ui/button";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CheckIcon,
+  WarningIcon,
+} from "~/components/ui/icons";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { LocaleToggle } from "~/components/ui/locale-toggle";
@@ -15,6 +21,11 @@ import { fmt } from "~/i18n/config";
 import { api, type RouterOutputs } from "~/trpc/react";
 
 type Question = RouterOutputs["question"]["list"][number];
+
+// Large, high-contrast field styling for the questionnaire's dark backdrop —
+// tall enough to be an easy target and legible for low-vision users.
+const questionInputClass =
+  "h-12 border-white/40 text-lg text-white placeholder:text-white/50";
 
 export function Questionnaire({ sessionId }: { sessionId: string }) {
   const router = useRouter();
@@ -135,11 +146,11 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
           key={current.id}
           className="rounded-2xl bg-white/10 p-6 shadow-xl ring-1 ring-white/10 duration-300 animate-in fade-in slide-in-from-right-4 sm:p-8"
         >
-          <h2 className="mb-2 font-heading text-2xl font-semibold">
+          <h2 className="mb-2 font-heading text-2xl font-bold sm:text-3xl">
             {current.prompt}
           </h2>
           {current.helper_text && (
-            <p className="mb-6 text-sm text-white/70">{current.helper_text}</p>
+            <p className="mb-6 text-base text-white/80">{current.helper_text}</p>
           )}
 
           <div className="mb-6">
@@ -156,34 +167,44 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
           {error && (
             <p
               role="alert"
-              className="mb-4 rounded-lg bg-red-400/15 px-3 py-2 text-sm text-red-200 ring-1 ring-red-400/20 duration-200 animate-in fade-in"
+              className="mb-4 flex items-center gap-2 rounded-md bg-red-400/15 px-3 py-2.5 text-sm font-medium text-red-100 ring-1 ring-red-400/30 duration-200 animate-in fade-in"
             >
+              <WarningIcon className="size-5 shrink-0" />
               {error}
             </p>
           )}
 
-          <div className="flex justify-between">
+          <div className="flex items-center justify-between gap-3">
             <Button
               variant="ghost"
+              size="lg"
               onClick={() => goTo(Math.max(0, index - 1))}
               disabled={index === 0}
-              className="text-white hover:bg-white/10 hover:text-white"
+              className="gap-2 text-white hover:bg-white/10 hover:text-white disabled:opacity-40"
             >
+              <ArrowLeftIcon className="size-5" />
               {t.common.back}
             </Button>
             <Button
               onClick={handleNext}
+              size="lg"
               disabled={upsert.isPending || complete.isPending}
-              className="!bg-white px-6 font-bold !text-[#1a4480] hover:!bg-white/90"
+              className="!bg-white px-7 font-bold !text-[#1a4480] hover:!bg-white/90"
             >
               {upsert.isPending || complete.isPending ? (
                 <>
                   <Spinner className="size-4" /> {t.common.saving}
                 </>
               ) : isLast ? (
-                t.screening.seeResults
+                <>
+                  {t.screening.seeResults}
+                  <ArrowRightIcon className="size-5" />
+                </>
               ) : (
-                t.screening.next
+                <>
+                  {t.screening.next}
+                  <ArrowRightIcon className="size-5" />
+                </>
               )}
             </Button>
           </div>
@@ -196,6 +217,38 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
 /** Coerce a stored answer value to a text-input string (ignores non-scalars). */
 function asText(v: unknown): string {
   return typeof v === "string" || typeof v === "number" ? String(v) : "";
+}
+
+/**
+ * A large, fully-clickable answer option. The whole card is the label, so the
+ * tap target is big and forgiving — important for older users and anyone on a
+ * phone. Selecting it fills the card and shows a check, a clearer signal than a
+ * small radio dot alone. Keyboard + screen-reader behavior comes from the
+ * underlying radio primitive.
+ */
+function OptionCard({
+  id,
+  value,
+  label,
+}: {
+  id: string;
+  value: string;
+  label: string;
+}) {
+  return (
+    <Label
+      htmlFor={id}
+      className="group cursor-pointer items-center gap-3 rounded-md border-2 border-white/30 bg-white/5 px-4 py-3.5 text-base font-medium text-white transition-colors hover:border-white/60 hover:bg-white/10 has-data-checked:border-white has-data-checked:bg-white has-data-checked:text-[#1a4480]"
+    >
+      <RadioGroupItem
+        id={id}
+        value={value}
+        className="!size-5 !border-white/60 data-checked:!border-[#1a4480] data-checked:!bg-[#1a4480]"
+      />
+      <span className="flex-1">{label}</span>
+      <CheckIcon className="size-5 opacity-0 transition-opacity peer-data-checked:opacity-100" />
+    </Label>
+  );
 }
 
 function QuestionInput({
@@ -221,6 +274,7 @@ function QuestionInput({
             onChange(n);
           }}
           required={question.is_required}
+          className={questionInputClass}
         />
       );
     case "decimal":
@@ -235,6 +289,7 @@ function QuestionInput({
             onChange(n);
           }}
           required={question.is_required}
+          className={questionInputClass}
         />
       );
     case "boolean":
@@ -243,14 +298,16 @@ function QuestionInput({
           value={value === true ? "yes" : value === false ? "no" : ""}
           onValueChange={(v) => onChange(v === "yes")}
         >
-          <div className="flex items-center gap-3">
-            <RadioGroupItem id={`${question.id}-yes`} value="yes" />
-            <Label htmlFor={`${question.id}-yes`}>{t.screening.yes}</Label>
-          </div>
-          <div className="flex items-center gap-3">
-            <RadioGroupItem id={`${question.id}-no`} value="no" />
-            <Label htmlFor={`${question.id}-no`}>{t.screening.no}</Label>
-          </div>
+          <OptionCard
+            id={`${question.id}-yes`}
+            value="yes"
+            label={t.screening.yes}
+          />
+          <OptionCard
+            id={`${question.id}-no`}
+            value="no"
+            label={t.screening.no}
+          />
         </RadioGroup>
       );
     case "single_select":
@@ -260,10 +317,12 @@ function QuestionInput({
           onValueChange={onChange}
         >
           {question.options.map((opt) => (
-            <div key={opt.id} className="flex items-center gap-3">
-              <RadioGroupItem id={opt.id} value={opt.option_key} />
-              <Label htmlFor={opt.id}>{opt.label}</Label>
-            </div>
+            <OptionCard
+              key={opt.id}
+              id={opt.id}
+              value={opt.option_key}
+              label={opt.label}
+            />
           ))}
         </RadioGroup>
       );
@@ -274,6 +333,7 @@ function QuestionInput({
           value={asText(value)}
           onChange={(e) => onChange(e.target.value)}
           required={question.is_required}
+          className={questionInputClass}
         />
       );
   }

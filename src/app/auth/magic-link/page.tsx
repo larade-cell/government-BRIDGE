@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Brand } from "~/components/ui/brand";
+import { ArrowRightIcon } from "~/components/ui/icons";
 import { LocaleToggle } from "~/components/ui/locale-toggle";
 import { getI18n } from "~/i18n/server";
 
@@ -65,9 +66,10 @@ export default async function MagicLinkPage({
           <div className="mt-6 border-t border-white/10 pt-4 text-center text-sm text-white/70">
             <Link
               href={isStaff ? "/auth/magic-link" : "/auth/magic-link?staff=1"}
-              className="transition hover:text-white hover:underline"
+              className="inline-flex items-center gap-1.5 font-medium underline-offset-4 transition hover:text-white hover:underline"
             >
               {isStaff ? t.auth.toResident : t.auth.toStaff}
+              <ArrowRightIcon className="size-4" />
             </Link>
           </div>
         </div>

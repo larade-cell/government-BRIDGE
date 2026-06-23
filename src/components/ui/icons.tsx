@@ -89,6 +89,15 @@ export function ArrowRightIcon(p: IconProps) {
   );
 }
 
+export function ArrowLeftIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <path d="M19 12H5" />
+      <path d="m12 19-7-7 7-7" />
+    </Icon>
+  );
+}
+
 export function CheckIcon(p: IconProps) {
   return (
     <Icon {...p}>
@@ -101,6 +110,62 @@ export function ChevronRightIcon(p: IconProps) {
   return (
     <Icon {...p}>
       <path d="m9 18 6-6-6-6" />
+    </Icon>
+  );
+}
+
+export function ExternalLinkIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <path d="M15 3h6v6" />
+      <path d="M10 14 21 3" />
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    </Icon>
+  );
+}
+
+export function XIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </Icon>
+  );
+}
+
+export function ShieldIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" />
+    </Icon>
+  );
+}
+
+export function GlobeIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M2 12h20" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </Icon>
+  );
+}
+
+export function ClockIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 6v6l4 2" />
+    </Icon>
+  );
+}
+
+export function SparkleIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
+      <path d="m6.3 6.3 2.1 2.1m7.2 7.2 2.1 2.1m0-11.4-2.1 2.1m-7.2 7.2-2.1 2.1" />
     </Icon>
   );
 }

@@ -32,7 +32,9 @@ export function DashboardShell({
 }) {
   return (
     <div className="min-h-screen bg-muted/30 text-foreground">
-      <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+      {/* Federal-navy header, matching the public site's banner so the resident
+          and staff areas read as one official product. */}
+      <header className="brand-gradient sticky top-0 z-30 text-white shadow-sm">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2.5">
             <Brand href="/" />
@@ -40,15 +42,15 @@ export function DashboardShell({
           </div>
           <div className="flex items-center gap-2 text-sm sm:gap-3">
             {headerActions}
-            {showLocaleToggle && <LocaleToggle />}
+            {showLocaleToggle && <LocaleToggle variant="dark" />}
             {userLabel && (
-              <span className="hidden max-w-40 truncate text-muted-foreground md:inline">
+              <span className="hidden max-w-40 truncate text-white/80 md:inline">
                 {userLabel}
               </span>
             )}
             <Link
               href="/api/auth/signout"
-              className="rounded-lg px-2.5 py-1.5 font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="rounded-lg px-2.5 py-1.5 font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white"
             >
               {signOutLabel}
             </Link>

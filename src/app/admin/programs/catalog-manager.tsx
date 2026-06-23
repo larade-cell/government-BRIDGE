@@ -6,6 +6,7 @@ import { Alert } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { ConfirmButton } from "~/components/ui/confirm";
+import { XIcon } from "~/components/ui/icons";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { api, type RouterOutputs } from "~/trpc/react";
@@ -516,11 +517,12 @@ function QuestionForm({
               <Button
                 size="icon-sm"
                 variant="ghost"
+                aria-label="Remove option"
                 onClick={() =>
                   setOptions((prev) => prev.filter((_, j) => j !== i))
                 }
               >
-                ✕
+                <XIcon />
               </Button>
             </div>
           ))}

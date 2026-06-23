@@ -2,34 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Brand } from "~/components/ui/brand";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
+import { ArrowLeftIcon } from "~/components/ui/icons";
 import { LocaleToggle } from "~/components/ui/locale-toggle";
-import { Tooltip } from "~/components/ui/tooltip";
-import { fmt } from "~/i18n/config";
 import { getI18n } from "~/i18n/server";
 import { api } from "~/trpc/server";
 
-import { EligibilityExplainer } from "./eligibility-explainer";
 import { RequestHelp } from "./request-help";
-
-// Color only — labels/help come from the locale catalog.
-const outcomeTone: Record<string, string> = {
-  likely_eligible: "bg-emerald-500/20 text-emerald-200 ring-emerald-400/30",
-  may_be_eligible: "bg-sky-500/20 text-sky-200 ring-sky-400/30",
-  needs_more_info: "bg-amber-500/20 text-amber-200 ring-amber-400/30",
-  unlikely_eligible: "bg-slate-500/20 text-slate-200 ring-slate-400/30",
-};
-
-type ResultExplanation = {
-  applied_state?: string | null;
-  reasons?: string[];
-} | null;
+import { ResultsList } from "./results-list";
 
 export default async function ResultsPage({
   params,
@@ -72,82 +51,7 @@ export default async function ResultsPage({
         {results.length === 0 ? (
           <p className="text-center text-white/70">{t.results.noMatch}</p>
         ) : (
-          <div className="flex flex-col gap-4">
-            {results.map((r, i) => {
-              const oc = t.results.outcomes[r.outcome];
-              const label = oc.label;
-              const help = oc.help;
-              const tone = outcomeTone[r.outcome] ?? "bg-white/10 text-white";
-              const exp = r.explanation as ResultExplanation;
-              const stateReason = exp?.reasons?.find((reason) =>
-                reason.startsWith("Adjusted for your state"),
-              );
-              return (
-                <Card
-                  key={r.id}
-                  style={{ animationDelay: `${Math.min(i, 8) * 70}ms` }}
-                  className="border-white/10 bg-white/10 text-white duration-500 animate-in fade-in slide-in-from-bottom-4 fill-mode-both"
-                >
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-4">
-                      <CardTitle className="text-2xl">
-                        {r.program.name}
-                      </CardTitle>
-                      <Tooltip label={help}>
-                        <span
-                          tabIndex={0}
-                          className={`cursor-help whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ring-1 outline-none ${tone}`}
-                        >
-                          {label}
-                        </span>
-                      </Tooltip>
-                    </div>
-                    {r.program.short_description && (
-                      <CardDescription className="text-white/70">
-                        {r.program.short_description}
-                      </CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent className="flex flex-col gap-3">
-                    {exp?.applied_state && (
-                      <Tooltip
-                        label={stateReason ?? t.results.adjustedFallback}
-                        className="w-60"
-                      >
-                        <span
-                          tabIndex={0}
-                          className="inline-flex w-fit cursor-help items-center gap-1 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-medium text-white/85 ring-1 ring-white/20 outline-none"
-                        >
-                          {fmt(t.results.adjustedFor, { state: exp.applied_state })}
-                        </span>
-                      </Tooltip>
-                    )}
-                    {r.program.next_steps && (
-                      <div>
-                        <h3 className="mb-1 text-sm font-semibold uppercase tracking-wide text-white/60">
-                          {t.results.nextSteps}
-                        </h3>
-                        <p className="text-sm text-white/85">
-                          {r.program.next_steps}
-                        </p>
-                      </div>
-                    )}
-                    <Link
-                      href={r.program.authoritative_url}
-                      target="_blank"
-                      className="text-sm font-semibold text-[#9cc6f0] underline underline-offset-2 hover:text-white"
-                    >
-                      {fmt(t.results.openApplication, { program: r.program.name })}
-                    </Link>
-                    <EligibilityExplainer
-                      sessionId={sessionId}
-                      programId={r.program.id}
-                    />
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+          <ResultsList sessionId={sessionId} results={results} />
         )}
 
         {results.length > 0 && (
@@ -159,8 +63,9 @@ export default async function ResultsPage({
         <div className="mt-10 text-center">
           <Link
             href="/"
-            className="rounded border-2 border-white/40 bg-white/10 px-6 py-3 font-semibold transition hover:bg-white/20"
+            className="inline-flex items-center gap-2 rounded border-2 border-white/40 bg-white/10 px-6 py-3 font-semibold transition hover:bg-white/20"
           >
+            <ArrowLeftIcon className="size-5" />
             {t.results.backHome}
           </Link>
         </div>

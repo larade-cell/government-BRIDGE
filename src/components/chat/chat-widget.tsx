@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { CheckCircleIcon, ExternalLinkIcon } from "~/components/ui/icons";
 import { Spinner } from "~/components/ui/spinner";
 import { useI18n } from "~/i18n/client";
 import { api } from "~/trpc/react";
@@ -136,9 +137,10 @@ export function ChatWidget() {
                             href={c.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs font-medium text-primary hover:underline"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-2 hover:underline"
                           >
-                            {c.title} ↗
+                            {c.title}
+                            <ExternalLinkIcon className="size-3" />
                           </a>
                         </li>
                       ))}
@@ -160,7 +162,10 @@ export function ChatWidget() {
           {conversationId && (
             <div className="border-t px-4 py-2">
               {handoffDone ? (
-                <p className="text-xs text-emerald-600">{t.chat.handoffDone}</p>
+                <p className="flex items-center gap-1.5 text-xs font-medium text-[#216e39]">
+                  <CheckCircleIcon className="size-4" />
+                  {t.chat.handoffDone}
+                </p>
               ) : handoffOpen ? (
                 <form
                   className="flex flex-col gap-2"

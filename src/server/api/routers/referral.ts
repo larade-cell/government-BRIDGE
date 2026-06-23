@@ -66,12 +66,18 @@ export const referralRouter = createTRPCRouter({
         }
       }
 
+      // Status is derived from the action, not picked by hand: creating a
+      // referral with an organization already chosen means it's routed (sent)
+      // immediately; an unassigned referral starts life as a draft.
+      const hasOrg = Boolean(input.organization_id);
       return ctx.db.referrals.create({
         data: {
           session_id: input.session_id,
           organization_id: input.organization_id ?? null,
           need_category: input.need_category,
           notes: input.notes ?? null,
+          status: hasOrg ? "sent" : "draft",
+          ...(hasOrg && { sent_at: new Date() }),
         },
       });
     }),
@@ -134,7 +140,13 @@ export const referralRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const referral = await ctx.db.referrals.findUnique({
         where: { id: input.id },
-        select: { id: true, session_id: true, sent_at: true },
+        select: {
+          id: true,
+          session_id: true,
+          sent_at: true,
+          status: true,
+          organization_id: true,
+        },
       });
       if (!referral) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Referral not found" });
@@ -151,8 +163,21 @@ export const referralRouter = createTRPCRouter({
           throw new TRPCError({ code: "NOT_FOUND", message: "Organization not found" });
         }
       }
-      // Stamp sent_at the first time a referral is marked sent.
-      const stampSent = input.status === "sent" && !referral.sent_at;
+      // Derive the status from the action so staff don't classify by hand.
+      // An explicit status (e.g. "accepted" from the Mark-accepted action, or a
+      // case-close sweep) always wins; otherwise assigning an organization
+      // sends a draft, and clearing the organization returns it to draft.
+      let nextStatus = input.status;
+      if (nextStatus === undefined && input.organization_id !== undefined) {
+        if (input.organization_id && referral.status === "draft") {
+          nextStatus = "sent";
+        } else if (!input.organization_id && referral.status === "sent") {
+          nextStatus = "draft";
+        }
+      }
+      // Stamp sent_at the first time it's sent; clear it if it returns to draft.
+      const stampSent = nextStatus === "sent" && !referral.sent_at;
+      const clearSent = nextStatus === "draft";
       return ctx.db.referrals.update({
         where: { id: input.id },
         data: {
@@ -163,8 +188,9 @@ export const referralRouter = createTRPCRouter({
             need_category: input.need_category,
           }),
           ...(input.notes !== undefined && { notes: input.notes }),
-          ...(input.status !== undefined && { status: input.status }),
+          ...(nextStatus !== undefined && { status: nextStatus }),
           ...(stampSent && { sent_at: new Date() }),
+          ...(clearSent && { sent_at: null }),
         },
         include: { organizations: true },
       });

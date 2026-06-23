@@ -1444,6 +1444,148 @@ async function main() {
     }
   }
 
+  // ---- Community organizations (referral targets) -------------------------
+  // Real national nonprofits, advocacy groups, and aid networks residents can
+  // be referred to from the screening/results flow. `service_categories` align
+  // with program categories (food, healthcare, cash, utilities, housing, tax,
+  // education, childcare) plus a few cross-cutting needs (legal, immigration,
+  // household, general) so the referral flow can match a resident's need to
+  // relevant organizations.
+  //
+  // Idempotent by name: the table has no natural unique key, so we find-or-
+  // update rather than upsert (mirrors the knowledge_sources approach above).
+  const ORGANIZATIONS: {
+    name: string;
+    organization_type: string;
+    phone?: string;
+    website_url: string;
+    service_categories: string[];
+  }[] = [
+    {
+      name: "United Way (211 Helpline)",
+      organization_type: "nonprofit",
+      phone: "211",
+      website_url: "https://www.211.org",
+      service_categories: [
+        "food",
+        "housing",
+        "utilities",
+        "healthcare",
+        "childcare",
+        "general",
+      ],
+    },
+    {
+      name: "Feeding America",
+      organization_type: "nonprofit",
+      website_url: "https://www.feedingamerica.org",
+      service_categories: ["food"],
+    },
+    {
+      name: "Catholic Charities USA",
+      organization_type: "faith-based",
+      website_url: "https://www.catholiccharitiesusa.org",
+      service_categories: ["food", "housing", "cash", "immigration"],
+    },
+    {
+      name: "The Salvation Army",
+      organization_type: "faith-based",
+      website_url: "https://www.salvationarmyusa.org",
+      service_categories: ["food", "housing", "utilities", "cash"],
+    },
+    {
+      name: "Community Action Partnership",
+      organization_type: "nonprofit",
+      website_url: "https://communityactionpartnership.com",
+      service_categories: ["utilities", "housing", "food", "education", "cash"],
+    },
+    {
+      name: "National Council on Aging (BenefitsCheckUp)",
+      organization_type: "nonprofit",
+      website_url: "https://www.ncoa.org",
+      service_categories: ["healthcare", "cash", "food"],
+    },
+    {
+      name: "National Association of Free & Charitable Clinics",
+      organization_type: "healthcare",
+      website_url: "https://nafcclinics.org",
+      service_categories: ["healthcare"],
+    },
+    {
+      name: "Legal Services Corporation",
+      organization_type: "legal aid",
+      website_url: "https://www.lsc.gov",
+      service_categories: ["legal"],
+    },
+    {
+      name: "National Low Income Housing Coalition",
+      organization_type: "advocacy",
+      website_url: "https://nlihc.org",
+      service_categories: ["housing"],
+    },
+    {
+      name: "National Alliance to End Homelessness",
+      organization_type: "advocacy",
+      website_url: "https://endhomelessness.org",
+      service_categories: ["housing"],
+    },
+    {
+      name: "Child Care Aware of America",
+      organization_type: "nonprofit",
+      website_url: "https://www.childcareaware.org",
+      service_categories: ["childcare"],
+    },
+    {
+      name: "National Diaper Bank Network",
+      organization_type: "nonprofit",
+      website_url: "https://nationaldiaperbanknetwork.org",
+      service_categories: ["childcare", "household"],
+    },
+    {
+      name: "AARP Foundation Tax-Aide",
+      organization_type: "nonprofit",
+      website_url: "https://www.aarpfoundation.org",
+      service_categories: ["tax"],
+    },
+    {
+      name: "National Immigration Law Center",
+      organization_type: "advocacy",
+      website_url: "https://www.nilc.org",
+      service_categories: ["immigration", "legal"],
+    },
+    {
+      name: "National Head Start Association",
+      organization_type: "nonprofit",
+      website_url: "https://www.nhsa.org",
+      service_categories: ["education", "childcare"],
+    },
+    {
+      name: "National Energy Assistance Directors Association (LIHEAP)",
+      organization_type: "nonprofit",
+      website_url: "https://neada.org",
+      service_categories: ["utilities"],
+    },
+  ];
+
+  for (const o of ORGANIZATIONS) {
+    const existing = await db.organizations.findFirst({
+      where: { name: o.name },
+      select: { id: true },
+    });
+    const data = {
+      name: o.name,
+      organization_type: o.organization_type,
+      phone: o.phone ?? null,
+      website_url: o.website_url,
+      service_categories: o.service_categories,
+    };
+    if (existing) {
+      await db.organizations.update({ where: { id: existing.id }, data });
+    } else {
+      await db.organizations.create({ data });
+    }
+  }
+
   console.log("Seed complete.");
 }
 

@@ -15,13 +15,21 @@ const STATUSES = [
   "closed",
 ] as const;
 const PRIORITIES = ["low", "normal", "high", "urgent"] as const;
-const REFERRAL_STATUSES = ["draft", "sent", "accepted", "closed"] as const;
 
 const PRIORITY_STYLES: Record<string, string> = {
   urgent: "bg-red-100 text-red-700",
   high: "bg-orange-100 text-orange-700",
   normal: "bg-slate-100 text-slate-600",
   low: "bg-slate-100 text-slate-500",
+};
+
+// Referral status is automated, not hand-picked: a badge reflects where the
+// referral is in its lifecycle (draft → sent → accepted → closed).
+const REFERRAL_STATUS_STYLES: Record<string, string> = {
+  draft: "bg-slate-100 text-slate-600",
+  sent: "bg-sky-100 text-sky-700",
+  accepted: "bg-emerald-100 text-emerald-700",
+  closed: "bg-slate-200 text-slate-500",
 };
 
 function selectClass() {
@@ -422,6 +430,11 @@ function CaseDetail({
         {c.session_id && c.screening_sessions && (
           <div className="flex flex-col gap-2">
             <Label className="text-sm font-semibold">Referrals</Label>
+            <p className="-mt-1 text-xs text-muted-foreground">
+              Status updates automatically: assign an organization to send it,
+              mark it accepted when they confirm, and it closes when the case is
+              resolved.
+            </p>
             {c.screening_sessions.referrals.length === 0 ? (
               <p className="text-xs text-muted-foreground">No referrals yet.</p>
             ) : (
@@ -441,6 +454,7 @@ function CaseDetail({
                       <select
                         aria-label="Organization"
                         value={r.organization_id ?? ""}
+                        disabled={r.status === "closed"}
                         onChange={(e) =>
                           updateReferral.mutate({
                             id: r.id,
@@ -456,24 +470,30 @@ function CaseDetail({
                           </option>
                         ))}
                       </select>
-                      <select
-                        aria-label="Referral status"
-                        value={r.status}
-                        onChange={(e) =>
-                          updateReferral.mutate({
-                            id: r.id,
-                            status: e.target
-                              .value as (typeof REFERRAL_STATUSES)[number],
-                          })
-                        }
-                        className={selectClass()}
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                          REFERRAL_STATUS_STYLES[r.status] ?? ""
+                        }`}
                       >
-                        {REFERRAL_STATUSES.map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </select>
+                        {r.status}
+                      </span>
+                      {/* The one transition the system can't observe on its own:
+                          a one-click confirmation that the org accepted. */}
+                      {r.status === "sent" && (
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          disabled={updateReferral.isPending}
+                          onClick={() =>
+                            updateReferral.mutate({
+                              id: r.id,
+                              status: "accepted",
+                            })
+                          }
+                        >
+                          Mark accepted
+                        </Button>
+                      )}
                     </div>
                   </li>
                 ))}

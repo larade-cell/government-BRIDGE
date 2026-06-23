@@ -254,7 +254,7 @@ export const caseRouter = createTRPCRouter({
       await requireRole(ctx, [...STAFF]);
       const exists = await ctx.db.cases.findUnique({
         where: { id: input.id },
-        select: { id: true },
+        select: { id: true, session_id: true },
       });
       if (!exists) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Case not found" });
@@ -274,6 +274,17 @@ export const caseRouter = createTRPCRouter({
           updated_at: new Date(),
         },
       });
+      // Resolving or closing a case closes its outstanding referrals — the work
+      // is done, so they shouldn't linger as draft/sent/accepted.
+      if (
+        (input.status === "resolved" || input.status === "closed") &&
+        exists.session_id
+      ) {
+        await ctx.db.referrals.updateMany({
+          where: { session_id: exists.session_id, status: { not: "closed" } },
+          data: { status: "closed" },
+        });
+      }
       await recordAudit(ctx, {
         action: "case.update",
         entity_type: "case",

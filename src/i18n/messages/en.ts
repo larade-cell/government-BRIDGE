@@ -24,6 +24,7 @@ export const en = {
   nav: {
     overview: "Overview",
     documents: "Documents",
+    messages: "Messages",
     profile: "Profile",
   },
   chat: {
@@ -195,6 +196,26 @@ export const en = {
     statMatches: "Program matches",
     updatesTitle: "Updates",
     updatesEmpty: "No updates yet. We'll let you know when something changes.",
+    referralsTitle: "Your referrals",
+    referralsLead: "Connections your caseworker is making to local organizations.",
+    referralsEmpty: "No referrals yet. Your caseworker will add them here as they connect you with help.",
+    refStatusDraft: "Being prepared",
+    refStatusSent: "Sent",
+    refStatusAccepted: "Accepted",
+    refStatusClosed: "Closed",
+    refUnassigned: "Choosing an organization",
+    messagesTitle: "Messages",
+    messagesLead: "Chat directly with your caseworker.",
+    messagesEmpty: "No messages yet. Send the first one and your caseworker will reply here.",
+    messagesNoCase:
+      "You don't have a caseworker yet. Request help from your results to start a conversation.",
+    messagesPlaceholder: "Write a message to your caseworker…",
+    messagesSend: "Send",
+    messagesSending: "Sending…",
+    messageFromYou: "You",
+    messageFromCaseworker: "Caseworker",
+    messagesWith: "Conversation with {name}",
+    messagesWithUnassigned: "A caseworker will be assigned soon",
     referralAccepted:
       "Good news — {org} accepted your referral for {need}. They'll be in touch about next steps.",
     referralAcceptedNoOrg:

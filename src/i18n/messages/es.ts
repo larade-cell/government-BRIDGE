@@ -19,6 +19,7 @@ export const es: Messages = {
   nav: {
     overview: "Resumen",
     documents: "Documentos",
+    messages: "Mensajes",
     profile: "Perfil",
   },
   chat: {
@@ -192,6 +193,26 @@ export const es: Messages = {
     statMatches: "Coincidencias",
     updatesTitle: "Novedades",
     updatesEmpty: "Aún no hay novedades. Le avisaremos cuando algo cambie.",
+    referralsTitle: "Sus referencias",
+    referralsLead: "Conexiones que su trabajador social está haciendo con organizaciones locales.",
+    referralsEmpty: "Aún no hay referencias. Su trabajador social las agregará aquí a medida que lo conecte con ayuda.",
+    refStatusDraft: "En preparación",
+    refStatusSent: "Enviada",
+    refStatusAccepted: "Aceptada",
+    refStatusClosed: "Cerrada",
+    refUnassigned: "Eligiendo una organización",
+    messagesTitle: "Mensajes",
+    messagesLead: "Converse directamente con su trabajador social.",
+    messagesEmpty: "Aún no hay mensajes. Envíe el primero y su trabajador social le responderá aquí.",
+    messagesNoCase:
+      "Aún no tiene un trabajador social. Solicite ayuda desde sus resultados para iniciar una conversación.",
+    messagesPlaceholder: "Escriba un mensaje a su trabajador social…",
+    messagesSend: "Enviar",
+    messagesSending: "Enviando…",
+    messageFromYou: "Usted",
+    messageFromCaseworker: "Trabajador social",
+    messagesWith: "Conversación con {name}",
+    messagesWithUnassigned: "Pronto se le asignará un trabajador social",
     referralAccepted:
       "Buenas noticias: {org} aceptó su referencia para {need}. Se comunicarán con usted sobre los próximos pasos.",
     referralAcceptedNoOrg:

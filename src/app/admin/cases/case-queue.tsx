@@ -236,6 +236,9 @@ function CaseDetail({
 }) {
   const utils = api.useUtils();
   const [note, setNote] = useState("");
+  // When on, the note is shared with the resident (shows in their Messages
+  // chat) instead of being an internal-only note.
+  const [noteToResident, setNoteToResident] = useState(false);
 
   const [refNeed, setRefNeed] = useState("");
   const [refOrg, setRefOrg] = useState("");
@@ -544,19 +547,40 @@ function CaseDetail({
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Add an internal note…"
+              placeholder={
+                noteToResident
+                  ? "Write a message to the resident…"
+                  : "Add an internal note…"
+              }
               rows={2}
               className="w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
-            <div>
+            <div className="flex items-center justify-between gap-3">
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={noteToResident}
+                  onChange={(e) => setNoteToResident(e.target.checked)}
+                  className="size-3.5 rounded border-input"
+                />
+                Send to resident (shows in their Messages)
+              </label>
               <Button
                 size="sm"
                 disabled={addNote.isPending || note.trim() === ""}
                 onClick={() =>
-                  addNote.mutate({ case_id: caseId, note: note.trim() })
+                  addNote.mutate({
+                    case_id: caseId,
+                    note: note.trim(),
+                    is_internal: !noteToResident,
+                  })
                 }
               >
-                {addNote.isPending ? "Adding…" : "Add note"}
+                {addNote.isPending
+                  ? "Adding…"
+                  : noteToResident
+                    ? "Send message"
+                    : "Add note"}
               </Button>
             </div>
           </div>
@@ -567,7 +591,7 @@ function CaseDetail({
                 <p>{n.note}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {new Date(n.created_at).toLocaleString()}
-                  {n.is_internal ? " · internal" : " · from resident"}
+                  {n.is_internal ? " · internal" : " · shared with resident"}
                 </p>
               </li>
             ))}

@@ -15,6 +15,7 @@ export default async function AccountLayout({
   const items: NavItem[] = [
     { href: "/account", label: t.nav.overview, icon: "grid", exact: true },
     { href: "/account/documents", label: t.nav.documents, icon: "documents" },
+    { href: "/account/messages", label: t.nav.messages, icon: "messages" },
     { href: "/account/profile", label: t.nav.profile, icon: "user" },
   ];
 

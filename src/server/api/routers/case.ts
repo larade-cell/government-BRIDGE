@@ -151,6 +151,96 @@ export const caseRouter = createTRPCRouter({
       return { ...created, created: true };
     }),
 
+  /**
+   * Resident-facing caseworker conversation. Returns the signed-in resident's
+   * most recent case (across their sessions) plus the shared, non-internal
+   * messages — internal staff notes are never exposed. `null` when the resident
+   * has no case yet.
+   */
+  myThread: publicProcedure.query(async ({ ctx }) => {
+    const appUserId = ctx.session?.user.appUserId;
+    if (!appUserId) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Sign in to view your messages",
+      });
+    }
+    const kase = await ctx.db.cases.findFirst({
+      where: { screening_sessions: { user_id: appUserId } },
+      orderBy: { created_at: "desc" },
+      select: {
+        id: true,
+        status: true,
+        users: { select: { email: true, auth_user: { select: { name: true } } } },
+        case_notes: {
+          where: { is_internal: false },
+          orderBy: { created_at: "asc" },
+          select: { id: true, note: true, author_id: true, created_at: true },
+        },
+      },
+    });
+    if (!kase) return null;
+    return {
+      case_id: kase.id,
+      status: kase.status,
+      caseworker_name:
+        kase.users?.auth_user?.name ?? kase.users?.email ?? null,
+      messages: kase.case_notes.map((n) => ({
+        id: n.id,
+        note: n.note,
+        created_at: n.created_at,
+        // Resident messages are author-null (legacy "request help") or authored
+        // by the resident themselves; everything else is the caseworker.
+        from:
+          n.author_id === null || n.author_id === appUserId
+            ? ("resident" as const)
+            : ("caseworker" as const),
+      })),
+    };
+  }),
+
+  /**
+   * Resident posts a message to their caseworker. Appended as a non-internal
+   * case note (so it shows in both the resident thread and the staff queue) and
+   * bumps the case so it resurfaces for the caseworker.
+   */
+  sendMessage: publicProcedure
+    .input(
+      z.object({
+        case_id: z.string().uuid(),
+        message: z.string().trim().min(1).max(5000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const appUserId = ctx.session?.user.appUserId;
+      if (!appUserId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Sign in to send a message",
+        });
+      }
+      const kase = await ctx.db.cases.findUnique({
+        where: { id: input.case_id },
+        select: { id: true, screening_sessions: { select: { user_id: true } } },
+      });
+      if (!kase || kase.screening_sessions?.user_id !== appUserId) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Case not found" });
+      }
+      const note = await ctx.db.case_notes.create({
+        data: {
+          case_id: input.case_id,
+          author_id: appUserId,
+          note: input.message,
+          is_internal: false,
+        },
+      });
+      await ctx.db.cases.update({
+        where: { id: input.case_id },
+        data: { updated_at: new Date() },
+      });
+      return { id: note.id };
+    }),
+
   list: publicProcedure
     .input(
       z

@@ -53,12 +53,28 @@ function Stat({
 }
 
 export default async function AccountOverviewPage() {
-  const [{ locale, t }, me, sessions, updates] = await Promise.all([
+  const [{ locale, t }, me, sessions, updates, referrals] = await Promise.all([
     getI18n(),
     api.user.me(),
     api.screeningSession.listMine(),
     api.notificationPreference.feed(),
+    api.referral.list(),
   ]);
+
+  // Resident-friendly status copy + tone for the referrals the caseworker is
+  // working on. "draft" reads as pending/in-prep, not a scary technical term.
+  const refStatusLabel: Record<string, string> = {
+    draft: t.account.refStatusDraft,
+    sent: t.account.refStatusSent,
+    accepted: t.account.refStatusAccepted,
+    closed: t.account.refStatusClosed,
+  };
+  const refStatusTone: Record<string, string> = {
+    draft: "bg-amber-100 text-amber-700",
+    sent: "bg-sky-100 text-sky-700",
+    accepted: "bg-emerald-100 text-emerald-700",
+    closed: "bg-slate-100 text-slate-500",
+  };
 
   // Turn a notification event into resident-facing copy in their language.
   const updateMessage = (event_type: string, payload: Record<string, unknown>) => {
@@ -153,6 +169,39 @@ export default async function AccountOverviewPage() {
                     {formatDate(u.created_at, locale)}
                   </p>
                 </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {referrals.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t.account.referralsTitle}</CardTitle>
+            <CardDescription>{t.account.referralsLead}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {referrals.map((r) => (
+              <div
+                key={r.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2.5"
+              >
+                <div>
+                  <span className="font-medium capitalize">
+                    {r.need_category}
+                  </span>
+                  <span className="ml-2 text-sm text-muted-foreground">
+                    {r.organizations?.name ?? t.account.refUnassigned}
+                  </span>
+                </div>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    refStatusTone[r.status] ?? refStatusTone.draft
+                  }`}
+                >
+                  {refStatusLabel[r.status] ?? r.status}
+                </span>
               </div>
             ))}
           </CardContent>

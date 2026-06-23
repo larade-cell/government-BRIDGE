@@ -7,6 +7,7 @@ import {
   BookIcon,
   BriefcaseIcon,
   BuildingIcon,
+  ChatIcon,
   ClipboardIcon,
   FileTextIcon,
   GridIcon,
@@ -24,6 +25,7 @@ import { cn } from "~/lib/utils";
 const NAV_ICONS = {
   grid: GridIcon,
   documents: FileTextIcon,
+  messages: ChatIcon,
   user: UserIcon,
   cases: BriefcaseIcon,
   rules: ScaleIcon,

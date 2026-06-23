@@ -20,6 +20,37 @@ const frequencySchema = z.enum([
 ]);
 
 export const notificationPreferenceRouter = createTRPCRouter({
+  /**
+   * The signed-in resident's notification feed: per-user deliveries joined to
+   * the event that produced them (e.g. a referral being accepted). Newest
+   * first; the UI localizes each event from its payload.
+   */
+  feed: publicProcedure.query(async ({ ctx }) => {
+    const appUserId = ctx.session?.user.appUserId;
+    if (!appUserId) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Sign in to view notifications",
+      });
+    }
+    const deliveries = await ctx.db.notification_deliveries.findMany({
+      where: { user_id: appUserId },
+      orderBy: { created_at: "desc" },
+      take: 20,
+      select: {
+        id: true,
+        created_at: true,
+        notification_events: { select: { event_type: true, payload: true } },
+      },
+    });
+    return deliveries.map((d) => ({
+      id: d.id,
+      created_at: d.created_at,
+      event_type: d.notification_events?.event_type ?? "unknown",
+      payload: (d.notification_events?.payload ?? {}) as Record<string, unknown>,
+    }));
+  }),
+
   list: publicProcedure
     .input(
       z

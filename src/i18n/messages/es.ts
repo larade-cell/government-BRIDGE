@@ -190,6 +190,12 @@ export const es: Messages = {
     yourScreenings: "Sus evaluaciones",
     statScreenings: "Evaluaciones",
     statMatches: "Coincidencias",
+    updatesTitle: "Novedades",
+    updatesEmpty: "Aún no hay novedades. Le avisaremos cuando algo cambie.",
+    referralAccepted:
+      "Buenas noticias: {org} aceptó su referencia para {need}. Se comunicarán con usted sobre los próximos pasos.",
+    referralAcceptedNoOrg:
+      "Buenas noticias: su referencia para {need} fue aceptada. Se comunicarán con usted sobre los próximos pasos.",
     newScreening: "Nueva evaluación",
     noScreenings: "Aún no ha comenzado una evaluación.",
     startOne: "Comience una ahora",

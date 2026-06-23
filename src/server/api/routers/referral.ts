@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { type createTRPCContext } from "~/server/api/trpc";
+import { notifyReferralAccepted } from "~/server/api/helpers/notify";
 import { assertSessionAccess } from "~/server/api/helpers/session";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -178,7 +179,7 @@ export const referralRouter = createTRPCRouter({
       // Stamp sent_at the first time it's sent; clear it if it returns to draft.
       const stampSent = nextStatus === "sent" && !referral.sent_at;
       const clearSent = nextStatus === "draft";
-      return ctx.db.referrals.update({
+      const updated = await ctx.db.referrals.update({
         where: { id: input.id },
         data: {
           ...(input.organization_id !== undefined && {
@@ -194,6 +195,12 @@ export const referralRouter = createTRPCRouter({
         },
         include: { organizations: true },
       });
+      // On the transition *into* accepted, notify the resident — best-effort so
+      // a notification hiccup never fails the status change.
+      if (nextStatus === "accepted" && referral.status !== "accepted") {
+        await notifyReferralAccepted(ctx.db, input.id).catch(() => null);
+      }
+      return updated;
     }),
 
   /** Soft-delete the referral by marking it closed (staff only). */

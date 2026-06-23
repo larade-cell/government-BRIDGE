@@ -193,6 +193,12 @@ export const en = {
     yourScreenings: "Your screenings",
     statScreenings: "Screenings",
     statMatches: "Program matches",
+    updatesTitle: "Updates",
+    updatesEmpty: "No updates yet. We'll let you know when something changes.",
+    referralAccepted:
+      "Good news — {org} accepted your referral for {need}. They'll be in touch about next steps.",
+    referralAcceptedNoOrg:
+      "Good news — your referral for {need} was accepted. They'll be in touch about next steps.",
     newScreening: "New screening",
     noScreenings: "You haven't started a screening yet.",
     startOne: "Start one now",

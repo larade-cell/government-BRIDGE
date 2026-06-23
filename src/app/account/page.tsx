@@ -53,11 +53,31 @@ function Stat({
 }
 
 export default async function AccountOverviewPage() {
-  const [{ locale, t }, me, sessions] = await Promise.all([
+  const [{ locale, t }, me, sessions, updates] = await Promise.all([
     getI18n(),
     api.user.me(),
     api.screeningSession.listMine(),
+    api.notificationPreference.feed(),
   ]);
+
+  // Turn a notification event into resident-facing copy in their language.
+  const updateMessage = (event_type: string, payload: Record<string, unknown>) => {
+    if (event_type === "referral_accepted") {
+      const org =
+        typeof payload.organization_name === "string"
+          ? payload.organization_name
+          : null;
+      const need =
+        typeof payload.need_category === "string" ? payload.need_category : "";
+      return org
+        ? fmt(t.account.referralAccepted, { org, need })
+        : fmt(t.account.referralAcceptedNoOrg, { need });
+    }
+    return null;
+  };
+  const updateItems = updates
+    .map((u) => ({ ...u, message: updateMessage(u.event_type, u.payload) }))
+    .filter((u): u is typeof u & { message: string } => u.message !== null);
 
   const inProgress = sessions.filter((s) => !s.completed_at);
   const completedCount = sessions.length - inProgress.length;
@@ -113,6 +133,30 @@ export default async function AccountOverviewPage() {
             tone="bg-indigo-100 text-indigo-700"
           />
         </div>
+      )}
+
+      {updateItems.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t.account.updatesTitle}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {updateItems.map((u) => (
+              <div
+                key={u.id}
+                className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5"
+              >
+                <CheckCircleIcon className="mt-0.5 size-5 shrink-0 text-emerald-600" />
+                <div>
+                  <p className="text-sm text-foreground">{u.message}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {formatDate(u.created_at, locale)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       )}
 
       {inProgress.length > 0 && (

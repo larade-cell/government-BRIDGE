@@ -12,6 +12,7 @@ export default async function AdminLayout({
   const items: NavItem[] = [
     { href: "/admin", label: "Overview", icon: "grid", exact: true },
     { href: "/admin/cases", label: "Cases", icon: "cases" },
+    { href: "/admin/messages", label: "Messages", icon: "messages" },
     ...(role === "admin"
       ? ([
           { href: "/admin/rules", label: "Eligibility rules", icon: "rules" },

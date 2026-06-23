@@ -242,6 +242,123 @@ export const caseRouter = createTRPCRouter({
       return { id: note.id };
     }),
 
+  /**
+   * Staff message center: the caseworker's assigned conversations. One entry
+   * per assigned, session-linked case, with the resident's name, the latest
+   * resident-visible message, and whether it's awaiting a reply. Sorted so the
+   * most recently active conversation is first.
+   */
+  staffThreads: publicProcedure.query(async ({ ctx }) => {
+    const staff = await requireRole(ctx, [...STAFF]);
+    const cases = await ctx.db.cases.findMany({
+      where: { assigned_to: staff.id, session_id: { not: null } },
+      orderBy: { updated_at: "desc" },
+      select: {
+        id: true,
+        status: true,
+        contact_name: true,
+        screening_sessions: {
+          select: {
+            user_id: true,
+            users: {
+              select: { email: true, auth_user: { select: { name: true } } },
+            },
+          },
+        },
+        case_notes: {
+          where: { is_internal: false },
+          orderBy: { created_at: "desc" },
+          take: 1,
+          select: { note: true, created_at: true, author_id: true },
+        },
+      },
+    });
+    return cases.map((c) => {
+      const residentUserId = c.screening_sessions?.user_id ?? null;
+      const last = c.case_notes[0] ?? null;
+      const fromResident =
+        last != null &&
+        (last.author_id === residentUserId || last.author_id === null);
+      return {
+        case_id: c.id,
+        status: c.status,
+        resident_name:
+          c.contact_name ??
+          c.screening_sessions?.users?.auth_user?.name ??
+          c.screening_sessions?.users?.email ??
+          "Resident",
+        last_message: last
+          ? {
+              preview:
+                last.note.length > 100
+                  ? `${last.note.slice(0, 97)}…`
+                  : last.note,
+              created_at: last.created_at,
+              from: fromResident ? ("resident" as const) : ("staff" as const),
+            }
+          : null,
+        // No read-state model — surface the actionable heuristic instead: the
+        // resident spoke last, so a reply is owed.
+        awaiting_reply: fromResident,
+      };
+    });
+  }),
+
+  /** Staff message center: the full resident-visible thread for one case. */
+  staffThread: publicProcedure
+    .input(z.object({ case_id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const staff = await requireRole(ctx, [...STAFF]);
+      const c = await ctx.db.cases.findUnique({
+        where: { id: input.case_id },
+        select: {
+          id: true,
+          status: true,
+          assigned_to: true,
+          contact_name: true,
+          screening_sessions: {
+            select: {
+              user_id: true,
+              users: {
+                select: { email: true, auth_user: { select: { name: true } } },
+              },
+            },
+          },
+          case_notes: {
+            where: { is_internal: false },
+            orderBy: { created_at: "asc" },
+            select: { id: true, note: true, author_id: true, created_at: true },
+          },
+        },
+      });
+      if (!c) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Case not found" });
+      }
+      // Caseworkers see only their own assigned conversations; admins see any.
+      if (staff.role !== "admin" && c.assigned_to !== staff.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not your case" });
+      }
+      const residentUserId = c.screening_sessions?.user_id ?? null;
+      return {
+        case_id: c.id,
+        status: c.status,
+        resident_name:
+          c.contact_name ??
+          c.screening_sessions?.users?.auth_user?.name ??
+          c.screening_sessions?.users?.email ??
+          "Resident",
+        messages: c.case_notes.map((n) => ({
+          id: n.id,
+          note: n.note,
+          created_at: n.created_at,
+          from:
+            n.author_id === residentUserId || n.author_id === null
+              ? ("resident" as const)
+              : ("staff" as const),
+        })),
+      };
+    }),
+
   list: publicProcedure
     .input(
       z

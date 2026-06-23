@@ -92,6 +92,7 @@ export async function runUploadValidation(
       storage_url: true,
       file_mime_type: true,
       document_type_id: true,
+      classified_by: true,
       document_types: {
         select: {
           doc_key: true,
@@ -168,21 +169,25 @@ export async function runUploadValidation(
       true,
     );
   }
-  if (!isAiEnabled()) {
+  // The vision model can only auto-check a readable image whose bytes are
+  // actually stored. When it can't (AI off, no object store wired so the URL is
+  // still `pending://`, or a non-image file), fall back to the resident's own
+  // label: a document they explicitly tagged counts as provided (a caseworker
+  // can still re-verify it), while an unlabeled one goes to manual review.
+  const canAutoCheck =
+    isAiEnabled() &&
+    !upload.storage_url.startsWith("pending://") &&
+    VISION_MIME.includes(upload.file_mime_type);
+  if (!canAutoCheck) {
+    if (upload.classified_by === "user") {
+      return persist(
+        "valid",
+        "Accepted as labeled by the applicant; automatic check unavailable.",
+        null,
+        false,
+      );
+    }
     return persist("needs_review", "Awaiting review.", null, true);
-  }
-  if (upload.storage_url.startsWith("pending://")) {
-    // Transient: validation re-runs from `finalize` once the bytes land, so
-    // don't open a case yet.
-    return persist("needs_review", "The file isn't available to check yet.");
-  }
-  if (!VISION_MIME.includes(upload.file_mime_type)) {
-    return persist(
-      "needs_review",
-      "This file type can't be checked automatically yet.",
-      null,
-      true,
-    );
   }
 
   const result = await validateDocument({

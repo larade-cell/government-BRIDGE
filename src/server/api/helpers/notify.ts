@@ -54,3 +54,41 @@ export async function notifyReferralAccepted(
     });
   }
 }
+
+/**
+ * Record a "new message from your caseworker" notification for the resident.
+ *
+ * Fires when a caseworker posts a resident-visible (non-internal) note. Stores
+ * a short preview so the Updates feed has context, and links back to the
+ * Messages thread. No-op when the case isn't tied to a resident account.
+ */
+export async function notifyCaseworkerMessage(
+  db: Db,
+  caseId: string,
+  message: string,
+): Promise<void> {
+  const kase = await db.cases.findUnique({
+    where: { id: caseId },
+    select: { id: true, screening_sessions: { select: { user_id: true } } },
+  });
+  const userId = kase?.screening_sessions?.user_id;
+  if (!userId) return;
+
+  const preview = message.length > 120 ? `${message.slice(0, 117)}…` : message;
+  const event = await db.notification_events.create({
+    data: {
+      event_type: "caseworker_message",
+      payload: { case_id: caseId, preview },
+    },
+    select: { id: true },
+  });
+  await db.notification_deliveries.create({
+    data: {
+      notification_event_id: event.id,
+      user_id: userId,
+      channel: "email",
+      delivery_status: "sent",
+      delivered_at: new Date(),
+    },
+  });
+}

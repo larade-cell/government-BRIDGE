@@ -217,6 +217,8 @@ export const es: Messages = {
       "Buenas noticias: {org} aceptó su referencia para {need}. Se comunicarán con usted sobre los próximos pasos.",
     referralAcceptedNoOrg:
       "Buenas noticias: su referencia para {need} fue aceptada. Se comunicarán con usted sobre los próximos pasos.",
+    caseworkerMessage: "Nuevo mensaje de su trabajador social: “{preview}”",
+    updatesView: "Ver",
     newScreening: "Nueva evaluación",
     noScreenings: "Aún no ha comenzado una evaluación.",
     startOne: "Comience una ahora",

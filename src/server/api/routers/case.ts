@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { recordAudit } from "~/server/api/helpers/audit";
+import { notifyCaseworkerMessage } from "~/server/api/helpers/notify";
 import { assertSessionAccess, requireRole } from "~/server/api/helpers/session";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { priorityFromAnswers } from "~/server/lib/case-priority";
@@ -447,7 +448,7 @@ export const caseNoteRouter = createTRPCRouter({
       if (!caseRow) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Case not found" });
       }
-      return ctx.db.case_notes.create({
+      const created = await ctx.db.case_notes.create({
         data: {
           case_id: input.case_id,
           author_id: staff.id,
@@ -455,6 +456,14 @@ export const caseNoteRouter = createTRPCRouter({
           is_internal: input.is_internal,
         },
       });
+      // A resident-visible note is a message to the resident — notify them.
+      // Best-effort so a notification hiccup never fails the note.
+      if (!input.is_internal) {
+        await notifyCaseworkerMessage(ctx.db, input.case_id, input.note).catch(
+          () => null,
+        );
+      }
+      return created;
     }),
 
   update: publicProcedure

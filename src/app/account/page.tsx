@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import {
+  ChatIcon,
   CheckCircleIcon,
   ClipboardIcon,
   ClockIcon,
@@ -76,8 +77,12 @@ export default async function AccountOverviewPage() {
     closed: "bg-slate-100 text-slate-500",
   };
 
-  // Turn a notification event into resident-facing copy in their language.
-  const updateMessage = (event_type: string, payload: Record<string, unknown>) => {
+  // Turn a notification event into resident-facing copy (+ optional link) in
+  // their language.
+  const renderUpdate = (
+    event_type: string,
+    payload: Record<string, unknown>,
+  ): { message: string; href: string | null } | null => {
     if (event_type === "referral_accepted") {
       const org =
         typeof payload.organization_name === "string"
@@ -85,15 +90,26 @@ export default async function AccountOverviewPage() {
           : null;
       const need =
         typeof payload.need_category === "string" ? payload.need_category : "";
-      return org
-        ? fmt(t.account.referralAccepted, { org, need })
-        : fmt(t.account.referralAcceptedNoOrg, { need });
+      return {
+        message: org
+          ? fmt(t.account.referralAccepted, { org, need })
+          : fmt(t.account.referralAcceptedNoOrg, { need }),
+        href: null,
+      };
+    }
+    if (event_type === "caseworker_message") {
+      const preview =
+        typeof payload.preview === "string" ? payload.preview : "";
+      return {
+        message: fmt(t.account.caseworkerMessage, { preview }),
+        href: "/account/messages",
+      };
     }
     return null;
   };
   const updateItems = updates
-    .map((u) => ({ ...u, message: updateMessage(u.event_type, u.payload) }))
-    .filter((u): u is typeof u & { message: string } => u.message !== null);
+    .map((u) => ({ ...u, ...renderUpdate(u.event_type, u.payload) }))
+    .filter((u): u is typeof u & { message: string } => Boolean(u.message));
 
   const inProgress = sessions.filter((s) => !s.completed_at);
   const completedCount = sessions.length - inProgress.length;
@@ -157,20 +173,40 @@ export default async function AccountOverviewPage() {
             <CardTitle>{t.account.updatesTitle}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
-            {updateItems.map((u) => (
-              <div
-                key={u.id}
-                className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5"
-              >
-                <CheckCircleIcon className="mt-0.5 size-5 shrink-0 text-emerald-600" />
-                <div>
-                  <p className="text-sm text-foreground">{u.message}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {formatDate(u.created_at, locale)}
-                  </p>
+            {updateItems.map((u) => {
+              const isMessage = u.event_type === "caseworker_message";
+              const Icon = isMessage ? ChatIcon : CheckCircleIcon;
+              return (
+                <div
+                  key={u.id}
+                  className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 ${
+                    isMessage
+                      ? "border-sky-200 bg-sky-50"
+                      : "border-emerald-200 bg-emerald-50"
+                  }`}
+                >
+                  <Icon
+                    className={`mt-0.5 size-5 shrink-0 ${
+                      isMessage ? "text-sky-600" : "text-emerald-600"
+                    }`}
+                  />
+                  <div className="min-w-0">
+                    <p className="text-sm text-foreground">{u.message}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {formatDate(u.created_at, locale)}
+                      {u.href && (
+                        <>
+                          {" · "}
+                          <Link href={u.href} className="text-primary underline">
+                            {t.account.updatesView}
+                          </Link>
+                        </>
+                      )}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
       )}

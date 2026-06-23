@@ -220,6 +220,8 @@ export const en = {
       "Good news — {org} accepted your referral for {need}. They'll be in touch about next steps.",
     referralAcceptedNoOrg:
       "Good news — your referral for {need} was accepted. They'll be in touch about next steps.",
+    caseworkerMessage: "New message from your caseworker: “{preview}”",
+    updatesView: "View",
     newScreening: "New screening",
     noScreenings: "You haven't started a screening yet.",
     startOne: "Start one now",

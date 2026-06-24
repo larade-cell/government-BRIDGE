@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.development)",
+      "Read(./.env.development.local)",
+      "Read(./.env.production)",
+      "Read(./.env.production.local)",
+      "Read(./.env.staging)",
+      "Read(./.env.test)",
+      "Read(./.env.test.local)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "in=$(cat)\ncmd=$(printf '%s' \"$in\" | jq -r '.tool_input.command // \"\"')\nfp=$(printf '%s' \"$in\" | jq -r '.tool_input.file_path // \"\"')\nif printf '%s %s' \"$cmd\" \"$fp\" | grep -oE '\\.env[A-Za-z0-9_.-]*' | grep -vE '^\\.environment' | grep -ivqE '^\\.env\\.(example|sample|template|dist|defaults?)$'; then\n  printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Security hook: this references a .env secret file. Reading secrets into the transcript/model context is blocked. Use .env.example, or extract a single non-secret value deliberately.\"}}'\nfi",
+            "statusMessage": "Checking for .env secret access"
+          }
+        ]
+      }
+    ]
+  }
+}

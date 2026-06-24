@@ -37,6 +37,7 @@
   --color-destructive: var(--destructive);
   --color-brand-accent: var(--brand-accent);
   --color-brand-accent-foreground: var(--brand-accent-foreground);
+  --color-brand-accent-strong: var(--brand-accent-strong);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -85,11 +86,14 @@
   --accent: #e7f0f7; /* pale federal blue wash for hovers/active surfaces */
   --accent-foreground: #1a4480;
   --destructive: #b50909; /* USWDS secondary (federal red) — 6.4:1 on white */
-  /* DOL brand accent: federal red for the top stripe, eyebrow rules, and
-     emphasis. Separate from --destructive (errors) so "red = emphasis" and
-     "red = error" stay distinguishable. 7:1 with white text. */
-  --brand-accent: #b31942;
+  /* DOL brand accent: USWDS `secondary` red (red-50) for the top stripe,
+     eyebrow rules, and emphasis. Separate from --destructive (errors) so
+     "red = emphasis" and "red = error" stay distinguishable. Decorative/non-text
+     use (passes the 3:1 non-text contrast bar). For white text on red, use
+     --brand-accent-strong below (red-70v), which clears AA for text. */
+  --brand-accent: #d83933;
   --brand-accent-foreground: #ffffff;
+  --brand-accent-strong: #8b0a03; /* red-70v — ~8:1 with white text */
   --border: #dfe1e2; /* gray-cool-10 hairline */
   --input: #565c65; /* darker input borders stay visible (3:1 non-text AA) */
   /* Focus: high-visibility blue ring, the USWDS focus indicator. Paired with
@@ -132,6 +136,7 @@
   --destructive: #f2938c;
   --brand-accent: #ff8a9b; /* lightened red for AA on the navy dark surface */
   --brand-accent-foreground: #0b1b32;
+  --brand-accent-strong: #ff8a9b; /* same light red carries text on dark navy */
   --border: rgb(255 255 255 / 14%);
   --input: rgb(255 255 255 / 24%);
   --ring: #2491ff;

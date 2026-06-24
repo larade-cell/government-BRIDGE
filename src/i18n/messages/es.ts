@@ -16,6 +16,22 @@ export const es: Messages = {
     secure:
       "Su información es privada y segura. Nunca pedimos un número de Seguro Social.",
   },
+  footer: {
+    agency: "Departamento de Trabajo de EE. UU.",
+    official:
+      "Un sitio web oficial del Departamento de Trabajo de los Estados Unidos",
+    requiredHeading: "Enlaces federales requeridos",
+    about: "Acerca del DOL",
+    accessibility: "Declaración de accesibilidad",
+    foia: "Solicitudes de FOIA",
+    noFear: "Datos de la Ley No FEAR",
+    oig: "Oficina del Inspector General",
+    performance: "Informes de desempeño",
+    privacy: "Política de privacidad",
+    notices: "Avisos importantes del sitio web",
+    usagov: "USA.gov",
+    votegov: "Vote.gov",
+  },
   nav: {
     overview: "Resumen",
     documents: "Documentos",
@@ -33,14 +49,16 @@ export const es: Messages = {
     disclaimer:
       "Asistente de IA — información general, no una decisión oficial de elegibilidad.",
     handoff: "Hablar con una persona",
-    handoffIntro: "Comparta su información de contacto y un trabajador de casos se comunicará:",
+    handoffIntro:
+      "Comparta su información de contacto y un trabajador de casos se comunicará:",
     handoffSubmit: "Solicitar un trabajador de casos",
     handoffDone: "Gracias — un trabajador de casos se comunicará con usted.",
     error: "Lo sentimos, algo salió mal. Inténtelo de nuevo.",
     close: "Cerrar",
   },
   home: {
-    badge: "Motor de Inteligencia de Recursos y Orientación Digital de Beneficios",
+    badge:
+      "Motor de Inteligencia de Recursos y Orientación Digital de Beneficios",
     title: "Encuentre los beneficios para los que califica",
     subtitle:
       "BRIDGE lo evalúa en minutos para programas federales y estatales, y luego le ayuda a reunir documentos y solicitar.",
@@ -155,7 +173,8 @@ export const es: Messages = {
       name: "Su nombre",
       email: "Correo electrónico",
       phone: "Teléfono (opcional)",
-      contactHint: "Comparta al menos una forma de contactarlo para que un trabajador de casos pueda comunicarse.",
+      contactHint:
+        "Comparta al menos una forma de contactarlo para que un trabajador de casos pueda comunicarse.",
       doneNew:
         "Gracias — un trabajador de casos revisará su evaluación y se comunicará con usted.",
       doneAlready:
@@ -194,8 +213,10 @@ export const es: Messages = {
     updatesTitle: "Novedades",
     updatesEmpty: "Aún no hay novedades. Le avisaremos cuando algo cambie.",
     referralsTitle: "Sus referencias",
-    referralsLead: "Conexiones que su trabajador social está haciendo con organizaciones locales.",
-    referralsEmpty: "Aún no hay referencias. Su trabajador social las agregará aquí a medida que lo conecte con ayuda.",
+    referralsLead:
+      "Conexiones que su trabajador social está haciendo con organizaciones locales.",
+    referralsEmpty:
+      "Aún no hay referencias. Su trabajador social las agregará aquí a medida que lo conecte con ayuda.",
     refStatusDraft: "En preparación",
     refStatusSent: "Enviada",
     refStatusAccepted: "Aceptada",
@@ -203,7 +224,8 @@ export const es: Messages = {
     refUnassigned: "Eligiendo una organización",
     messagesTitle: "Mensajes",
     messagesLead: "Converse directamente con su trabajador social.",
-    messagesEmpty: "Aún no hay mensajes. Envíe el primero y su trabajador social le responderá aquí.",
+    messagesEmpty:
+      "Aún no hay mensajes. Envíe el primero y su trabajador social le responderá aquí.",
     messagesNoCase:
       "Aún no tiene un trabajador social. Solicite ayuda desde sus resultados para iniciar una conversación.",
     messagesPlaceholder: "Escriba un mensaje a su trabajador social…",

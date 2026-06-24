@@ -21,6 +21,21 @@ export const en = {
     secure:
       "Your information is private and secure. We never ask for a Social Security number.",
   },
+  footer: {
+    agency: "U.S. Department of Labor",
+    official: "An official website of the U.S. Department of Labor",
+    requiredHeading: "Required federal links",
+    about: "About DOL",
+    accessibility: "Accessibility statement",
+    foia: "FOIA requests",
+    noFear: "No FEAR Act data",
+    oig: "Office of Inspector General",
+    performance: "Performance reports",
+    privacy: "Privacy policy",
+    notices: "Important website notices",
+    usagov: "USA.gov",
+    votegov: "Vote.gov",
+  },
   nav: {
     overview: "Overview",
     documents: "Documents",
@@ -95,7 +110,8 @@ export const en = {
   auth: {
     signInTitle: "Sign in",
     staffTitle: "Staff sign-in",
-    signInSubtitle: "We'll email you a one-time sign-in link — no password needed.",
+    signInSubtitle:
+      "We'll email you a one-time sign-in link — no password needed.",
     staffSubtitle: "Use your staff email. We'll send a one-time sign-in link.",
     name: "Name",
     namePlaceholder: "Your name",
@@ -158,7 +174,8 @@ export const en = {
       name: "Your name",
       email: "Email",
       phone: "Phone (optional)",
-      contactHint: "Share at least one way to reach you so a caseworker can follow up.",
+      contactHint:
+        "Share at least one way to reach you so a caseworker can follow up.",
       doneNew:
         "Thanks — a caseworker will review your screening and follow up.",
       doneAlready:
@@ -197,8 +214,10 @@ export const en = {
     updatesTitle: "Updates",
     updatesEmpty: "No updates yet. We'll let you know when something changes.",
     referralsTitle: "Your referrals",
-    referralsLead: "Connections your caseworker is making to local organizations.",
-    referralsEmpty: "No referrals yet. Your caseworker will add them here as they connect you with help.",
+    referralsLead:
+      "Connections your caseworker is making to local organizations.",
+    referralsEmpty:
+      "No referrals yet. Your caseworker will add them here as they connect you with help.",
     refStatusDraft: "Being prepared",
     refStatusSent: "Sent",
     refStatusAccepted: "Accepted",
@@ -206,7 +225,8 @@ export const en = {
     refUnassigned: "Choosing an organization",
     messagesTitle: "Messages",
     messagesLead: "Chat directly with your caseworker.",
-    messagesEmpty: "No messages yet. Send the first one and your caseworker will reply here.",
+    messagesEmpty:
+      "No messages yet. Send the first one and your caseworker will reply here.",
     messagesNoCase:
       "You don't have a caseworker yet. Request help from your results to start a conversation.",
     messagesPlaceholder: "Write a message to your caseworker…",

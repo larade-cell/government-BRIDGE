@@ -24,7 +24,7 @@ Before writing styles, lean on these (already defined in `src/styles/globals.css
 ## Color — navy leads, red accents, gray neutrals
 DOL's identity is **navy + red + gray**. Use them in that hierarchy:
 - **Federal navy** (`--primary`, #1a4480) is the dominant brand color: primary buttons, the brand mark, active nav, links-as-actions, and the `.brand-gradient` backdrop. Navy carries the weight.
-- **Federal red** (`--brand-accent`, #b31942; lightened to #ff8a9b on the dark surface) is an **accent, not a primary**: the top `.brand-stripe`, eyebrow rules, and small emphasis moments. On the navy backdrop, where the deep token is low-contrast, use the bright on-navy red `#ff5d6c` (the one sanctioned red hardcode, alongside the navy hexes). **Red is a spice, not a base** — never flood large areas with it.
+- **Federal red** (`--brand-accent`, the USWDS `secondary` red #d83933; lightened to #ff8a9b on the dark surface) is an **accent, not a primary**: the top `.brand-stripe`, eyebrow rules, and small emphasis moments. It's decorative — for **white text on red** (badges/buttons) use `--brand-accent-strong` (#8b0a03), which clears AA. On the navy backdrop, where the token is low-contrast, use the bright on-navy red `#ff5d6c` (the one sanctioned red hardcode, alongside the navy hexes). **Red is a spice, not a base** — never flood large areas with it.
 - **Gray** (`--muted`, `--secondary`, `--border`, `--muted-foreground`) carries surfaces, dividers, and secondary text.
 - Keep `--destructive` (#b50909) for **errors only**. Don't use the brand red for error states, or the error red for emphasis — "red = emphasis" and "red = error" must stay distinguishable.
 - High contrast everywhere; meet WCAG AA. The palette tokens are AA-tuned — stay on them.

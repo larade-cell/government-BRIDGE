@@ -5,6 +5,7 @@ import { Geist, Merriweather, Public_Sans } from "next/font/google";
 
 import { ChatWidget } from "~/components/chat/chat-widget";
 import { GovBanner } from "~/components/ui/gov-banner";
+import { SiteFooter } from "~/components/ui/site-footer";
 import { I18nProvider } from "~/i18n/client";
 import { getI18n } from "~/i18n/server";
 import { TRPCReactProvider } from "~/trpc/react";
@@ -53,6 +54,7 @@ export default async function RootLayout({
             <div className="brand-stripe" aria-hidden="true" />
             <GovBanner />
             {children}
+            <SiteFooter />
             <ChatWidget />
           </I18nProvider>
         </TRPCReactProvider>

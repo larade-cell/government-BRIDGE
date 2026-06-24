@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { ChevronRightIcon, ExternalLinkIcon } from "~/components/ui/icons";
+import {
+  CheckCircleIcon,
+  ChevronRightIcon,
+  ExternalLinkIcon,
+  HelpIcon,
+  WarningIcon,
+} from "~/components/ui/icons";
 import { Tooltip } from "~/components/ui/tooltip";
 import { useI18n } from "~/i18n/client";
 import { fmt } from "~/i18n/config";
@@ -32,10 +38,33 @@ const TIER_OF: Record<string, Tier> = {
 };
 const TIER_ORDER: Tier[] = ["likely", "maybe", "unlikely"];
 
+type CriterionStatus = "met" | "unmet" | "unknown";
+type Criterion = {
+  key: string;
+  status: CriterionStatus;
+  hard: boolean;
+  label_en: string;
+  label_es: string;
+};
 type ResultExplanation = {
   applied_state?: string | null;
   reasons?: string[];
+  // Structured, bilingual per-criterion results from the rules engine — the
+  // deterministic "why" we show inline (no AI required).
+  criteria?: Criterion[];
 } | null;
+
+/** Status icon for a criterion. Shapes differ by status (check / warning /
+ *  question), so meaning isn't conveyed by color alone (WCAG 1.4.1). */
+function CriterionIcon({ status }: { status: CriterionStatus }) {
+  if (status === "met")
+    return (
+      <CheckCircleIcon className="mt-0.5 size-4 shrink-0 text-emerald-300" />
+    );
+  if (status === "unmet")
+    return <WarningIcon className="mt-0.5 size-4 shrink-0 text-rose-300" />;
+  return <HelpIcon className="mt-0.5 size-4 shrink-0 text-amber-300" />;
+}
 
 export function ResultsList({
   sessionId,
@@ -44,7 +73,7 @@ export function ResultsList({
   sessionId: string;
   results: Result[];
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   // null = follow the data (first non-empty tab); set once the user clicks.
   const [activeTab, setActiveTab] = useState<Tier | null>(null);
 
@@ -166,6 +195,34 @@ export function ResultsList({
                             })}
                           </span>
                         </Tooltip>
+                      )}
+                      {exp?.criteria && exp.criteria.length > 0 && (
+                        <div>
+                          <h3 className="mb-1.5 text-sm font-semibold tracking-wide text-white/60 uppercase">
+                            {t.results.whyHeading}
+                          </h3>
+                          <ul className="flex flex-col gap-1.5">
+                            {exp.criteria.map((c) => (
+                              <li
+                                key={c.key}
+                                className="flex items-start gap-2 text-sm text-white/85"
+                              >
+                                <CriterionIcon status={c.status} />
+                                <span>
+                                  <span className="sr-only">
+                                    {c.status === "met"
+                                      ? t.results.criterionMet
+                                      : c.status === "unmet"
+                                        ? t.results.criterionUnmet
+                                        : t.results.criterionUnknown}
+                                    {": "}
+                                  </span>
+                                  {locale === "es" ? c.label_es : c.label_en}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       )}
                       {r.program.next_steps && (
                         <div>

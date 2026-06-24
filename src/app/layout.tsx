@@ -4,6 +4,7 @@ import { type Metadata } from "next";
 import { Geist, Merriweather, Public_Sans } from "next/font/google";
 
 import { ChatWidget } from "~/components/chat/chat-widget";
+import { FooterSlot } from "~/components/ui/footer-slot";
 import { GovBanner } from "~/components/ui/gov-banner";
 import { SiteFooter } from "~/components/ui/site-footer";
 import { I18nProvider } from "~/i18n/client";
@@ -54,7 +55,9 @@ export default async function RootLayout({
             <div className="brand-stripe" aria-hidden="true" />
             <GovBanner />
             {children}
-            <SiteFooter />
+            <FooterSlot>
+              <SiteFooter />
+            </FooterSlot>
             <ChatWidget />
           </I18nProvider>
         </TRPCReactProvider>

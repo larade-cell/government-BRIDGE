@@ -4,15 +4,20 @@ import type { ReactNode } from "react";
 import { Brand } from "~/components/ui/brand";
 import { ArrowRightIcon } from "~/components/ui/icons";
 import { LocaleToggle } from "~/components/ui/locale-toggle";
+import { SiteFooter } from "~/components/ui/site-footer";
 
 import { DashboardNav, type NavItem } from "./dashboard-nav";
 
 /** Two uppercase initials from a name or email, for the sidebar avatar. */
 function initialsOf(label?: string | null): string {
   if (!label) return "—";
-  const name = label.split("@")[0]!.replace(/[._-]+/g, " ").trim();
+  const name = label
+    .split("@")[0]!
+    .replace(/[._-]+/g, " ")
+    .trim();
   const parts = name.split(/\s+/).filter(Boolean);
-  const chars = parts.length >= 2 ? parts[0]![0]! + parts[1]![0]! : name.slice(0, 2);
+  const chars =
+    parts.length >= 2 ? parts[0]![0]! + parts[1]![0]! : name.slice(0, 2);
   return chars.toUpperCase();
 }
 
@@ -42,7 +47,7 @@ export function DashboardShell({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-muted/30 text-foreground">
+    <div className="bg-muted/30 text-foreground min-h-screen">
       {/* Fixed navy sidebar (desktop). */}
       <aside className="brand-gradient fixed inset-y-0 left-0 z-40 hidden w-64 flex-col text-white md:flex">
         <div className="flex h-16 items-center px-5">
@@ -78,7 +83,7 @@ export function DashboardShell({
 
       {/* Main column, offset by the sidebar on desktop. */}
       <div className="flex min-h-screen flex-col md:pl-64">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b bg-background/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/70 sm:px-6 lg:px-8">
+        <header className="bg-background/80 supports-[backdrop-filter]:bg-background/70 sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b px-4 backdrop-blur sm:px-6 lg:px-8">
           {/* Brand shows in the bar only on mobile (sidebar hidden there). */}
           <div className="flex items-center gap-2.5 md:hidden">
             <Brand href="/" />
@@ -89,7 +94,7 @@ export function DashboardShell({
             {showLocaleToggle && <LocaleToggle />}
             <Link
               href="/api/auth/signout"
-              className="rounded-lg px-2.5 py-1.5 font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg px-2.5 py-1.5 font-medium transition-colors md:hidden"
             >
               {signOutLabel}
             </Link>
@@ -103,10 +108,15 @@ export function DashboardShell({
 
         <main
           id="main-content"
-          className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 duration-300 animate-in fade-in sm:px-6 lg:px-8"
+          className="animate-in fade-in mx-auto w-full max-w-6xl flex-1 px-4 py-8 duration-300 sm:px-6 lg:px-8"
         >
           {children}
         </main>
+
+        {/* Footer lives inside the offset column so the fixed sidebar never
+            covers its left edge. The global footer is suppressed on these
+            routes (see FooterSlot in the root layout). */}
+        <SiteFooter />
       </div>
     </div>
   );

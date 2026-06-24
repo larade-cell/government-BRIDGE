@@ -12,6 +12,14 @@ import { Tooltip } from "~/components/ui/tooltip";
 import { US_STATES } from "~/server/lib/eligibility/states";
 import { api } from "~/trpc/react";
 
+import { NaturalRuleEditor } from "./natural-rule-editor";
+import {
+  EMPTY_FORM,
+  parseRules,
+  serializeRules,
+  type RuleForm,
+} from "./rule-form";
+
 /** Loose view of the state-specific section of a rules_json blob. */
 type StateCriterionView = { key?: string; label_en?: string };
 type StateRulesView = {
@@ -47,7 +55,7 @@ export function RuleManager() {
           id="program"
           value={programId}
           onChange={(e) => setProgramId(e.target.value)}
-          className="h-8 min-w-64 rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-8 min-w-64 rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3"
         >
           <option value="">Select a program…</option>
           {(programs.data ?? []).map((p) => (
@@ -78,6 +86,11 @@ function RuleVersions({ programId }: { programId: string }) {
     program_id: programId,
   });
 
+  const [mode, setMode] = useState<"guided" | "json">("guided");
+  const [form, setForm] = useState<RuleForm>(EMPTY_FORM);
+  // Top-level rule keys the guided form doesn't edit (e.g. per-state overrides),
+  // preserved verbatim and merged back on save.
+  const [passthrough, setPassthrough] = useState<Record<string, unknown>>({});
   const [draft, setDraft] = useState("");
   const [bias, setBias] = useState(true);
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -85,6 +98,8 @@ function RuleVersions({ programId }: { programId: string }) {
   const create = api.eligibilityRule.createVersion.useMutation({
     onSuccess: () => {
       setDraft("");
+      setForm(EMPTY_FORM);
+      setPassthrough({});
       void utils.eligibilityRule.listVersions.invalidate({
         program_id: programId,
       });
@@ -102,6 +117,14 @@ function RuleVersions({ programId }: { programId: string }) {
 
   function handleCreate() {
     setJsonError(null);
+    if (mode === "guided") {
+      create.mutate({
+        program_id: programId,
+        rules_json: serializeRules(form, passthrough),
+        false_positive_bias: bias,
+      });
+      return;
+    }
     let parsed: unknown;
     try {
       parsed = JSON.parse(draft);
@@ -109,7 +132,11 @@ function RuleVersions({ programId }: { programId: string }) {
       setJsonError("Not valid JSON.");
       return;
     }
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      Array.isArray(parsed)
+    ) {
       setJsonError("Rules must be a JSON object.");
       return;
     }
@@ -120,8 +147,19 @@ function RuleVersions({ programId }: { programId: string }) {
     });
   }
 
+  // Load an existing version into the editor. Prefer the guided form; if the
+  // rules use a shape the form can't represent, fall back to raw JSON so nothing
+  // is lost.
   function prefillFrom(rules: unknown) {
-    setDraft(JSON.stringify(rules, null, 2));
+    const result = parseRules(rules);
+    if (result.ok) {
+      setForm(result.form);
+      setPassthrough(result.passthrough);
+      setMode("guided");
+    } else {
+      setDraft(JSON.stringify(rules, null, 2));
+      setMode("json");
+    }
   }
 
   const list = versions.data?.data ?? [];
@@ -131,15 +169,55 @@ function RuleVersions({ programId }: { programId: string }) {
       {/* New version */}
       <Card>
         <CardContent className="flex flex-col gap-3 py-5">
-          <h3 className="text-sm font-semibold">New rule version</h3>
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            rows={10}
-            spellCheck={false}
-            placeholder='{ "requirements": [ { "key": "income", "condition": { "fact": "income_pct_fpl", "op": "lte", "value": 130 }, "label_en": "…", "label_es": "…" } ] }'
-            className="w-full rounded-lg border border-input bg-transparent px-3 py-2 font-mono text-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-          />
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold">New rule version</h3>
+            <div className="border-input inline-flex overflow-hidden rounded-md border text-xs">
+              <button
+                type="button"
+                onClick={() => setMode("guided")}
+                className={`px-2.5 py-1 font-medium ${mode === "guided" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
+              >
+                Guided
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("json")}
+                className={`px-2.5 py-1 font-medium ${mode === "json" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
+              >
+                JSON
+              </button>
+            </div>
+          </div>
+
+          {mode === "guided" ? (
+            <>
+              <NaturalRuleEditor form={form} onChange={setForm} />
+              {Object.keys(passthrough).length > 0 && (
+                <p className="text-muted-foreground text-xs">
+                  This version also has advanced settings (
+                  {Object.keys(passthrough).join(", ")}) that are preserved on
+                  save but only editable in JSON mode.
+                </p>
+              )}
+              <details className="text-xs">
+                <summary className="text-muted-foreground cursor-pointer">
+                  Preview generated JSON
+                </summary>
+                <pre className="bg-muted/60 mt-1 max-h-48 overflow-auto rounded-lg p-2">
+                  {JSON.stringify(serializeRules(form, passthrough), null, 2)}
+                </pre>
+              </details>
+            </>
+          ) : (
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              rows={10}
+              spellCheck={false}
+              placeholder='{ "requirements": [ { "key": "income", "condition": { "fact": "income_pct_fpl", "op": "lte", "value": 130 }, "label_en": "…", "label_es": "…" } ] }'
+              className="border-input focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-lg border bg-transparent px-3 py-2 font-mono text-xs outline-none focus-visible:ring-3"
+            />
+          )}
           <div className="flex flex-wrap items-center gap-3">
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -154,7 +232,11 @@ function RuleVersions({ programId }: { programId: string }) {
                 <HelpIcon className="size-4" />
               </span>
             </Tooltip>
-            <Button size="sm" onClick={handleCreate} disabled={create.isPending}>
+            <Button
+              size="sm"
+              onClick={handleCreate}
+              disabled={create.isPending}
+            >
               {create.isPending ? "Creating…" : "Create draft"}
             </Button>
           </div>
@@ -168,9 +250,9 @@ function RuleVersions({ programId }: { programId: string }) {
       {/* Existing versions */}
       <div className="flex flex-col gap-2">
         {versions.isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-muted-foreground text-sm">Loading…</p>
         ) : list.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             No rule versions yet for this program.
           </p>
         ) : (
@@ -225,7 +307,7 @@ function RuleVersions({ programId }: { programId: string }) {
 
                 <StateVariations rulesJson={v.rules_json} />
 
-                <pre className="max-h-48 overflow-auto rounded-lg bg-muted/60 p-2 text-xs">
+                <pre className="bg-muted/60 max-h-48 overflow-auto rounded-lg p-2 text-xs">
                   {JSON.stringify(v.rules_json, null, 2)}
                 </pre>
               </CardContent>
@@ -256,7 +338,7 @@ function StateVariations({ rulesJson }: { rulesJson: unknown }) {
             ...(sr.add ?? []).map((c) => ({ kind: "add", c })),
           ];
           return (
-            <li key={code} className="rounded-md bg-background p-2 text-xs">
+            <li key={code} className="bg-background rounded-md p-2 text-xs">
               <div className="font-medium">
                 {code}
                 <span className="text-muted-foreground">
@@ -264,7 +346,9 @@ function StateVariations({ rulesJson }: { rulesJson: unknown }) {
                   · {US_STATES[code] ?? code}
                 </span>
               </div>
-              {sr.note && <p className="mt-0.5 text-muted-foreground">{sr.note}</p>}
+              {sr.note && (
+                <p className="text-muted-foreground mt-0.5">{sr.note}</p>
+              )}
               {changes.length > 0 && (
                 <ul className="mt-1 flex flex-col gap-0.5">
                   {changes.map((ch, i) => (

@@ -12,7 +12,7 @@ export const es: Messages = {
     skipToContent: "Saltar al contenido principal",
   },
   gov: {
-    official: "Una plataforma oficial de evaluación de beneficios",
+    official: "Una plataforma oficial del Departamento de Trabajo de EE. UU.",
     secure:
       "Su información es privada y segura. Nunca pedimos un número de Seguro Social.",
     howYouKnow: "Así es como puede verificarlo",
@@ -64,11 +64,11 @@ export const es: Messages = {
     close: "Cerrar",
   },
   home: {
-    badge:
-      "Motor de Inteligencia de Recursos y Orientación Digital de Beneficios",
-    title: "Encuentre los beneficios para los que califica",
+    badge: "Motor Digital de Orientación sobre Beneficios, Derechos e Ingresos",
+    title:
+      "Encuentre los beneficios y protecciones laborales que le corresponden",
     subtitle:
-      "BRIDGE lo evalúa en minutos para programas federales y estatales, y luego le ayuda a reunir documentos y solicitar.",
+      "BRIDGE lo evalúa en minutos para programas del Departamento de Trabajo de EE. UU. — desempleo, salarios, seguridad laboral, capacitación y más — y luego le ayuda a dar el siguiente paso.",
     signedInAs: "Sesión iniciada como",
     startScreening: "Comenzar evaluación",
     goToDashboard: "Ir a mi panel",
@@ -77,32 +77,35 @@ export const es: Messages = {
     trustFree: "Gratis",
     trustPrivate: "Privado y seguro",
     trustBilingual: "Inglés y español",
-    featureTitle: "No tiene que resolverlo solo",
+    featureTitle: "No tiene que navegar el sistema solo",
     featureLead:
-      "BRIDGE convierte un laberinto confuso de programas en unas pocas preguntas sencillas, y lo acompaña desde la evaluación hasta la solicitud.",
+      "BRIDGE convierte un laberinto de programas laborales en unas pocas preguntas sencillas, y lo acompaña desde la evaluación hasta presentar un reclamo o solicitud.",
     step1Title: "Responda algunas preguntas",
     step1Desc:
-      "Preguntas sencillas sobre su hogar. Sin tecnicismos y sin necesidad de crear una cuenta para empezar.",
+      "Preguntas sencillas sobre su situación laboral. Sin tecnicismos y sin necesidad de crear una cuenta para empezar.",
     step2Title: "Vea sus coincidencias",
     step2Desc:
-      "Obtenga una lista personalizada de los programas para los que probablemente califica, ordenada según su elegibilidad.",
-    step3Title: "Reúna documentos y solicite",
+      "Obtenga una lista personalizada de programas del Departamento de Trabajo para los que podría calificar, ordenada según su elegibilidad.",
+    step3Title: "Dé el siguiente paso",
     step3Desc:
-      "Le mostramos exactamente qué documentos necesita y lo enlazamos directamente a cada solicitud.",
-    categoriesTitle: "Explore categorías comunes",
+      "Le mostramos lo que necesita y lo enlazamos directamente con la oficina correcta — desempleo, reclamos salariales, OSHA y más.",
+    categoriesTitle: "Explore por tema",
     categoriesLead: "Vaya directo al tipo de ayuda que más necesita.",
-    catFood: "Alimentación y nutrición",
-    catFoodDesc: "SNAP, WIC, comidas escolares y más.",
-    catHealth: "Cobertura de salud",
-    catHealthDesc: "Medicaid, CHIP y ayuda del mercado.",
-    catHousing: "Vivienda y servicios",
-    catHousingDesc: "Ayuda de alquiler, vales y ayuda de energía.",
+    catJobs: "Empleo y capacitación",
+    catJobsDesc:
+      "Encuentre trabajo, capacitación gratuita y apoyo para regresar al trabajo.",
+    catWages: "Salarios y derechos laborales",
+    catWagesDesc:
+      "Recupere salarios y horas extra no pagados; licencia familiar y médica.",
+    catSafety: "Seguridad y beneficios",
+    catSafetyDesc:
+      "Reporte condiciones inseguras, compensación laboral y beneficios del empleo.",
     howCanWeHelp: "¿Cómo podemos ayudarle hoy?",
     helpLead: "Elija por dónde desea empezar.",
     checkTitle: "Verifique para qué califica",
     checkDesc:
-      "Responda algunas preguntas sencillas para ver los programas para los que podría ser elegible.",
-    continueTitle: "Continuar una solicitud",
+      "Responda algunas preguntas sencillas para ver los programas del Departamento de Trabajo para los que podría ser elegible.",
+    continueTitle: "Continuar un reclamo o solicitud",
     continueDesc:
       "Inicie sesión con un enlace seguro para retomar donde quedó y administrar documentos.",
     helpTitle: "Obtenga ayuda en su idioma",

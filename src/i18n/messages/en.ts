@@ -17,7 +17,7 @@ export const en = {
     skipToContent: "Skip to main content",
   },
   gov: {
-    official: "An official benefits screening platform",
+    official: "An official U.S. Department of Labor platform",
     secure:
       "Your information is private and secure. We never ask for a Social Security number.",
     howYouKnow: "Here's how you know",
@@ -67,10 +67,10 @@ export const en = {
     close: "Close",
   },
   home: {
-    badge: "Benefits Resource Intelligence & Digital Guidance Engine",
-    title: "Find the benefits you qualify for",
+    badge: "Benefits, Rights & Income Digital Guidance Engine",
+    title: "Find the work benefits and protections you're entitled to",
     subtitle:
-      "BRIDGE screens you across federal and state programs in minutes — then helps you gather documents and apply.",
+      "BRIDGE checks you against U.S. Department of Labor programs in minutes — unemployment, wages, workplace safety, training, and more — then helps you take the next step.",
     signedInAs: "Signed in as",
     startScreening: "Start screening",
     goToDashboard: "Go to my dashboard",
@@ -79,32 +79,34 @@ export const en = {
     trustFree: "Free to use",
     trustPrivate: "Private & secure",
     trustBilingual: "English & Spanish",
-    featureTitle: "You don't have to figure it out alone",
+    featureTitle: "You don't have to navigate the system alone",
     featureLead:
-      "BRIDGE turns a confusing maze of programs into a few plain questions — and stays with you from screening all the way to application.",
+      "BRIDGE turns a maze of labor programs into a few plain questions — and stays with you from screening through filing a claim or request.",
     step1Title: "Answer a few questions",
     step1Desc:
-      "Plain-language questions about your household. No jargon, and no account needed to start.",
+      "Plain-language questions about your work situation. No jargon, and no account needed to start.",
     step2Title: "See your matches",
     step2Desc:
-      "Get a personalized list of programs you likely qualify for, sorted by how well you fit.",
-    step3Title: "Gather documents & apply",
+      "Get a personalized list of Labor Department programs you may qualify for, sorted by how well you fit.",
+    step3Title: "Take the next step",
     step3Desc:
-      "We show you exactly which documents you need and link you straight to each application.",
-    categoriesTitle: "Explore common categories",
+      "We show you what you need and link you straight to the right office — unemployment, wage claims, OSHA, and more.",
+    categoriesTitle: "Explore by topic",
     categoriesLead: "Jump straight to the kind of help you need most.",
-    catFood: "Food & nutrition",
-    catFoodDesc: "SNAP, WIC, school meals and more.",
-    catHealth: "Health coverage",
-    catHealthDesc: "Medicaid, CHIP and marketplace help.",
-    catHousing: "Housing & utilities",
-    catHousingDesc: "Rental assistance, vouchers and energy aid.",
+    catJobs: "Jobs & training",
+    catJobsDesc: "Find work, get free training, and return-to-work support.",
+    catWages: "Wages & workplace rights",
+    catWagesDesc:
+      "Recover unpaid wages and overtime; family and medical leave.",
+    catSafety: "Safety & benefits",
+    catSafetyDesc:
+      "Report unsafe conditions, workers' comp, and job-based benefits.",
     howCanWeHelp: "How can we help you today?",
     helpLead: "Choose where you'd like to start.",
     checkTitle: "Check what you qualify for",
     checkDesc:
-      "Answer a few plain-language questions to see programs you may be eligible for.",
-    continueTitle: "Continue an application",
+      "Answer a few plain-language questions to see Labor Department programs you may be eligible for.",
+    continueTitle: "Continue a claim or request",
     continueDesc:
       "Sign in with a secure link to pick up where you left off and manage documents.",
     helpTitle: "Get help in your language",

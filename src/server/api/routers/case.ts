@@ -71,7 +71,10 @@ export const caseRouter = createTRPCRouter({
           select: { id: true },
         });
         if (!session) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Session not found",
+          });
         }
       } else {
         // Resident self-service: enforces ownership / anonymous access.
@@ -79,7 +82,10 @@ export const caseRouter = createTRPCRouter({
       }
 
       const existing = await ctx.db.cases.findFirst({
-        where: { session_id: input.session_id, status: { in: [...OPEN_STATUSES] } },
+        where: {
+          session_id: input.session_id,
+          status: { in: [...OPEN_STATUSES] },
+        },
         orderBy: { created_at: "desc" },
       });
       if (existing) {
@@ -122,9 +128,13 @@ export const caseRouter = createTRPCRouter({
           },
         });
         const byKey: Record<string, unknown> = {};
-        for (const a of answers) byKey[a.questions.question_key] = a.answer_value;
+        for (const a of answers)
+          byKey[a.questions.question_key] = a.answer_value;
         const auto = priorityFromAnswers(byKey);
-        priorityData = { priority: auto.priority, priority_reason: auto.reason };
+        priorityData = {
+          priority: auto.priority,
+          priority_reason: auto.reason,
+        };
       }
 
       const created = await ctx.db.cases.create({
@@ -172,7 +182,9 @@ export const caseRouter = createTRPCRouter({
       select: {
         id: true,
         status: true,
-        users: { select: { email: true, auth_user: { select: { name: true } } } },
+        users: {
+          select: { email: true, auth_user: { select: { name: true } } },
+        },
         case_notes: {
           where: { is_internal: false },
           orderBy: { created_at: "asc" },
@@ -184,8 +196,7 @@ export const caseRouter = createTRPCRouter({
     return {
       case_id: kase.id,
       status: kase.status,
-      caseworker_name:
-        kase.users?.auth_user?.name ?? kase.users?.email ?? null,
+      caseworker_name: kase.users?.auth_user?.name ?? kase.users?.email ?? null,
       messages: kase.case_notes.map((n) => ({
         id: n.id,
         note: n.note,
@@ -369,7 +380,9 @@ export const caseRouter = createTRPCRouter({
           // Where the request came from: a completed screening ("Request help"),
           // the chat assistant handoff, or an uploaded document that needs
           // manual review.
-          source: z.enum(["screening", "chatbot", "document_review"]).optional(),
+          source: z
+            .enum(["screening", "chatbot", "document_review"])
+            .optional(),
           page: z.number().int().min(1).default(1),
           limit: z.number().int().min(1).max(100).default(20),
         })
@@ -446,6 +459,17 @@ export const caseRouter = createTRPCRouter({
           message: "Case is assigned to another caseworker",
         });
       }
+      // Read-access audit: a staff member opened a resident's full case record
+      // (contact PII + notes). Captures who/when/IP so PII access is traceable
+      // for breach investigations — write actions are audited separately. The
+      // polled thread/queue endpoints are intentionally NOT logged per-tick, to
+      // avoid flooding the audit table; add session-windowed logging there if
+      // message-view auditing is later required.
+      await recordAudit(ctx, {
+        action: "case.view",
+        entity_type: "case",
+        entity_id: input.id,
+      });
       return found;
     }),
 
@@ -500,7 +524,9 @@ export const caseRouter = createTRPCRouter({
         after: {
           ...(input.status && { status: input.status }),
           ...(input.priority && { priority: input.priority }),
-          ...(input.assigned_to !== undefined && { assigned_to: input.assigned_to }),
+          ...(input.assigned_to !== undefined && {
+            assigned_to: input.assigned_to,
+          }),
         },
       });
       return updated;

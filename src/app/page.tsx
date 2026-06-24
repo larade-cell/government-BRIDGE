@@ -28,12 +28,12 @@ const ghostBtn =
 // Programs a single questionnaire screens for. Names are proper nouns, so they
 // read the same in every locale; the section heading carries the language.
 const PROGRAMS = [
-  { name: "SNAP", tag: "Food assistance" },
-  { name: "WIC", tag: "Women, Infants & Children" },
-  { name: "Medicaid / CHIP", tag: "Health coverage" },
-  { name: "LIHEAP", tag: "Utility & energy help" },
-  { name: "Rental assistance", tag: "Housing" },
-  { name: "Childcare subsidies", tag: "Childcare" },
+  { name: "Unemployment Insurance", tag: "Income while you're between jobs" },
+  { name: "Wage & Hour Claims", tag: "Recover unpaid or back wages" },
+  { name: "Workplace Safety (OSHA)", tag: "Report unsafe conditions" },
+  { name: "Job Training (WIOA)", tag: "Free skills training and placement" },
+  { name: "Veterans' Employment", tag: "Job-search help for veterans" },
+  { name: "Workers' Compensation", tag: "Support after a workplace injury" },
 ];
 
 export default async function Home() {
@@ -41,19 +41,19 @@ export default async function Home() {
 
   const categories = [
     {
-      title: t.home.catFood,
-      desc: t.home.catFoodDesc,
-      img: img("photo-1593113598332-cd288d649433", 800), // food bank
+      title: t.home.catJobs,
+      desc: t.home.catJobsDesc,
+      img: img("photo-1521737711867-e3b97375f902", 800), // training / team
     },
     {
-      title: t.home.catHealth,
-      desc: t.home.catHealthDesc,
-      img: img("photo-1542884748-2b87b36c6b90", 800), // health screening
+      title: t.home.catWages,
+      desc: t.home.catWagesDesc,
+      img: img("photo-1454165804606-c3d57bc86b40", 800), // workplace
     },
     {
-      title: t.home.catHousing,
-      desc: t.home.catHousingDesc,
-      img: img("photo-1605276374104-dee2a0ed3cd6", 800), // housing
+      title: t.home.catSafety,
+      desc: t.home.catSafetyDesc,
+      img: img("photo-1581094794329-c8112a89af12", 800), // safety / hard hat
     },
   ];
 

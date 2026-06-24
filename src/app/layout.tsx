@@ -11,9 +11,9 @@ import { getI18n } from "~/i18n/server";
 import { TRPCReactProvider } from "~/trpc/react";
 
 export const metadata: Metadata = {
-  title: "BRIDGE — Benefits screening & guidance",
+  title: "BRIDGE — U.S. Department of Labor benefits & rights",
   description:
-    "Find out which benefits you may qualify for and get help applying.",
+    "Check which Department of Labor programs you may qualify for — unemployment, wages, workplace safety, training, and more — and get help taking the next step.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 

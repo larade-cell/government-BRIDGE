@@ -180,11 +180,19 @@ describe("Phase 1 — screening core", () => {
     });
 
     // Anonymous caller can no longer read it.
-    await expectCode(caller(null).screeningSession.byId({ id: session.id }), "FORBIDDEN");
+    await expectCode(
+      caller(null).screeningSession.byId({ id: session.id }),
+      "FORBIDDEN",
+    );
     // A different signed-in user can't either.
-    await expectCode(caller(adminId).screeningSession.byId({ id: session.id }), "FORBIDDEN");
+    await expectCode(
+      caller(adminId).screeningSession.byId({ id: session.id }),
+      "FORBIDDEN",
+    );
     // The owner can.
-    const owned = await caller(residentId).screeningSession.byId({ id: session.id });
+    const owned = await caller(residentId).screeningSession.byId({
+      id: session.id,
+    });
     expect(owned.id).toBe(session.id);
   });
 
@@ -241,13 +249,22 @@ describe("Phase 2 — programs, checklist, uploads", () => {
   });
 
   it("gets a program by id and 404s on a missing one", async () => {
-    const p = await caller(null).program.byId({ id: programId, language_code: "en" });
+    const p = await caller(null).program.byId({
+      id: programId,
+      language_code: "en",
+    });
     expect(p.id).toBe(programId);
-    await expectCode(caller(null).program.byId({ id: randomUUID(), language_code: "en" }), "NOT_FOUND");
+    await expectCode(
+      caller(null).program.byId({ id: randomUUID(), language_code: "en" }),
+      "NOT_FOUND",
+    );
   });
 
   it("search returns a ranked envelope (empty until indexed)", async () => {
-    const res = await caller(null).program.search({ q: "food assistance", limit: 5 });
+    const res = await caller(null).program.search({
+      q: "food assistance",
+      limit: 5,
+    });
     expect(Array.isArray(res.data)).toBe(true);
     expect(res.meta.query).toBe("food assistance");
   });
@@ -259,7 +276,9 @@ describe("Phase 2 — programs, checklist, uploads", () => {
   it("generates a checklist from eligibility results", async () => {
     const session = await newSession();
     await caller(null).eligibility.run({ session_id: session.id });
-    const gen = await caller(null).documentChecklist.generate({ session_id: session.id });
+    const gen = await caller(null).documentChecklist.generate({
+      session_id: session.id,
+    });
     expect(gen.count).toBeGreaterThanOrEqual(1);
 
     const list = await caller(null).documentChecklist.bySession({
@@ -334,7 +353,9 @@ describe("Phase 2 — programs, checklist, uploads", () => {
     expect(rowsAfter.length).toBe(rowsBefore.length);
     // Received, but NOT auto-"verified" — picking a type is an unchecked claim.
     expect(rowsAfter.every((d) => d.upload_status === "uploaded")).toBe(true);
-    expect(new Set(rowsAfter.map((d) => d.program_id)).size).toBeGreaterThanOrEqual(2);
+    expect(
+      new Set(rowsAfter.map((d) => d.program_id)).size,
+    ).toBeGreaterThanOrEqual(2);
   });
 
   it("accepts a valid upload and rejects a bad mime type", async () => {
@@ -357,8 +378,13 @@ describe("Phase 2 — programs, checklist, uploads", () => {
     );
 
     // Soft-delete removes it from the listing.
-    await caller(null).documentUpload.delete({ session_id: session.id, id: upload.id });
-    const list = await caller(null).documentUpload.list({ session_id: session.id });
+    await caller(null).documentUpload.delete({
+      session_id: session.id,
+      id: upload.id,
+    });
+    const list = await caller(null).documentUpload.list({
+      session_id: session.id,
+    });
     expect(list.data.find((u) => u.id === upload.id)).toBeUndefined();
   });
 
@@ -450,19 +476,21 @@ describe("Phase 2 — programs, checklist, uploads", () => {
     expect(cases[0]?.source).toBe("document_review");
     expect(cases[0]?.status).toBe("new");
     expect(cases[0]!.case_notes.length).toBeGreaterThanOrEqual(2);
-    expect(
-      cases[0]!.case_notes.every((n) => n.is_internal),
-    ).toBe(true);
+    expect(cases[0]!.case_notes.every((n) => n.is_internal)).toBe(true);
 
     // And it surfaces in the staff queue filtered by the new source.
-    const queued = await caller(adminId).case.list({ source: "document_review" });
+    const queued = await caller(adminId).case.list({
+      source: "document_review",
+    });
     expect(queued.data.some((c) => c.id === cases[0]!.id)).toBe(true);
   });
 });
 
 describe("Phase 4 — AI, reports, cases, rule versions", () => {
   it("ai.ask creates a conversation and offers handoff once", async () => {
-    const res = await caller(null).ai.ask({ question: "Do I qualify for SNAP?" });
+    const res = await caller(null).ai.ask({
+      question: "Do I qualify for SNAP?",
+    });
     createdConversationIds.push(res.conversation_id);
     expect(res.answer).toContain("official eligibility decision");
     expect(res.human_handoff_offered).toBe(true);
@@ -502,7 +530,10 @@ describe("Phase 4 — AI, reports, cases, rule versions", () => {
     const published = await admin.eligibilityRule.publish({ id: version.id });
     expect(published.is_published).toBe(true);
 
-    await expectCode(admin.eligibilityRule.publish({ id: version.id }), "CONFLICT");
+    await expectCode(
+      admin.eligibilityRule.publish({ id: version.id }),
+      "CONFLICT",
+    );
   });
 
   it("non-admins cannot create rule versions", async () => {
@@ -646,11 +677,25 @@ describe("Citizen & admin views — dashboards", () => {
     expect(updated.priority).toBe("low");
     const detail = await caller(adminId).case.byId({ id: c.id });
     expect(detail.priority_reason).toBeNull();
+
+    // Read-access audit: opening a resident's case logs who viewed it, so PII
+    // access is traceable (not just write actions).
+    const accessLog = await caller(adminId).audit.list({
+      entity_type: "case",
+      limit: 100,
+    });
+    expect(
+      accessLog.data.some(
+        (e) => e.action === "case.view" && e.entity_id === c.id,
+      ),
+    ).toBe(true);
   });
 
   it("chatbot handoff creates a case in the caseworker queue with contact", async () => {
     // createConversation has no model call, so this stays deterministic.
-    const convo = await caller(null).ai.createConversation({ language_code: "en" });
+    const convo = await caller(null).ai.createConversation({
+      language_code: "en",
+    });
     createdConversationIds.push(convo.id);
 
     await caller(null).ai.handoff({
@@ -679,7 +724,9 @@ describe("Citizen & admin views — dashboards", () => {
       limit: 100,
     });
     expect(screeningList.data.some((x) => x.id === c!.id)).toBe(false);
-    expect(screeningList.data.every((x) => x.source === "screening")).toBe(true);
+    expect(screeningList.data.every((x) => x.source === "screening")).toBe(
+      true,
+    );
 
     // Second handoff is still rejected (idempotent — no duplicate case).
     await expectCode(
@@ -766,7 +813,10 @@ describe("Citizen & admin views — dashboards", () => {
       answer_value: 3,
     });
 
-    await expectCode(caller(residentId).question.delete({ id: q.id }), "FORBIDDEN");
+    await expectCode(
+      caller(residentId).question.delete({ id: q.id }),
+      "FORBIDDEN",
+    );
 
     const res = await caller(adminId).question.delete({ id: q.id });
     expect(res.deleted).toBe(true);
@@ -774,7 +824,10 @@ describe("Citizen & admin views — dashboards", () => {
     const list = await caller(null).question.list({ language_code: "en" });
     expect(list.some((x) => x.id === q.id)).toBe(false);
 
-    await expectCode(caller(adminId).question.delete({ id: q.id }), "NOT_FOUND");
+    await expectCode(
+      caller(adminId).question.delete({ id: q.id }),
+      "NOT_FOUND",
+    );
   });
 
   it("completing a session stamps completed_at (idempotent) and counts in reports", async () => {
@@ -848,7 +901,9 @@ describe("Citizen & admin views — dashboards", () => {
       program_key: key,
       category: "test",
       authoritative_url: "https://example.test",
-      translations: { en: { name: "Audit Test", short_description: "d", next_steps: "n" } },
+      translations: {
+        en: { name: "Audit Test", short_description: "d", next_steps: "n" },
+      },
     });
 
     const log = await caller(adminId).audit.list({
@@ -919,8 +974,12 @@ describe("Citizen & admin views — dashboards", () => {
       need_category: "housing",
     });
 
-    expect((await caller(residentId).referral.byId({ id: ref.id })).id).toBe(ref.id);
-    expect((await caller(caseworkerId).referral.byId({ id: ref.id })).id).toBe(ref.id);
+    expect((await caller(residentId).referral.byId({ id: ref.id })).id).toBe(
+      ref.id,
+    );
+    expect((await caller(caseworkerId).referral.byId({ id: ref.id })).id).toBe(
+      ref.id,
+    );
 
     const updated = await caller(caseworkerId).referral.update({
       id: ref.id,
@@ -988,7 +1047,10 @@ describe("Phase 3 — profile, notifications, referrals", () => {
     const withPhone = await me.user.update({ phone: "+15551234567" });
     expect(withPhone.phone).toBe("+15551234567");
 
-    await expectCode(me.user.update({ preferred_language: "zz" }), "BAD_REQUEST");
+    await expectCode(
+      me.user.update({ preferred_language: "zz" }),
+      "BAD_REQUEST",
+    );
   });
 
   it("requires auth for user.update", async () => {
@@ -1017,13 +1079,18 @@ describe("Phase 3 — profile, notifications, referrals", () => {
       destination: "resident@example.test",
       frequency: "daily_digest",
     });
-    const list = await me.notificationPreference.list({ session_id: session.id });
+    const list = await me.notificationPreference.list({
+      session_id: session.id,
+    });
     expect(list.length).toBe(1);
     expect(list[0]?.frequency).toBe("daily_digest");
   });
 
   it("requires auth or a session id to list preferences", async () => {
-    await expectCode(caller(null).notificationPreference.list(), "UNAUTHORIZED");
+    await expectCode(
+      caller(null).notificationPreference.list(),
+      "UNAUTHORIZED",
+    );
   });
 
   it("creates a referral and lists it; 404s on an unknown org", async () => {

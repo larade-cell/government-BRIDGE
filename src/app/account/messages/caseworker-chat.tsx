@@ -41,7 +41,7 @@ export function CaseworkerChat() {
   if (thread.isLoading) {
     return (
       <Card>
-        <CardContent className="py-8 text-sm text-muted-foreground">
+        <CardContent className="text-muted-foreground py-8 text-sm">
           …
         </CardContent>
       </Card>
@@ -52,9 +52,12 @@ export function CaseworkerChat() {
   if (!thread.data) {
     return (
       <Card>
-        <CardContent className="flex flex-col items-start gap-3 py-8 text-sm text-muted-foreground">
+        <CardContent className="text-muted-foreground flex flex-col items-start gap-3 py-8 text-sm">
           <p>{t.account.messagesNoCase}</p>
-          <Button nativeButton={false} render={<Link href="/screening/start" />}>
+          <Button
+            nativeButton={false}
+            render={<Link href="/screening/start" />}
+          >
             {t.account.newScreening}
           </Button>
         </CardContent>
@@ -76,11 +79,19 @@ export function CaseworkerChat() {
   return (
     <Card>
       <CardContent className="flex flex-col gap-3 py-5">
-        <p className="text-sm font-medium text-muted-foreground">{headerText}</p>
+        <p className="text-muted-foreground text-sm font-medium">
+          {headerText}
+        </p>
 
-        <div className="flex max-h-[28rem] min-h-40 flex-col gap-2 overflow-y-auto">
+        <div
+          role="log"
+          aria-live="polite"
+          aria-relevant="additions text"
+          aria-label={headerText}
+          className="flex max-h-[28rem] min-h-40 flex-col gap-2 overflow-y-auto"
+        >
           {messages.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
+            <p className="text-muted-foreground py-8 text-center text-sm">
               {t.account.messagesEmpty}
             </p>
           ) : (
@@ -94,13 +105,13 @@ export function CaseworkerChat() {
                   <div
                     className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
                       mine
-                        ? "rounded-br-sm bg-primary text-primary-foreground"
-                        : "rounded-bl-sm bg-muted text-foreground"
+                        ? "bg-primary text-primary-foreground rounded-br-sm"
+                        : "bg-muted text-foreground rounded-bl-sm"
                     }`}
                   >
                     {m.note}
                   </div>
-                  <span className="mt-0.5 px-1 text-[11px] text-muted-foreground">
+                  <span className="text-muted-foreground mt-0.5 px-1 text-[11px]">
                     {mine
                       ? t.account.messageFromYou
                       : t.account.messageFromCaseworker}{" "}
@@ -126,13 +137,15 @@ export function CaseworkerChat() {
             rows={2}
             placeholder={t.account.messagesPlaceholder}
             aria-label={t.account.messagesPlaceholder}
-            className="min-w-0 flex-1 rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="border-input focus-visible:border-ring focus-visible:ring-ring/50 min-w-0 flex-1 rounded-lg border bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:ring-3"
           />
           <Button
             disabled={send.isPending || text.trim() === ""}
             onClick={handleSend}
           >
-            {send.isPending ? t.account.messagesSending : t.account.messagesSend}
+            {send.isPending
+              ? t.account.messagesSending
+              : t.account.messagesSend}
           </Button>
         </div>
       </CardContent>

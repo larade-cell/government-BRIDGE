@@ -90,7 +90,7 @@ export function CaseQueue({ currentUserId }: { currentUserId: string | null }) {
       {/* Queue */}
       <div className="flex flex-col gap-3">
         {/* Separate screening requests from chatbot handoffs. */}
-        <div className="inline-flex rounded-lg bg-muted p-0.5 text-sm">
+        <div className="bg-muted inline-flex rounded-lg p-0.5 text-sm">
           {SOURCES.map((s) => (
             <button
               key={s.value}
@@ -127,10 +127,10 @@ export function CaseQueue({ currentUserId }: { currentUserId: string | null }) {
         </div>
 
         {list.isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-muted-foreground text-sm">Loading…</p>
         ) : cases.length === 0 ? (
           <Card>
-            <CardContent className="py-8 text-center text-sm text-muted-foreground">
+            <CardContent className="text-muted-foreground py-8 text-center text-sm">
               No cases in this view.
             </CardContent>
           </Card>
@@ -142,10 +142,16 @@ export function CaseQueue({ currentUserId }: { currentUserId: string | null }) {
                 key={c.id}
                 role="button"
                 tabIndex={0}
+                aria-pressed={selectedId === c.id}
                 onClick={() => setSelectedId(c.id)}
-                onKeyDown={(e) => e.key === "Enter" && setSelectedId(c.id)}
-                className={`cursor-pointer rounded-xl border bg-card px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted ${
-                  selectedId === c.id ? "ring-2 ring-primary" : ""
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedId(c.id);
+                  }
+                }}
+                className={`bg-card hover:bg-muted cursor-pointer rounded-xl border px-3 py-2.5 text-left text-sm transition-colors ${
+                  selectedId === c.id ? "ring-primary ring-2" : ""
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
@@ -163,7 +169,7 @@ export function CaseQueue({ currentUserId }: { currentUserId: string | null }) {
                   )}
                 </div>
                 <div className="mt-1 flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
                     <span
                       className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
                         (SOURCE_BADGE[c.source] ?? DEFAULT_SOURCE_BADGE)
@@ -215,7 +221,7 @@ export function CaseQueue({ currentUserId }: { currentUserId: string | null }) {
           />
         ) : (
           <Card>
-            <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            <CardContent className="text-muted-foreground py-12 text-center text-sm">
               Select a case to view details and notes.
             </CardContent>
           </Card>
@@ -274,7 +280,7 @@ function CaseDetail({
   if (detail.isLoading) {
     return (
       <Card>
-        <CardContent className="py-8 text-sm text-muted-foreground">
+        <CardContent className="text-muted-foreground py-8 text-sm">
           Loading…
         </CardContent>
       </Card>
@@ -283,7 +289,7 @@ function CaseDetail({
   if (detail.error) {
     return (
       <Card>
-        <CardContent className="py-8 text-sm text-destructive">
+        <CardContent className="text-destructive py-8 text-sm">
           {detail.error.message}
         </CardContent>
       </Card>
@@ -363,14 +369,14 @@ function CaseDetail({
         </div>
 
         {c.priority_reason && (
-          <p className="-mt-1 text-xs text-muted-foreground">
+          <p className="text-muted-foreground -mt-1 text-xs">
             Auto-prioritized: {c.priority_reason}
           </p>
         )}
 
         {/* Who needs help + how to reach them */}
-        <div className="rounded-lg border bg-background p-3 text-sm">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        <div className="bg-background rounded-lg border p-3 text-sm">
+          <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
             Contact
           </p>
           <p className="mt-1 font-medium">
@@ -398,21 +404,23 @@ function CaseDetail({
               Email {c.contact_name ?? "resident"}
             </Button>
           ) : (
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-xs">
               No contact info provided — follow up via the screening session.
             </p>
           )}
         </div>
 
-        <div className="rounded-lg border bg-muted/40 p-3 text-sm">
+        <div className="bg-muted/40 rounded-lg border p-3 text-sm">
           {c.session_id ? (
             <>
               <p className="text-muted-foreground">
                 Screening session:{" "}
-                <span className="font-mono text-foreground">{c.session_id}</span>
+                <span className="text-foreground font-mono">
+                  {c.session_id}
+                </span>
               </p>
               {c.screening_sessions && (
-                <p className="mt-1 text-muted-foreground">
+                <p className="text-muted-foreground mt-1">
                   {c.screening_sessions.completed_at
                     ? "Completed"
                     : `In progress (step ${c.screening_sessions.current_step ?? 0})`}
@@ -433,13 +441,13 @@ function CaseDetail({
         {c.session_id && c.screening_sessions && (
           <div className="flex flex-col gap-2">
             <Label className="text-sm font-semibold">Referrals</Label>
-            <p className="-mt-1 text-xs text-muted-foreground">
+            <p className="text-muted-foreground -mt-1 text-xs">
               Status updates automatically: assign an organization to send it,
               mark it accepted when they confirm, and it closes when the case is
               resolved.
             </p>
             {c.screening_sessions.referrals.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No referrals yet.</p>
+              <p className="text-muted-foreground text-xs">No referrals yet.</p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {c.screening_sessions.referrals.map((r) => (
@@ -449,7 +457,7 @@ function CaseDetail({
                   >
                     <div>
                       <span className="font-medium">{r.need_category}</span>
-                      <span className="ml-2 text-muted-foreground">
+                      <span className="text-muted-foreground ml-2">
                         {r.organizations?.name ?? "Unassigned"}
                       </span>
                     </div>
@@ -509,7 +517,7 @@ function CaseDetail({
                 value={refNeed}
                 onChange={(e) => setRefNeed(e.target.value)}
                 placeholder="Need (e.g. food, housing)"
-                className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3"
               />
               <select
                 aria-label="Organization for new referral"
@@ -553,15 +561,15 @@ function CaseDetail({
                   : "Add an internal note…"
               }
               rows={2}
-              className="w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="border-input focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-lg border bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:ring-3"
             />
             <div className="flex items-center justify-between gap-3">
-              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <label className="text-muted-foreground flex items-center gap-2 text-xs">
                 <input
                   type="checkbox"
                   checked={noteToResident}
                   onChange={(e) => setNoteToResident(e.target.checked)}
-                  className="size-3.5 rounded border-input"
+                  className="border-input size-3.5 rounded"
                 />
                 Send to resident (shows in their Messages)
               </label>
@@ -589,7 +597,7 @@ function CaseDetail({
             {(notes.data?.data ?? []).map((n) => (
               <li key={n.id} className="rounded-lg border px-3 py-2 text-sm">
                 <p>{n.note}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="text-muted-foreground mt-1 text-xs">
                   {new Date(n.created_at).toLocaleString()}
                   {n.is_internal ? " · internal" : " · shared with resident"}
                 </p>

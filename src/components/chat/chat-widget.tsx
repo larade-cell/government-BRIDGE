@@ -88,14 +88,31 @@ export function ChatWidget() {
         onClick={() => setOpen((v) => !v)}
         aria-label={t.chat.launch}
         aria-expanded={open}
-        className="fixed right-4 bottom-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-1 ring-black/10 transition hover:opacity-90 active:translate-y-px sm:right-6 sm:bottom-6"
+        className="bg-primary text-primary-foreground fixed right-4 bottom-4 z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-lg ring-1 ring-black/10 transition hover:opacity-90 active:translate-y-px sm:right-6 sm:bottom-6"
       >
         {open ? (
-          <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            className="size-6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
             <path d="M6 6l12 12M18 6L6 18" />
           </svg>
         ) : (
-          <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            className="size-6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.6-.8L3 21l1.9-5.4A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z" />
           </svg>
         )}
@@ -103,8 +120,8 @@ export function ChatWidget() {
 
       {/* Panel */}
       {open && (
-        <div className="fixed right-4 bottom-20 z-40 flex h-[min(70vh,32rem)] w-[min(92vw,24rem)] flex-col overflow-hidden rounded-2xl border bg-popover text-popover-foreground shadow-2xl ring-1 ring-foreground/10 duration-200 animate-in fade-in slide-in-from-bottom-3 sm:right-6 sm:bottom-24">
-          <header className="flex items-center justify-between gap-2 border-b bg-primary px-4 py-3 text-primary-foreground">
+        <div className="bg-popover text-popover-foreground ring-foreground/10 animate-in fade-in slide-in-from-bottom-3 fixed right-4 bottom-20 z-40 flex h-[min(70vh,32rem)] w-[min(92vw,24rem)] flex-col overflow-hidden rounded-2xl border shadow-2xl ring-1 duration-200 sm:right-6 sm:bottom-24">
+          <header className="bg-primary text-primary-foreground flex items-center justify-between gap-2 border-b px-4 py-3">
             <span className="font-heading font-semibold">{t.chat.title}</span>
             <button
               type="button"
@@ -112,13 +129,27 @@ export function ChatWidget() {
               aria-label={t.chat.close}
               className="rounded-md p-1 transition hover:bg-white/15"
             >
-              <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                className="size-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
                 <path d="M6 6l12 12M18 6L6 18" />
               </svg>
             </button>
           </header>
 
-          <div className="flex-1 space-y-3 overflow-y-auto p-4 text-sm">
+          <div
+            role="log"
+            aria-live="polite"
+            aria-relevant="additions text"
+            aria-label={t.chat.title}
+            className="flex-1 space-y-3 overflow-y-auto p-4 text-sm"
+          >
             {/* Intro bubble */}
             <Bubble role="assistant">{t.chat.intro}</Bubble>
 
@@ -126,8 +157,8 @@ export function ChatWidget() {
               <Bubble key={i} role={m.role}>
                 <p className="whitespace-pre-wrap">{m.content}</p>
                 {m.citations && m.citations.length > 0 && (
-                  <div className="mt-2 border-t border-foreground/10 pt-2">
-                    <p className="mb-1 text-xs font-semibold text-muted-foreground">
+                  <div className="border-foreground/10 mt-2 border-t pt-2">
+                    <p className="text-muted-foreground mb-1 text-xs font-semibold">
                       {t.chat.sources}
                     </p>
                     <ul className="flex flex-col gap-0.5">
@@ -137,7 +168,7 @@ export function ChatWidget() {
                             href={c.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-2 hover:underline"
+                            className="text-primary inline-flex items-center gap-1 text-xs font-medium underline-offset-2 hover:underline"
                           >
                             {c.title}
                             <ExternalLinkIcon className="size-3" />
@@ -152,7 +183,7 @@ export function ChatWidget() {
 
             {busy && (
               <Bubble role="assistant">
-                <Spinner className="size-4 text-muted-foreground" />
+                <Spinner className="text-muted-foreground size-4" />
               </Bubble>
             )}
             <div ref={endRef} />
@@ -184,36 +215,39 @@ export function ChatWidget() {
                     }
                   }}
                 >
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t.chat.handoffIntro}
                   </p>
                   <input
                     value={contactName}
                     onChange={(e) => setContactName(e.target.value)}
                     placeholder={t.results.help.name}
+                    aria-label={t.results.help.name}
                     autoComplete="name"
-                    className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                    className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3"
                   />
                   <input
                     type="email"
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
                     placeholder={t.results.help.email}
+                    aria-label={t.results.help.email}
                     autoComplete="email"
-                    className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                    className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3"
                   />
                   <input
                     type="tel"
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
                     placeholder={t.results.help.phone}
+                    aria-label={t.results.help.phone}
                     autoComplete="tel"
-                    className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                    className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3"
                   />
                   <button
                     type="submit"
                     disabled={handoff.isPending}
-                    className="self-start rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+                    className="bg-primary text-primary-foreground self-start rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:opacity-90 disabled:opacity-60"
                   >
                     {t.chat.handoffSubmit}
                   </button>
@@ -222,7 +256,7 @@ export function ChatWidget() {
                 <button
                   type="button"
                   onClick={() => setHandoffOpen(true)}
-                  className="text-xs font-medium text-primary hover:underline"
+                  className="text-primary text-xs font-medium hover:underline"
                 >
                   {t.chat.handoff}
                 </button>
@@ -242,17 +276,18 @@ export function ChatWidget() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={t.chat.placeholder}
-              className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              aria-label={t.chat.placeholder}
+              className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 min-w-0 flex-1 rounded-lg border bg-transparent px-3 text-sm outline-none focus-visible:ring-3"
             />
             <button
               type="submit"
               disabled={busy || input.trim() === ""}
-              className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+              className="bg-primary text-primary-foreground rounded-lg px-3 py-2 text-sm font-semibold transition hover:opacity-90 disabled:opacity-50"
             >
               {t.chat.send}
             </button>
           </form>
-          <p className="bg-muted/40 px-4 py-1.5 text-[11px] leading-tight text-muted-foreground">
+          <p className="bg-muted/40 text-muted-foreground px-4 py-1.5 text-[11px] leading-tight">
             {t.chat.disclaimer}
           </p>
         </div>
@@ -270,10 +305,7 @@ function Bubble({
 }) {
   return (
     <div
-      className={cn(
-        "flex",
-        role === "user" ? "justify-end" : "justify-start",
-      )}
+      className={cn("flex", role === "user" ? "justify-end" : "justify-start")}
     >
       <div
         className={cn(

@@ -24,7 +24,9 @@ export function RequestHelp({ sessionId }: { sessionId: string }) {
     return (
       <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-6 text-center">
         <p className="font-semibold text-emerald-200">
-          {done.alreadyOpen ? t.results.help.doneAlready : t.results.help.doneNew}
+          {done.alreadyOpen
+            ? t.results.help.doneAlready
+            : t.results.help.doneNew}
         </p>
       </div>
     );
@@ -77,6 +79,7 @@ export function RequestHelp({ sessionId }: { sessionId: string }) {
         onChange={(e) => setMessage(e.target.value)}
         rows={3}
         placeholder={t.results.help.placeholder}
+        aria-label={t.results.help.placeholder}
         className={`mt-3 ${fieldClass}`}
       />
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Brand } from "~/components/ui/brand";
 import { Button } from "~/components/ui/button";
@@ -35,7 +35,9 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
   const [questions] = api.question.list.useSuspenseQuery({
     language_code: locale,
   });
-  const [session] = api.screeningSession.byId.useSuspenseQuery({ id: sessionId });
+  const [session] = api.screeningSession.byId.useSuspenseQuery({
+    id: sessionId,
+  });
 
   // Build a map from question id → stored answer so we can pre-fill on resume.
   const storedAnswers = useMemo(() => {
@@ -49,7 +51,9 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
   // Resume where they left off: jump to the first unanswered question (or the
   // last question if everything's answered), instead of restarting at 0.
   const resumeIndex = useMemo(() => {
-    const firstUnanswered = questions.findIndex((q) => !storedAnswers.has(q.id));
+    const firstUnanswered = questions.findIndex(
+      (q) => !storedAnswers.has(q.id),
+    );
     return firstUnanswered === -1
       ? Math.max(0, questions.length - 1)
       : firstUnanswered;
@@ -65,14 +69,27 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
   const complete = api.screeningSession.complete.useMutation();
 
   const [draft, setDraft] = useState<unknown>(
-    current ? storedAnswers.get(current.id) ?? null : null,
+    current ? (storedAnswers.get(current.id) ?? null) : null,
   );
   const [error, setError] = useState<string | null>(null);
+
+  // Move keyboard/screen-reader focus to the new question on navigation, so the
+  // user isn't left focused on the now-stale Next/Back button. Skip the initial
+  // mount so we don't steal focus on page load.
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    headingRef.current?.focus();
+  }, [index]);
 
   // Reset draft when navigating to a new question.
   function goTo(nextIndex: number) {
     const next = questions[nextIndex];
-    setDraft(next ? storedAnswers.get(next.id) ?? null : null);
+    setDraft(next ? (storedAnswers.get(next.id) ?? null) : null);
     setError(null);
     setIndex(nextIndex);
   }
@@ -144,19 +161,36 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
         {/* Re-keyed by question id so each question animates in on navigation. */}
         <div
           key={current.id}
-          className="rounded-2xl bg-white/10 p-6 shadow-xl ring-1 ring-white/10 duration-300 animate-in fade-in slide-in-from-right-4 sm:p-8"
+          className="animate-in fade-in slide-in-from-right-4 rounded-2xl bg-white/10 p-6 shadow-xl ring-1 ring-white/10 duration-300 sm:p-8"
         >
-          <h2 className="mb-2 font-heading text-2xl font-bold sm:text-3xl">
+          <h2
+            ref={headingRef}
+            id="question-prompt"
+            tabIndex={-1}
+            className="font-heading mb-2 text-2xl font-bold sm:text-3xl"
+          >
             {current.prompt}
           </h2>
           {current.helper_text && (
-            <p className="mb-6 text-base text-white/80">{current.helper_text}</p>
+            <p id="question-helper" className="mb-6 text-base text-white/80">
+              {current.helper_text}
+            </p>
           )}
 
           <div className="mb-6">
             <QuestionInput
               question={current}
               value={draft}
+              invalid={!!error}
+              labelledBy="question-prompt"
+              describedBy={
+                [
+                  current.helper_text ? "question-helper" : null,
+                  error ? "question-error" : null,
+                ]
+                  .filter(Boolean)
+                  .join(" ") || undefined
+              }
               onChange={(v) => {
                 setDraft(v);
                 if (error) setError(null);
@@ -166,8 +200,9 @@ export function Questionnaire({ sessionId }: { sessionId: string }) {
 
           {error && (
             <p
+              id="question-error"
               role="alert"
-              className="mb-4 flex items-center gap-2 rounded-md bg-red-400/15 px-3 py-2.5 text-sm font-medium text-red-100 ring-1 ring-red-400/30 duration-200 animate-in fade-in"
+              className="animate-in fade-in mb-4 flex items-center gap-2 rounded-md bg-red-400/15 px-3 py-2.5 text-sm font-medium text-red-100 ring-1 ring-red-400/30 duration-200"
             >
               <WarningIcon className="size-5 shrink-0" />
               {error}
@@ -254,13 +289,26 @@ function OptionCard({
 function QuestionInput({
   question,
   value,
+  invalid,
+  labelledBy,
+  describedBy,
   onChange,
 }: {
   question: Question;
   value: unknown;
+  invalid?: boolean;
+  labelledBy?: string;
+  describedBy?: string;
   onChange: (v: unknown) => void;
 }) {
   const { t } = useI18n();
+  // Shared a11y wiring: name the control from the question prompt, link helper +
+  // error text, and flag the invalid state (Input/RadioGroup style aria-invalid).
+  const a11y = {
+    "aria-labelledby": labelledBy,
+    "aria-describedby": describedBy,
+    "aria-invalid": invalid ? true : undefined,
+  };
   switch (question.answer_type) {
     case "integer":
       return (
@@ -275,6 +323,7 @@ function QuestionInput({
           }}
           required={question.is_required}
           className={questionInputClass}
+          {...a11y}
         />
       );
     case "decimal":
@@ -290,6 +339,7 @@ function QuestionInput({
           }}
           required={question.is_required}
           className={questionInputClass}
+          {...a11y}
         />
       );
     case "boolean":
@@ -297,6 +347,7 @@ function QuestionInput({
         <RadioGroup
           value={value === true ? "yes" : value === false ? "no" : ""}
           onValueChange={(v) => onChange(v === "yes")}
+          {...a11y}
         >
           <OptionCard
             id={`${question.id}-yes`}
@@ -315,6 +366,7 @@ function QuestionInput({
         <RadioGroup
           value={typeof value === "string" ? value : ""}
           onValueChange={onChange}
+          {...a11y}
         >
           {question.options.map((opt) => (
             <OptionCard
@@ -334,6 +386,7 @@ function QuestionInput({
           onChange={(e) => onChange(e.target.value)}
           required={question.is_required}
           className={questionInputClass}
+          {...a11y}
         />
       );
   }

@@ -35,7 +35,7 @@ export function AuditLog() {
             setEntityType(e.target.value);
             setPage(1);
           }}
-          className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3"
         >
           <option value="">All</option>
           {(facets.data?.entity_types ?? []).map((t) => (
@@ -47,39 +47,56 @@ export function AuditLog() {
       </div>
 
       {log.isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <p className="text-muted-foreground text-sm">Loading…</p>
       ) : rows.length === 0 ? (
         <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">
+          <CardContent className="text-muted-foreground py-8 text-center text-sm">
             No audit entries yet.
           </CardContent>
         </Card>
       ) : (
-        <div className="overflow-hidden rounded-xl border bg-card">
+        <div className="bg-card overflow-hidden rounded-xl border">
           <table className="w-full text-sm">
-            <thead className="border-b bg-muted/50 text-left text-xs text-muted-foreground uppercase">
+            <thead className="bg-muted/50 text-muted-foreground border-b text-left text-xs uppercase">
               <tr>
-                <th className="px-3 py-2 font-medium">When</th>
-                <th className="px-3 py-2 font-medium">Actor</th>
-                <th className="px-3 py-2 font-medium">Action</th>
-                <th className="px-3 py-2 font-medium">Entity</th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  When
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Actor
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Action
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Entity
+                </th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => {
                 const open = expanded === r.id;
-                const hasDetail = r.before_value != null || r.after_value != null;
+                const hasDetail =
+                  r.before_value != null || r.after_value != null;
                 return (
                   <tr
                     key={r.id}
-                    className={`border-b last:border-0 align-top ${
-                      hasDetail ? "cursor-pointer hover:bg-muted/40" : ""
+                    className={`border-b align-top last:border-0 ${
+                      hasDetail
+                        ? "hover:bg-muted/40 focus-visible:bg-muted/40 cursor-pointer"
+                        : ""
                     }`}
-                    onClick={() =>
-                      hasDetail && setExpanded(open ? null : r.id)
-                    }
+                    tabIndex={hasDetail ? 0 : undefined}
+                    aria-expanded={hasDetail ? open : undefined}
+                    onClick={() => hasDetail && setExpanded(open ? null : r.id)}
+                    onKeyDown={(e) => {
+                      if (hasDetail && (e.key === "Enter" || e.key === " ")) {
+                        e.preventDefault();
+                        setExpanded(open ? null : r.id);
+                      }
+                    }}
                   >
-                    <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
+                    <td className="text-muted-foreground px-3 py-2 whitespace-nowrap">
                       {new Date(r.created_at).toLocaleString()}
                     </td>
                     <td className="px-3 py-2">
@@ -88,19 +105,19 @@ export function AuditLog() {
                       )}
                     </td>
                     <td className="px-3 py-2">
-                      <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-xs">
+                      <span className="bg-muted rounded-md px-1.5 py-0.5 font-mono text-xs">
                         {r.action}
                       </span>
                     </td>
                     <td className="px-3 py-2">
                       <div>{r.entity_type}</div>
                       {r.entity_id && (
-                        <div className="font-mono text-[11px] text-muted-foreground">
+                        <div className="text-muted-foreground font-mono text-[11px]">
                           {r.entity_id.slice(0, 8)}
                         </div>
                       )}
                       {open && hasDetail && (
-                        <pre className="mt-1 max-w-md overflow-auto rounded-lg bg-muted/60 p-2 text-[11px]">
+                        <pre className="bg-muted/60 mt-1 max-w-md overflow-auto rounded-lg p-2 text-[11px]">
                           {JSON.stringify(
                             { before: r.before_value, after: r.after_value },
                             null,

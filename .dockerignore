@@ -1,0 +1,28 @@
+# Dependencies & build artifacts (regenerated inside the image)
+node_modules
+.next
+generated
+out
+build
+
+# Local env & secrets — pass these at runtime, never bake them in
+.env
+.env*.local
+
+# VCS & tooling
+.git
+.gitignore
+.github
+.vscode
+.idea
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Logs & misc
+*.log
+npm-debug.log*
+.DS_Store
+README.md

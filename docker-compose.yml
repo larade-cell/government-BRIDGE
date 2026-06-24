@@ -1,0 +1,58 @@
+# Local / shippable stack: the Bridge app + a pgvector-enabled Postgres.
+# Usage:
+#   cp .env.example .env   # then fill in secrets
+#   docker compose up --build
+services:
+  app:
+    build:
+      context: .
+    ports:
+      # Override the host port with APP_PORT (e.g. APP_PORT=3001) if 3000 is taken.
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      # DB host is the compose service name, not localhost.
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/bridge
+      AUTH_SECRET: ${AUTH_SECRET}
+      EMAIL_FROM: ${EMAIL_FROM}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      RATE_LIMIT_BACKEND: ${RATE_LIMIT_BACKEND:-postgres}
+      NODE_ENV: production
+      # Auth.js runs behind a proxy/non-canonical host in containers; trust it.
+      AUTH_TRUST_HOST: "true"
+    depends_on:
+      # Start only after migrations have completed successfully.
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # One-off: applies Prisma migrations, then exits. Built from the `migrator`
+  # stage (full node_modules) so the Prisma CLI and its deps are available.
+  migrate:
+    build:
+      context: .
+      target: migrator
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/bridge
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bridge
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bridge"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

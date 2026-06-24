@@ -90,7 +90,7 @@ export const es: Messages = {
     step3Desc:
       "Le mostramos lo que necesita y lo enlazamos directamente con la oficina correcta — desempleo, reclamos salariales, OSHA y más.",
     categoriesTitle: "Explore por tema",
-    categoriesLead: "Vaya directo al tipo de ayuda que más necesita.",
+    categoriesLead: "Los tipos de ayuda con los que podemos conectarlo.",
     catJobs: "Empleo y capacitación",
     catJobsDesc:
       "Encuentre trabajo, capacitación gratuita y apoyo para regresar al trabajo.",

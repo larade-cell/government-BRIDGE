@@ -92,7 +92,8 @@ export const en = {
     step3Desc:
       "We show you what you need and link you straight to the right office — unemployment, wage claims, OSHA, and more.",
     categoriesTitle: "Explore by topic",
-    categoriesLead: "Jump straight to the kind of help you need most.",
+    categoriesLead: "The kinds of help we can connect you with.",
+    // DOL topic categories — keys mirror the `categories` array in app/page.tsx.
     catJobs: "Jobs & training",
     catJobsDesc: "Find work, get free training, and return-to-work support.",
     catWages: "Wages & workplace rights",

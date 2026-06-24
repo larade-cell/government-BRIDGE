@@ -250,7 +250,8 @@ export default async function Home() {
             </div>
           </section>
 
-          {/* Explore by category — photo cards as visual entry points. */}
+          {/* Explore by topic — photo info cards (not links); the survey CTA
+              lives once at the end of the programs section below. */}
           <section
             aria-labelledby="categories-heading"
             className="page-container py-12 sm:py-16"
@@ -268,15 +269,12 @@ export default async function Home() {
             <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {categories.map((c) => (
                 <li key={c.title}>
-                  <Link
-                    href="/screening/start"
-                    className="group relative flex h-56 flex-col justify-end overflow-hidden rounded-xl text-white shadow-sm ring-1 ring-black/5 transition hover:shadow-lg"
-                  >
+                  <div className="relative flex h-56 flex-col justify-end overflow-hidden rounded-xl text-white shadow-sm ring-1 ring-black/5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={c.img}
                       alt=""
-                      className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-105"
+                      className="absolute inset-0 size-full object-cover"
                       loading="lazy"
                     />
                     <div
@@ -288,18 +286,14 @@ export default async function Home() {
                         {c.title}
                       </h3>
                       <p className="mt-1 text-sm text-white/85">{c.desc}</p>
-                      <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold">
-                        {t.home.startScreening}
-                        <ArrowRightIcon className="size-4 transition group-hover:translate-x-0.5" />
-                      </span>
                     </div>
-                  </Link>
+                  </div>
                 </li>
               ))}
             </ul>
           </section>
 
-          {/* Programs we screen for — GOV.UK-style "popular" links. */}
+          {/* Programs we screen for — info boxes, with one survey CTA below. */}
           <section
             aria-labelledby="programs-heading"
             className="border-border bg-secondary border-y"
@@ -318,23 +312,28 @@ export default async function Home() {
               <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {PROGRAMS.map((p) => (
                   <li key={p.name}>
-                    <Link
-                      href="/screening/start"
-                      className="group border-border bg-card hover:border-primary hover:bg-accent flex items-center justify-between gap-3 rounded border px-4 py-3 transition"
-                    >
-                      <span>
-                        <span className="text-foreground block font-semibold">
-                          {p.name}
-                        </span>
-                        <span className="text-muted-foreground block text-sm">
-                          {p.tag}
-                        </span>
+                    <div className="border-border bg-card h-full rounded border px-4 py-3">
+                      <span className="text-foreground block font-semibold">
+                        {p.name}
                       </span>
-                      <ArrowRightIcon className="text-primary size-4 shrink-0 transition group-hover:translate-x-0.5" />
-                    </Link>
+                      <span className="text-muted-foreground block text-sm">
+                        {p.tag}
+                      </span>
+                    </div>
                   </li>
                 ))}
               </ul>
+
+              {/* One clear path into the survey, after the info boxes. */}
+              <div className="mt-8">
+                <Link
+                  href="/screening/start"
+                  className="bg-primary text-primary-foreground inline-flex items-center justify-center gap-2 rounded px-6 py-3 text-base font-bold shadow-sm transition hover:opacity-90 active:translate-y-px"
+                >
+                  {t.home.startScreening}
+                  <ArrowRightIcon className="size-4" />
+                </Link>
+              </div>
             </div>
           </section>
         </main>

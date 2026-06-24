@@ -5,9 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: var(--font-public-sans), var(--font-geist-sans), ui-sans-serif,
-    system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-    "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans:
+    var(--font-public-sans), var(--font-geist-sans), ui-sans-serif, system-ui,
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
   /* Serif display face for headlines — the authoritative, editorial tone of
      the federal sites (White House / State Dept "Building Back Better"). */
   --font-display: var(--font-merriweather), Georgia, "Times New Roman", serif;
@@ -34,6 +35,8 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-foreground: var(--brand-accent-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -59,10 +62,11 @@
 
 :root {
   /* ──────────────────────────────────────────────────────────────────────
-     Federal palette, modeled on the U.S. Web Design System (USWDS) tokens
-     used across government sites. Chosen for WCAG 2.1 AA contrast: ink on
-     white, a deep federal navy for primary actions, an accessible link blue,
-     a federal red for emphasis, and a high-visibility focus indicator.
+     Department of Labor palette: navy + red + gray, built on U.S. Web Design
+     System (USWDS) tokens for WCAG 2.1 AA contrast. Navy leads (primary
+     actions, brand mark, nav); a federal red is the brand accent (top stripe,
+     eyebrow rules, emphasis — see --brand-accent, distinct from the error red
+     --destructive); gray carries surfaces and neutrals.
      ────────────────────────────────────────────────────────────────────── */
   --background: #ffffff;
   --foreground: #1b1b1b; /* USWDS "ink" — 16.1:1 on white */
@@ -81,6 +85,11 @@
   --accent: #e7f0f7; /* pale federal blue wash for hovers/active surfaces */
   --accent-foreground: #1a4480;
   --destructive: #b50909; /* USWDS secondary (federal red) — 6.4:1 on white */
+  /* DOL brand accent: federal red for the top stripe, eyebrow rules, and
+     emphasis. Separate from --destructive (errors) so "red = emphasis" and
+     "red = error" stay distinguishable. 7:1 with white text. */
+  --brand-accent: #b31942;
+  --brand-accent-foreground: #ffffff;
   --border: #dfe1e2; /* gray-cool-10 hairline */
   --input: #565c65; /* darker input borders stay visible (3:1 non-text AA) */
   /* Focus: high-visibility blue ring, the USWDS focus indicator. Paired with
@@ -121,6 +130,8 @@
   --accent: #1b3a5f;
   --accent-foreground: #f7f9fa;
   --destructive: #f2938c;
+  --brand-accent: #ff8a9b; /* lightened red for AA on the navy dark surface */
+  --brand-accent-foreground: #0b1b32;
   --border: rgb(255 255 255 / 14%);
   --input: rgb(255 255 255 / 24%);
   --ring: #2491ff;
@@ -176,7 +187,19 @@
      official color instead of the old decorative gradient. */
   .brand-gradient {
     background-color: #112e51;
-    background-image: linear-gradient(180deg, #1a4480 0%, #112e51 60%, #0b1b32 100%);
+    background-image: linear-gradient(
+      180deg,
+      #1a4480 0%,
+      #112e51 60%,
+      #0b1b32 100%
+    );
+  }
+  /* Thin DOL red rule pinned to the very top of every page — the navy + red
+     federal identity cue (Department of Labor). Sits above the gov banner. */
+  .brand-stripe {
+    height: 0.375rem;
+    width: 100%;
+    background-color: var(--brand-accent);
   }
   /* Skip link: visually hidden until focused, then pinned top-left so keyboard
      and screen-reader users can jump past the banner straight to content. */
@@ -184,7 +207,7 @@
     @apply sr-only;
   }
   .skip-link:focus {
-    @apply not-sr-only fixed top-2 left-2 z-50 rounded-sm bg-primary px-4 py-2 font-semibold text-primary-foreground no-underline shadow-lg;
+    @apply bg-primary text-primary-foreground not-sr-only fixed top-2 left-2 z-50 rounded-sm px-4 py-2 font-semibold no-underline shadow-lg;
   }
   /* Official government banner strip across the very top of every page. */
   .gov-banner {

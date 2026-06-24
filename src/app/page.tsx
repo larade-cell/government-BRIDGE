@@ -65,7 +65,7 @@ export default async function Home() {
 
   return (
     <HydrateClient>
-      <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <div className="bg-background text-foreground flex min-h-screen flex-col">
         {/* Hero: full-bleed photograph of the National Mall behind a federal
             navy wash, so the headline stays high-contrast and official. */}
         <header className="relative isolate overflow-hidden text-white">
@@ -109,7 +109,7 @@ export default async function Home() {
 
           <div className="page-container pt-12 pb-20 sm:pt-20 sm:pb-28">
             <div className="max-w-3xl">
-              <span className="inline-block border-l-4 border-white/70 pl-3 text-sm font-semibold tracking-wide text-white/80 uppercase">
+              <span className="inline-block border-l-4 border-[#ff5d6c] pl-3 text-sm font-semibold tracking-wide text-white/80 uppercase">
                 {t.home.badge}
               </span>
               <h1 className="font-display mt-4 text-4xl font-black tracking-tight text-balance sm:text-5xl lg:text-6xl">
@@ -148,7 +148,9 @@ export default async function Home() {
                   </Link>
                 )}
               </div>
-              <p className="mt-4 text-sm text-white/75">{t.home.screenerNote}</p>
+              <p className="mt-4 text-sm text-white/75">
+                {t.home.screenerNote}
+              </p>
 
               {/* Trust signals — reassure before the first click. */}
               <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-white/90">
@@ -181,7 +183,7 @@ export default async function Home() {
             >
               {t.home.howCanWeHelp}
             </h2>
-            <p className="mt-2 text-muted-foreground">{t.home.helpLead}</p>
+            <p className="text-muted-foreground mt-2">{t.home.helpLead}</p>
 
             <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <TaskCard
@@ -204,7 +206,7 @@ export default async function Home() {
 
           {/* Reassurance + how-it-works — photo paired with three numbered
               steps so the process feels approachable and finite. */}
-          <section className="border-y border-border bg-secondary">
+          <section className="border-border bg-secondary border-y">
             <div className="page-container grid items-center gap-10 py-12 sm:py-16 lg:grid-cols-2">
               <div className="relative overflow-hidden rounded-xl shadow-md ring-1 ring-black/5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -224,20 +226,20 @@ export default async function Home() {
                 <h2 className="font-display text-2xl font-bold sm:text-3xl">
                   {t.home.featureTitle}
                 </h2>
-                <p className="mt-3 text-muted-foreground">
+                <p className="text-muted-foreground mt-3">
                   {t.home.featureLead}
                 </p>
                 <ol className="mt-8 flex flex-col gap-6">
                   {steps.map((step, i) => (
                     <li key={i} className="flex gap-4">
-                      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary font-bold text-primary-foreground">
+                      <span className="bg-primary text-primary-foreground grid size-9 shrink-0 place-items-center rounded-full font-bold">
                         {i + 1}
                       </span>
                       <div>
-                        <h3 className="font-semibold text-foreground">
+                        <h3 className="text-foreground font-semibold">
                           {step.title}
                         </h3>
-                        <p className="mt-0.5 text-sm text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 text-sm">
                           {step.desc}
                         </p>
                       </div>
@@ -259,7 +261,7 @@ export default async function Home() {
             >
               {t.home.categoriesTitle}
             </h2>
-            <p className="mt-2 text-muted-foreground">
+            <p className="text-muted-foreground mt-2">
               {t.home.categoriesLead}
             </p>
 
@@ -300,7 +302,7 @@ export default async function Home() {
           {/* Programs we screen for — GOV.UK-style "popular" links. */}
           <section
             aria-labelledby="programs-heading"
-            className="border-y border-border bg-secondary"
+            className="border-border bg-secondary border-y"
           >
             <div className="page-container py-12 sm:py-16">
               <h2
@@ -309,24 +311,26 @@ export default async function Home() {
               >
                 {t.home.programsTitle}
               </h2>
-              <p className="mt-2 text-muted-foreground">{t.home.programsLead}</p>
+              <p className="text-muted-foreground mt-2">
+                {t.home.programsLead}
+              </p>
 
               <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {PROGRAMS.map((p) => (
                   <li key={p.name}>
                     <Link
                       href="/screening/start"
-                      className="group flex items-center justify-between gap-3 rounded border border-border bg-card px-4 py-3 transition hover:border-primary hover:bg-accent"
+                      className="group border-border bg-card hover:border-primary hover:bg-accent flex items-center justify-between gap-3 rounded border px-4 py-3 transition"
                     >
                       <span>
-                        <span className="block font-semibold text-foreground">
+                        <span className="text-foreground block font-semibold">
                           {p.name}
                         </span>
-                        <span className="block text-sm text-muted-foreground">
+                        <span className="text-muted-foreground block text-sm">
                           {p.tag}
                         </span>
                       </span>
-                      <ArrowRightIcon className="size-4 shrink-0 text-primary transition group-hover:translate-x-0.5" />
+                      <ArrowRightIcon className="text-primary size-4 shrink-0 transition group-hover:translate-x-0.5" />
                     </Link>
                   </li>
                 ))}
@@ -335,8 +339,8 @@ export default async function Home() {
           </section>
         </main>
 
-        <footer className="border-t border-border bg-background">
-          <div className="page-container flex flex-col items-start justify-between gap-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center">
+        <footer className="border-border bg-background border-t">
+          <div className="page-container text-muted-foreground flex flex-col items-start justify-between gap-4 py-8 text-sm sm:flex-row sm:items-center">
             <Brand />
             {!session?.user && (
               <Link
@@ -368,13 +372,13 @@ function TaskCard({
     <li>
       <Link
         href={href}
-        className="group flex h-full flex-col gap-2 rounded border border-border border-t-4 border-t-primary bg-card p-5 shadow-sm transition hover:border-primary hover:shadow-md"
+        className="group border-border border-t-primary bg-card hover:border-primary flex h-full flex-col gap-2 rounded border border-t-4 p-5 shadow-sm transition hover:shadow-md"
       >
         <span className="flex items-center justify-between gap-2">
-          <span className="font-display text-lg font-bold text-foreground">
+          <span className="font-display text-foreground text-lg font-bold">
             {title}
           </span>
-          <ArrowRightIcon className="size-5 shrink-0 text-primary transition group-hover:translate-x-0.5" />
+          <ArrowRightIcon className="text-primary size-5 shrink-0 transition group-hover:translate-x-0.5" />
         </span>
         <span className="text-muted-foreground">{desc}</span>
       </Link>

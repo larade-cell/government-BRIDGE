@@ -50,6 +50,7 @@ export default async function RootLayout({
             <a href="#main-content" className="skip-link">
               {t.common.skipToContent}
             </a>
+            <div className="brand-stripe" aria-hidden="true" />
             <GovBanner />
             {children}
             <ChatWidget />

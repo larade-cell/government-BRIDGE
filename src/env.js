@@ -15,6 +15,17 @@ export const env = createEnv({
     OPENAI_API_KEY: z.string().optional(),
     DATABASE_URL: z.string().url(),
     RATE_LIMIT_BACKEND: z.enum(["memory", "postgres"]).default("memory"),
+    // SMTP transport for outbound mail (notifications + magic links). When
+    // SMTP_HOST is unset, mail is logged to the console in dev and treated as
+    // undeliverable in production (see src/server/lib/mailer.ts).
+    SMTP_HOST: z.string().optional(),
+    SMTP_PORT: z.coerce.number().int().positive().default(587),
+    SMTP_SECURE: z
+      .enum(["true", "false"])
+      .optional()
+      .transform((v) => v === "true"),
+    SMTP_USER: z.string().optional(),
+    SMTP_PASSWORD: z.string().optional(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -40,6 +51,11 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     RATE_LIMIT_BACKEND: process.env.RATE_LIMIT_BACKEND,
     NODE_ENV: process.env.NODE_ENV,
+    SMTP_HOST: process.env.SMTP_HOST,
+    SMTP_PORT: process.env.SMTP_PORT,
+    SMTP_SECURE: process.env.SMTP_SECURE,
+    SMTP_USER: process.env.SMTP_USER,
+    SMTP_PASSWORD: process.env.SMTP_PASSWORD,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

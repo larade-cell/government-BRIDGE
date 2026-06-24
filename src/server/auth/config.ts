@@ -3,6 +3,7 @@ import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import Nodemailer from "next-auth/providers/nodemailer";
 
 import { db } from "~/server/db";
+import { sendMail } from "~/server/lib/mailer";
 
 export type AppRole = "resident" | "navigator" | "caseworker" | "admin";
 
@@ -54,11 +55,19 @@ export const authConfig = {
       // Stub transport — never actually used because sendVerificationRequest
       // is overridden below. Auth.js still requires `server` to be set.
       server: { jsonTransport: true },
-      sendVerificationRequest: ({ identifier, url }) => {
-        console.log("\n========== MAGIC LINK ==========");
-        console.log(`To:   ${identifier}`);
-        console.log(`Link: ${url}`);
-        console.log("================================\n");
+      // Deliver the sign-in link through the shared mailer (real SMTP in prod;
+      // logs to the console in dev when SMTP isn't configured). Throw on a
+      // failed send so Auth.js surfaces an error instead of silently leaving
+      // the user waiting for a link that never arrives.
+      sendVerificationRequest: async ({ identifier, url }) => {
+        const result = await sendMail({
+          to: identifier,
+          subject: "Your sign-in link",
+          text: `Use this link to sign in:\n\n${url}\n\nThis link can be used once and expires soon. If you didn't request it, you can ignore this email.`,
+        });
+        if (!result.ok) {
+          throw new Error(`Could not send sign-in email: ${result.error}`);
+        }
       },
     }),
   ],

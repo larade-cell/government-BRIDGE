@@ -20,6 +20,13 @@ export const en = {
     official: "An official benefits screening platform",
     secure:
       "Your information is private and secure. We never ask for a Social Security number.",
+    howYouKnow: "Here's how you know",
+    dotGovHeading: "Official websites use .gov",
+    dotGovBody:
+      "A .gov website belongs to an official government organization in the United States.",
+    httpsHeading: "Secure .gov websites use HTTPS",
+    httpsBody:
+      "A lock or https:// means you've safely connected to the .gov website. Share sensitive information only on official, secure websites.",
   },
   footer: {
     agency: "U.S. Department of Labor",

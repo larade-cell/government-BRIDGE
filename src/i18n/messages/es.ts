@@ -15,6 +15,13 @@ export const es: Messages = {
     official: "Una plataforma oficial de evaluación de beneficios",
     secure:
       "Su información es privada y segura. Nunca pedimos un número de Seguro Social.",
+    howYouKnow: "Así es como puede verificarlo",
+    dotGovHeading: "Los sitios web oficiales usan .gov",
+    dotGovBody:
+      "Un sitio web .gov pertenece a una organización oficial del gobierno de los Estados Unidos.",
+    httpsHeading: "Los sitios web seguros .gov usan HTTPS",
+    httpsBody:
+      "Un candado o https:// significa que se conectó de forma segura al sitio web .gov. Comparta información confidencial solo en sitios web oficiales y seguros.",
   },
   footer: {
     agency: "Departamento de Trabajo de EE. UU.",

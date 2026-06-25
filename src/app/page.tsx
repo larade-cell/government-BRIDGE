@@ -16,7 +16,7 @@ import { HydrateClient } from "~/trpc/server";
 // browser only pulls what it needs; the navy overlays keep text AA-legible.
 const img = (id: string, w: number) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=80`;
-const HERO_IMG = img("photo-1429041966141-44d228a42775", 2000); // National Mall
+const HERO_IMG = img("photo-1619316636833-a4ebbe525af1", 2000); // Washington Monument
 const FEATURE_IMG = img("photo-1582213782179-e0d53f98f2ca", 1200); // hands together
 
 // Squared, high-contrast government buttons (USWDS style) — no decorative pills.

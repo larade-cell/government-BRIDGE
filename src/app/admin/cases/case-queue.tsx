@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
+import { ChevronRightIcon } from "~/components/ui/icons";
 import { Label } from "~/components/ui/label";
 import { api } from "~/trpc/react";
 
@@ -21,6 +22,17 @@ const PRIORITY_STYLES: Record<string, string> = {
   high: "bg-orange-100 text-orange-700",
   normal: "bg-slate-100 text-slate-600",
   low: "bg-slate-100 text-slate-500",
+};
+
+// A document's validation verdict, as a colored badge in the case's document
+// dropdown. Mirrors the resident-facing checklist colors so staff and residents
+// read the same signal.
+const DOC_STATUS_STYLES: Record<string, string> = {
+  valid: "bg-emerald-100 text-emerald-700",
+  needs_review: "bg-amber-100 text-amber-700",
+  invalid: "bg-rose-100 text-rose-700",
+  unreadable: "bg-rose-100 text-rose-700",
+  unvalidated: "bg-slate-100 text-slate-600",
 };
 
 // Referral status is automated, not hand-picked: a badge reflects where the
@@ -436,6 +448,60 @@ function CaseDetail({
             </p>
           )}
         </div>
+
+        {/* Documents for this case, joined through its session — collapsed into
+            a dropdown so each case carries its own uploads. Opens by default for
+            document-review cases, where the documents are the reason it exists. */}
+        {c.screening_sessions &&
+          c.screening_sessions.document_uploads.length > 0 && (
+            <details
+              className="group bg-background rounded-lg border"
+              open={c.source === "document_review"}
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+                <span className="flex items-center gap-1.5">
+                  <ChevronRightIcon className="text-muted-foreground size-4 transition-transform group-open:rotate-90" />
+                  Documents
+                </span>
+                <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">
+                  {c.screening_sessions.document_uploads.length}
+                </span>
+              </summary>
+              <ul className="flex flex-col gap-1.5 border-t px-3 py-2.5">
+                {c.screening_sessions.document_uploads.map((d) => {
+                  const typeName =
+                    d.document_types?.document_type_translations[0]?.name ??
+                    d.document_types?.doc_key ??
+                    "Unclassified";
+                  return (
+                    <li
+                      key={d.id}
+                      className="flex flex-col gap-1 rounded-lg border px-3 py-2 text-sm"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="truncate">{d.file_name}</span>
+                        <span
+                          className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                            DOC_STATUS_STYLES[d.validation_status] ?? ""
+                          }`}
+                        >
+                          {d.validation_status.replace(/_/g, " ")}
+                        </span>
+                      </div>
+                      <span className="text-muted-foreground text-xs">
+                        {typeName}
+                      </span>
+                      {d.validation_reason && (
+                        <span className="text-muted-foreground text-xs">
+                          {d.validation_reason}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </details>
+          )}
 
         {/* Referrals — only sessions can be referred (chat-only cases can't). */}
         {c.session_id && c.screening_sessions && (

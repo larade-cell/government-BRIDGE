@@ -5,7 +5,7 @@ import { ArrowRightIcon } from "~/components/ui/icons";
 import { LocaleToggle } from "~/components/ui/locale-toggle";
 import { getI18n } from "~/i18n/server";
 
-import { requestMagicLink } from "./actions";
+import { devSignInAsCaseworker, requestMagicLink } from "./actions";
 
 export default async function MagicLinkPage({
   searchParams,
@@ -73,6 +73,22 @@ export default async function MagicLinkPage({
             </Link>
           </div>
         </div>
+
+        {/* Dev-only demo shortcut. Skips the magic-link round-trip (which only
+            prints to the server console without SMTP) so a presenter can jump
+            straight into the caseworker view to show the review queue. Never
+            rendered in production. */}
+        {process.env.NODE_ENV !== "production" && (
+          <form action={devSignInAsCaseworker} className="mt-4">
+            <button
+              type="submit"
+              className="flex w-full items-center justify-center gap-2 rounded border border-dashed border-white/40 px-4 py-2.5 text-sm font-semibold text-white/80 transition hover:bg-white/10 hover:text-white"
+            >
+              Dev: sign in as caseworker
+              <ArrowRightIcon className="size-4" />
+            </button>
+          </form>
+        )}
       </div>
     </main>
   );

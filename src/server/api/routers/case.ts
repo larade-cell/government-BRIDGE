@@ -446,6 +446,31 @@ export const caseRouter = createTRPCRouter({
                 orderBy: { created_at: "desc" },
                 include: { organizations: true },
               },
+              // The case's documents, joined through its session, so staff can
+              // review uploads (and their validation verdicts) in context —
+              // especially the `document_review`-sourced cases the validator
+              // opens. SSNs are already redacted into validation_reason upstream.
+              document_uploads: {
+                where: { status: { not: "deleted" } },
+                orderBy: { created_at: "desc" },
+                select: {
+                  id: true,
+                  file_name: true,
+                  validation_status: true,
+                  validation_reason: true,
+                  created_at: true,
+                  document_types: {
+                    select: {
+                      doc_key: true,
+                      document_type_translations: {
+                        where: { language_code: "en" },
+                        select: { name: true },
+                        take: 1,
+                      },
+                    },
+                  },
+                },
+              },
             },
           },
         },

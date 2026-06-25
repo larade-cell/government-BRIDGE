@@ -34,6 +34,31 @@ const TIER_OF: Record<string, Tier> = {
 };
 const TIER_ORDER: Tier[] = ["likely", "maybe", "unlikely"];
 
+// Demo: the vision model only reads raster images, and a base64 data URL
+// inflates ~33%, so we only inline JPEG/PNG under this cap. Anything else falls
+// back to the server's label-based path (PDF/HEIC, or oversized files).
+const VISION_TYPES = ["image/jpeg", "image/png"];
+const MAX_INLINE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+/**
+ * Read a small JPEG/PNG as a base64 `data:` URL so the server can run live AI
+ * validation against the real bytes (no object store needed for the demo).
+ * Resolves `undefined` for unsupported types, oversized files, or a read
+ * error — all of which degrade cleanly to the label-based fallback.
+ */
+function readInlineImage(file: File): Promise<string | undefined> {
+  if (!VISION_TYPES.includes(file.type) || file.size > MAX_INLINE_BYTES) {
+    return Promise.resolve(undefined);
+  }
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () =>
+      resolve(typeof reader.result === "string" ? reader.result : undefined);
+    reader.onerror = () => resolve(undefined);
+    reader.readAsDataURL(file);
+  });
+}
+
 export function DocumentsManager({ sessionId }: { sessionId: string }) {
   const { locale, t } = useI18n();
   const utils = api.useUtils();
@@ -111,15 +136,17 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
     },
   });
 
-  function handleAdd() {
+  async function handleAdd() {
     const file = fileRef.current?.files?.[0];
     if (!file) return;
+    const data_url = await readInlineImage(file);
     createUpload.mutate({
       session_id: sessionId,
       file_name: file.name,
       file_mime_type: file.type || "application/octet-stream",
       size: file.size,
       document_type_id: docTypeId || undefined,
+      data_url,
     });
   }
 
@@ -131,20 +158,24 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
     reqFileRef.current?.click();
   }
 
-  function handleReqFileChange() {
+  async function handleReqFileChange() {
     const file = reqFileRef.current?.files?.[0];
     const documentTypeId = pendingTypeRef.current;
+    // Capture then reset the shared input before the async read, so a quick
+    // second upload can't pick up this file or type.
+    if (reqFileRef.current) reqFileRef.current.value = "";
+    pendingTypeRef.current = null;
     if (file && documentTypeId) {
+      const data_url = await readInlineImage(file);
       createUpload.mutate({
         session_id: sessionId,
         file_name: file.name,
         file_mime_type: file.type || "application/octet-stream",
         size: file.size,
         document_type_id: documentTypeId,
+        data_url,
       });
     }
-    if (reqFileRef.current) reqFileRef.current.value = "";
-    pendingTypeRef.current = null;
   }
 
   const items = useMemo(() => checklist.data?.data ?? [], [checklist.data]);
@@ -352,7 +383,7 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
           type="file"
           accept="image/jpeg,image/png,application/pdf,image/heic"
           className="hidden"
-          onChange={handleReqFileChange}
+          onChange={() => void handleReqFileChange()}
         />
 
         {items.length === 0 ? (
@@ -429,13 +460,24 @@ export function DocumentsManager({ sessionId }: { sessionId: string }) {
               accept="image/jpeg,image/png,application/pdf,image/heic"
               className="text-sm file:mr-2 file:rounded-md file:border file:bg-background file:px-2 file:py-1 file:text-sm"
             />
-            <Button size="sm" onClick={handleAdd} disabled={createUpload.isPending}>
+            <Button
+              size="sm"
+              onClick={() => void handleAdd()}
+              disabled={createUpload.isPending}
+            >
               {createUpload.isPending ? t.account.docs.adding : t.account.docs.add}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
             {t.account.docs.accepted}
           </p>
+          {/* While the vision model judges a just-uploaded image, surface that
+              the check is happening — it's the visible "the AI read it" moment. */}
+          {(createUpload.isPending || validate.isPending) && (
+            <p className="text-xs font-medium text-sky-600" aria-live="polite">
+              {t.account.docs.aiReviewing}
+            </p>
+          )}
           {createUpload.error && (
             <Alert variant="error">{createUpload.error.message}</Alert>
           )}

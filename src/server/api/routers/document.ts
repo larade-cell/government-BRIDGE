@@ -229,6 +229,15 @@ export const documentUploadRouter = createTRPCRouter({
         file_mime_type: z.string().trim().min(1).max(128),
         size: z.number().int().positive().optional(),
         document_type_id: z.string().uuid().optional(),
+        // Demo-only: an inline base64 image (`data:image/...`) so the vision
+        // model can validate the real bytes without an object store wired.
+        // Capped here as a backstop; the client only sends JPEG/PNG under 5 MB.
+        // Production replaces this with a presigned object-store upload.
+        data_url: z
+          .string()
+          .startsWith("data:image/")
+          .max(8_000_000)
+          .optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -268,9 +277,13 @@ export const documentUploadRouter = createTRPCRouter({
           // Defensive: a user could name the file with their SSN.
           file_name: redactSsn(input.file_name),
           file_mime_type: input.file_mime_type,
-          // Placeholder until object-store integration lands. The real flow
+          // Demo: when the client hands us an inline base64 image, store it as
+          // the canonical URL so validation runs against real bytes (the vision
+          // model accepts a `data:` URL directly). Otherwise fall back to the
+          // placeholder until object-store integration lands — the real flow
           // PUTs to `upload_url` then a webhook fills the canonical URL.
-          storage_url: `pending://${input.session_id}/${input.file_name}`,
+          storage_url:
+            input.data_url ?? `pending://${input.session_id}/${input.file_name}`,
           status: "uploaded",
           classified_by: input.document_type_id ? "user" : null,
           classified_at: input.document_type_id ? new Date() : null,

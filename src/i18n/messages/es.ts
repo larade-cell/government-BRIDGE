@@ -289,6 +289,7 @@ export const es: Messages = {
       accepted: "Aceptados: JPG, PNG, PDF, HEIC.",
       add: "Agregar",
       adding: "Agregando…",
+      aiReviewing: "🔍 La IA está revisando este documento…",
       remove: "Eliminar",
       removeConfirmTitle: "¿Eliminar este documento?",
       removeConfirmDesc: 'Se eliminará "{file}" de sus documentos.',

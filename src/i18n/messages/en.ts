@@ -290,6 +290,7 @@ export const en = {
       accepted: "Accepted: JPG, PNG, PDF, HEIC.",
       add: "Add",
       adding: "Adding…",
+      aiReviewing: "🔍 AI is reviewing this document…",
       remove: "Remove",
       removeConfirmTitle: "Remove this document?",
       removeConfirmDesc: '"{file}" will be removed from your documents.',
